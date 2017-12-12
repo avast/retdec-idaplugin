@@ -1,0 +1,6 @@
+[submodule "deps/tl-cpputils"]
+	path = deps/tl-cpputils
+	url = https://github.com/avast-tl/tl-cpputils
+[submodule "deps/retdec-config"]
+	path = deps/retdec-config
+	url = https://github.com/avast-tl/retdec-config
