@@ -10,8 +10,8 @@ RetDec idaplugin uses the following third-party libraries or other resources:
 3) OpenSSL: https://www.openssl.org/
 4) cpp-netlib: http://cpp-netlib.org/
 5) Boost: http://www.boost.org/
-6) retdec-config: https://git.int.avast.com/viruslab/retdec/retdec-config
-7) tl-cpputils: https://git.int.avast.com/viruslab/retdec/tl-cpputils
+6) retdec-config: https://github.com/avast-tl/retdec-config
+7) tl-cpputils: https://github.com/avast-tl/tl-cpputils
 
 These third-party libraries or other resources are licensed under the
 following licenses:

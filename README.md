@@ -13,12 +13,12 @@ The plugin is compatible with IDA versions >= 6.6.
 * CMake (version >= 3.6)
 * IDA SDK (version == 6.6)
 * IDA plugin libraries
-  * You can build your own IDA plugin libraries with `scripts/download-and-build-libs.sh`. This requires the Linux bash shell. On Windows, you need to install and configure an environment like MSYS2. You can follow RetDec's Windows environment setup [guide](https://git.int.avast.com/viruslab/retdec/retdec/wikis/build/windows-environment) to help you get everything you need.
+  * You can build your own IDA plugin libraries with `scripts/download-and-build-libs.sh`. This requires the Linux bash shell. On Windows, you need to install and configure an environment like MSYS2. You can follow RetDec's Windows environment setup [guide](https://github.com/avast-tl/retdec/wiki/Windows-Environment) to help you get everything you need.
 
 ## Build and Installation
 
 * Recursively clone the repository (it contains submodules):
-  * `git clone --recursive git@git.int.avast.com:viruslab/retdec/retdec-idaplugin.git`
+  * `git clone --recursive https://github.com/avast-tl/retdec-idaplugin.git`
 * Linux:
   * `cd retdec-idaplugin`
   * `mkdir build && cd build`
@@ -60,4 +60,4 @@ RetDec IDA plugin uses third-party libraries or other resources listed, along wi
 
 ## Contributing
 
-See [RetDec contribution guidelines](https://git.int.avast.com/viruslab/retdec/retdec/wikis/development/contribution-guidelines).
+See [RetDec contribution guidelines](https://github.com/avast-tl/retdec/wiki/Contribution-Guidelines).
