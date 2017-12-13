@@ -68,13 +68,17 @@ print_error_and_die()
 #
 get_SYS()
 {
-	if [[ $(uname -s) == *Linux* ]]; then
-		echo "linux"
-	elif [[ $(uname -s) == *MINGW* ]] || [[ $(uname -s) == *MSYS* ]]; then
-		echo "win"
-	else
-		echo "unknown"
-	fi
+	case "$(uname -s)" in
+		*Linux*)
+			echo "linux"
+			;;
+		*Windows*|*CYGWIN*|*MINGW*|*MSYS*)
+			echo "windows"
+			;;
+		*)
+			echo "unknown"
+			;;
+	esac
 }
 
 SYS="$(get_SYS)"
