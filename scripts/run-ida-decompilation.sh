@@ -79,7 +79,7 @@ get_SYS()
 
 SYS="$(get_SYS)"
 if [ "$SYS" != "win" -a "$SYS" != "linux" ]; then
-	echo "Error: Unknown OS" >&2
+	echo "Error: Cannot detect OS type: $(uname -s)" >&2
 	exit 1
 fi
 
