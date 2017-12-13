@@ -226,6 +226,7 @@ static void idaapi localDecompilation(RdGlobalInfo *di)
 	auto tmp = di->decCmd;
 	std::replace(tmp.begin(), tmp.end(), ' ', '\n');
 	INFO_MSG("Decompilation command: %s\n", tmp.c_str());
+	INFO_MSG("Running the decompilation command ...\n");
 
 	// Do NOT use call_system() because it prevents us to kill the run program
 	// by killing IDA. This is needed in, e.g., regression tests (timeout
