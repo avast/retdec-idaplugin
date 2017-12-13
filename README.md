@@ -45,8 +45,6 @@ You can pass the following additional parameters to `cmake`:
 
 ## User Guide
 
-**Note: The user guide, in its present state, assumes that the RetDec IDA plugin is downloaded as a binary package from the [RetDec](https://retdec.com/) official web page. This will be fixed in the future. You can still use it to learn about the plugin, just use files built in this repository instead of those distributed in a binary package.**
-
 The user guide in a PDF form is located in `doc/user_guide/user_guide.pdf`.
 
 You can build your own guide by running `make` in `doc/user_guide` directory:
