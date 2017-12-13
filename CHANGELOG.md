@@ -1,5 +1,9 @@
 # Changelog
 
+## dev
+
+* Added support for local decompilations. Requires locally installed [RetDec](https://github.com/avast-tl/retdec).
+
 ## v0.3.1 (September 7, 2016)
 
 * Fixed searching for the input file in cases when the `.idb` file was moved.
