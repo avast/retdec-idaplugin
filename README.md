@@ -2,7 +2,8 @@
 
 RetDec plugin for IDA (Interactive Disassembler).
 
-The plugin is compatible with IDA versions >= 6.6.
+The plugin is compatible with the following IDA versions: 6.6, 6.7, 6.8, 6.9, 6.95.
+The plugins does NOT work with IDA 7.x.
 
 ## Requirements
 
