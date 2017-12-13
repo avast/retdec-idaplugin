@@ -391,7 +391,7 @@ void decompileInput(RdGlobalInfo &decompInfo)
 	// are not run through Bash, which causes us problems.
 	decompInfo.decCmd += "sh ";
 #endif
-	decompInfo.decCmd += decompInfo.decompilationShCmd + " '" + decompInfo.inputPath;
+	decompInfo.decCmd += "'" + decompInfo.decompilationShCmd + "' '" + decompInfo.inputPath;
 	decompInfo.decCmd += "' --config='" + decompInfo.dbFile + "'";
 
 	if (!decompInfo.mode.empty())

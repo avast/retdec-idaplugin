@@ -40,12 +40,19 @@ bool RdGlobalInfo::isSelectiveDecompilation()
 
 bool RdGlobalInfo::isDecompileShInSystemPath() const
 {
+#ifdef OS_WINDOWS
+	return std::system("sh decompile.sh --help") == 0;
+#else
 	return std::system("decompile.sh --help") == 0;
+#endif
 }
 
 bool RdGlobalInfo::isDecompileShInSpecifiedPath() const
 {
-	std::string cmd = decompileShPath + " --help";
+	std::string cmd = "'" + decompileShPath + "'" + " --help";
+#ifdef OS_WINDOWS
+	cmd = "sh " + cmd;
+#endif
 	return std::system(cmd.c_str()) == 0;
 }
 
