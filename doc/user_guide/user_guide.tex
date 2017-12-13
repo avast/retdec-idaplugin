@@ -49,7 +49,7 @@
 
 \fontfamily{cmss}
 
-\includegraphics[width=12cm]{figures/avg-orig}
+\includegraphics[width=12cm]{figures/avast-logo-cmyk}
 
 \vfill
 
@@ -57,11 +57,12 @@
 \\[5 mm]
 {\HUGE User Guide}
 \\[3 mm]
-{\large Version 0.3.1}
+{\large Version 0.4}
 
 \vfill
 
 {\LARGE
+\href{https://github.com/avast-tl/retdec-idaplugin}{https://github.com/avast-tl/retdec-idaplugin} \\[2 mm]
 \href{https://retdec.com}{https://retdec.com} \\[2 mm]
 \href{mailto:support@retdec.com}{support@retdec.com} \\[4 mm]
 \today}
@@ -83,11 +84,25 @@
 \newpage
 \section{Introduction}
 \label{sec:introduction}
-This document describes the Retargetable Decompiler's plugin for IDA (RetDec plugin). Its goal is to integrate with IDA, give transparent access to the Retargetable Decompiler's decompilation service and provide user-interaction capabilities like navigation or code refactoring. An example of code decompiled by Retdec plugin is shown in Figure~\ref{fig:overview}.
+This document describes the Retargetable Decompiler's plugin for IDA (RetDec plugin). Its goal is to integrate with IDA, give transparent access to the Retargetable Decompiler and provide user-interaction capabilities like navigation or code refactoring. An example of code decompiled by Retdec plugin is shown in Figure~\ref{fig:overview}.
 
-Retargetable Decompiler (RetDec) is a reverse-engineering tool independent of any particular target architecture, file format, operating system, or compiler. It was developed in cooperation of Faculty of Information Technology, Brno University of Technology and AVG Technologies CZ, s.r.o. It is using architecture description language processor models and extensive pre-processing to translate machine code into a high-level-language representation. Currently, the decompiler supports the MIPS, ARM, x86, PIC32, and PowerPC architectures using the Windows PE, COFF, Unix ELF, Intel HEX, and RAW binary file formats.
+Retargetable Decompiler (RetDec) is a reverse-engineering tool independent of any particular target architecture, file format, operating system, or compiler. It was developed in cooperation of Faculty of Information Technology, Brno University of Technology and AVG Technologies. Since the acquisition of AVG Technologies by Avast in 2016, Avast has continued to develop the decompiler. It is using Capstone disassembler engine and a Capstone2LlvmIR library to translate machine code into a high-level-language representation. Currently, the decompiler supports the MIPS, ARM (including Thumb extension), x86, and PowerPC architectures using the Windows PE, COFF, Unix ELF, Intel HEX, and RAW binary file formats.
 
-The RetDec's decompilation service provides two ways to use the decompiler: 1) web interface and 2) application programming interface (API). RetDec plugin is using the API.
+RetDec can be used in the following ways:
+\begin{enumerate}
+	\item Online decompilation using \href{https://retdec.com/decompilation/}{web interface}.
+	\item Remote decompilation using \href{https://retdec.com/api/}{Application programming interface} (API).
+	\item Local build:
+	\begin{enumerate}
+		\item Compiling \href{https://github.com/avast-tl/retdec}{RetDec repository} on your own.
+		\item Downloading and installing \href{https://github.com/avast-tl/retdec/releases}{RetDec binary release}.
+	\end{enumerate}
+	\item \href{https://retdec.com/idaplugin/}{RetDec IDA plugin} (this quide's topic):
+	\begin{enumerate}
+		\item Remote decompilation using API.
+		\item Local decompilation using local build.
+	\end{enumerate}
+\end{enumerate}
 
 \begin{figure}[!ht]
 	\centering
@@ -102,11 +117,12 @@ The RetDec's decompilation service provides two ways to use the decompiler: 1) w
 \newpage
 \section{Installation}
 \label{sec:installation}
-This section describes prerequisites and the installation process of RetDec plugin.
-%After you follow the instructions, you should have the plugin installed and ready for configuration.
+This section describes prerequisites and the installation process of RetDec IDA plugin binary release.
+
+It is also possible to build and install the plugin directly from sources. To do so, follow the \href{https://github.com/avast-tl/retdec-idaplugin#build-and-installation}{Build and Installation} instructions instead of this section.
 
 \subsection{IDA}
-The plugin is created using IDA SDK version 6.6. Therefore, you need IDA version 6.6 or later to run it.
+The plugin is created using IDA SDK version 6.6. The plugin is compatible with the following IDA versions: 6.6, 6.7, 6.8, 6.9, 6.95. The plugin does NOT work with IDA 7.x.
 
 \subsection{Linux}
 Follow the next steps to install RetDec plugin in a Linux environment:
@@ -115,7 +131,7 @@ Follow the next steps to install RetDec plugin in a Linux environment:
 \begin{verbatim}
 libc.so.6 libgcc_s.so.1 libm.so.6 libpthread.so.0 libstdc++.so.6
 \end{verbatim}
-	\item Download the Linux installation package (Figure~\ref{table:installation-package-linux}) from our website.
+	\item Download the Linux installation package (Table~\ref{table:installation-package-linux}) from the \href{https://github.com/avast-tl/retdec-idaplugin/releases}{project's release page}.
 	\item Copy \texttt{retdec.plx} to the IDA's plugin directory (\texttt{<IDA_root>/plugins}).
 \end{enumerate}
 
@@ -127,10 +143,10 @@ libc.so.6 libgcc_s.so.1 libm.so.6 libpthread.so.0 libstdc++.so.6
 \textbf{File} & \textbf{Description}\\
 \hline
 \texttt{license} & Directory with licenses. \\
-\texttt{license/3rdparty.txt} & Licenses of libraries used by RetDec plugin. \\
-\texttt{license/license_us.htm} & RetDec plugin's end user agreement (EULA). \\
-\texttt{user_guide.pdf} & RetDec plugin's user guide (this document). \\
+\texttt{license/LICENSE} & RetDec IDA plugin's license. \\
+\texttt{license/LICENSE-THIRD-PARTY} & Licenses of libraries used by RetDec plugin. \\
 \texttt{retdec.plx} & 32-bit Linux RetDec plugin. \\
+\texttt{user_guide.pdf} & RetDec plugin's user guide (this document). \\
 \end{tabular}
 \end{table}
 
@@ -140,7 +156,7 @@ The Windows version of the plugin requires Windows 7 or later, with the MSVC 201
 
 Follow the next steps to install RetDec plugin in a Windows environment:
 \begin{enumerate}
-	\item Download the Windows installation package (Figure~\ref{table:installation-package-windows}) from our website.
+	\item Download the Windows installation package (Table~\ref{table:installation-package-windows}) from the \href{https://github.com/avast-tl/retdec-idaplugin/releases}{project's release page}.
 	\item Copy \texttt{retdec.plw} to the IDA's plugin directory (\texttt{<IDA_root>/plugins}).
 \end{enumerate}
 
@@ -152,10 +168,10 @@ Follow the next steps to install RetDec plugin in a Windows environment:
 \textbf{File} & \textbf{Description}\\
 \hline
 \texttt{license} & Directory with licenses. \\
-\texttt{license/3rdparty.txt} & Licenses of libraries used by RetDec plugin. \\
-\texttt{license/license_us.htm} & RetDec plugin's end user agreement (EULA). \\
-\texttt{user_guide.pdf} & RetDec plugin's user guide (this document). \\
+\texttt{license/LICENSE} & RetDec IDA plugin's license. \\
+\texttt{license/LICENSE-THIRD-PARTY} & Licenses of libraries used by RetDec plugin. \\
 \texttt{retdec.plw} & 32-bit Windows RetDec plugin. \\
+\texttt{user_guide.pdf} & RetDec plugin's user guide (this document). \\
 \end{tabular}
 \end{table}
 
@@ -196,19 +212,39 @@ These lines tell IDA which hotkeys invoke the plugin and what argument is passed
 \end{tabular}
 \end{table}
 
-\subsection{First Run}
-When you run IDA for the first time after you installed RetDec plugin, you are asked to configure the plugin. The configuration dialog is shown in Figure~\ref{fig:config-dialog}. To use the plugin, you have to provide your API key\footnote{To access it, register to \url{https://retdec.com}, login, and click on \texttt{Account}.} and check that you agree with our terms of use. If you choose not to agree, you will not be able to run any decompilations. No matter what you choose, you will not be presented with the dialog next time you run IDA. If you want to change the settings later, you need to manually invoke the plugin's configuration from IDA (see Section~\ref{sec:config:from-ida}).
+\subsection{Decompilation Configuration}
+Each time a decompilation is triggered, plugin checks that it is properly configured. If it is not, warning shown in Figure~\ref{fig:config-warning} is displayed. After you hit \texttt{OK}, the configuration dialog (Figure~\ref{fig:config-dialog-1}) appears. Here, you can choose the decompilation mode to use:
+\begin{enumerate}
+	\item Remote API decompilation (plugin's default) -- you have to provide your API key. To access it, register to \url{https://retdec.com}, login, and click on \texttt{Account}.
+	\item Local decompilation -- you have to install \href{https://github.com/avast-tl/retdec}{RetDec} local build and make sure plugin finds the \texttt{decompile.sh} script. Either add the decompiler's \texttt{bin} directory to the system \texttt{PATH}, or set path to \texttt{decompile.sh} in the form as shown in Figure~\ref{fig:config-dialog-2}.
+\end{enumerate}
+
+The settings will be saved and if you want to change them later, you need to manually invoke the plugin's configuration from IDA (see Section~\ref{sec:config:from-ida}).
 
 \begin{figure}[!ht]
 	\centering
-	\includegraphics[width=12cm]{figures/configuration}
+	\includegraphics[width=10cm]{figures/config-warning}
+	\caption{RetDec plugin's configuration warning.}
+	\label{fig:config-warning}
+\end{figure}
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=13cm]{figures/config-1}
 	\caption{RetDec plugin's configuration dialog.}
-	\label{fig:config-dialog}
+	\label{fig:config-dialog-1}
+\end{figure}
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=13cm]{figures/config-2}
+	\caption{RetDec plugin's configuration dialog -- path to \texttt{decompile.sh} set.}
+	\label{fig:config-dialog-2}
 \end{figure}
 
 \subsection{Configuration from IDA}
 \label{sec:config:from-ida}
-The same dialog (Figure~\ref{fig:config-dialog}) that is displayed at the first run of IDA after plugin installation can be opened from IDA anytime later. There are the following two ways to do it:
+The same dialog (Figure~\ref{fig:config-dialog-1}) that is displayed if the plugin is misconfigured can be opened from IDA anytime later. There are the following two ways to do it:
 \begin{itemize}
 	\item If you configured a hotkey for the plugin's configuration argument value according to Section~\ref{sec:config:plugin-cfg}, you can use it to invoke the configuration dialog.
 	\item You can also open the configuration dialog from the \texttt{Options/RetDec plugin options} menu (Figure~\ref{fig:config-menu}).
@@ -216,7 +252,7 @@ The same dialog (Figure~\ref{fig:config-dialog}) that is displayed at the first 
 
 \begin{figure}[!ht]
 	\centering
-	\includegraphics[width=10cm]{figures/menu-config-cut}
+	\includegraphics[width=12cm]{figures/menu-config-cut}
 	\caption{Opening the plugin's configuration dialog from the menu.}
 	\label{fig:config-menu}
 \end{figure}
@@ -423,10 +459,11 @@ Move forward (navigation) & \texttt{CTRL+F} & \xmark
 %-----------------------------------------------------------------------------
 \section{Support and Feedback}
 \label{sec:support}
-RetDec plugin is still in an experimental beta version. If you have any feedback, suggestions, or bug reports, please send them to us, either through our website or through email:
+RetDec plugin is still in an experimental beta version. If you have any feedback, suggestions, or bug reports, please open an issue in the GitHub project (preferred), or send them to us either through our website, or through email.
 \begin{center}
 {
 \LARGE
+\href{https://github.com/avast-tl/retdec-idaplugin}{https://github.com/avast-tl/retdec-idaplugin} \\[5 mm]
 \href{https://retdec.com}{https://retdec.com} \\[5 mm]
 \href{mailto:support@retdec.com}{support@retdec.com}
 }
