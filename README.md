@@ -36,7 +36,9 @@ Currently, we support only Windows and Linux.
 * CMake (version >= 3.6)
 * IDA SDK (version == 6.6)
 * IDA plugin libraries
-  * You can build your own IDA plugin libraries with `scripts/download-and-build-libs.sh`. This requires the Linux bash shell. On Windows, you need to install and configure an environment like MSYS2. You can follow RetDec's Windows environment setup [guide](https://github.com/avast-tl/retdec/wiki/Windows-Environment) to help you get everything you need.
+  * You can try to use prebuilt packages from [this repository](https://github.com/avast-tl/retdec-idaplugin-support).
+  * Or you can build your own IDA plugin libraries with `scripts/download-and-build-libs.sh`. This requires the Linux bash shell. On Windows, you need to install and configure an environment like MSYS2. You can follow RetDec's Windows environment setup [guide](https://github.com/avast-tl/retdec/wiki/Windows-Environment) to help you get everything you need.
+  * Or you can build IDA plugin libraries on your own.
 
 ### Process
 
