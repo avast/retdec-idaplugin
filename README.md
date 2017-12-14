@@ -1,13 +1,35 @@
-## RetDec IDA plugin
+# RetDec IDA plugin
 
 RetDec plugin for IDA (Interactive Disassembler).
 
 The plugin is compatible with the following IDA versions: 6.6, 6.7, 6.8, 6.9, 6.95.
 The plugin does NOT work with IDA 7.x.
 
-## Requirements
+## Installation and Use
 
-**Note: These are requirements to build the RetDec IDA plugin, not to run it. See our User Guide for information on plugin installation, configuration, and use.**
+Currently, we support only Windows and Linux.
+
+### Windows
+
+1. Either download and unpack a pre-built package from the following list, or build and install the RetDec IDA plugin by yourself (the process is described below):
+
+    * [32b Windows](https://github.com/avast-tl/retdec-idaplugin/releases/download/v0.4/retdec-idaplugin-v0.4-win.zip) (v0.4)
+    
+2. Follow the user guide (`user_guide.pdf`) that is part of the downloaded package, or use the [current version](https://github.com/avast-tl/retdec-idaplugin/blob/master/doc/user_guide/user_guide.pdf) from this repository.
+
+### Linux
+
+1. Either download and unpack a pre-built package from the following list, or build and install the RetDec IDA plugin by yourself (the process is described below):
+
+    * [32b Linux](https://github.com/avast-tl/retdec-idaplugin/releases/download/v0.4/retdec-idaplugin-v0.4-linux.zip) (v0.4)
+
+2. Follow the user guide (`user_guide.pdf`) that is part of the downloaded package, or use the [current version](https://github.com/avast-tl/retdec-idaplugin/blob/master/doc/user_guide/user_guide.pdf) from this repository.
+
+## Build and Installation
+
+### Requirements
+
+**Note: These are requirements to build the RetDec IDA plugin, not to run it. See our [User Guide](https://github.com/avast-tl/retdec-idaplugin/blob/master/doc/user_guide/user_guide.pdf) for information on plugin installation, configuration, and use.**
 
 * A compiler supporting C++14
   * On Windows, only Microsoft Visual C++ is supported (version >= Visual Studio 2015).
@@ -16,7 +38,7 @@ The plugin does NOT work with IDA 7.x.
 * IDA plugin libraries
   * You can build your own IDA plugin libraries with `scripts/download-and-build-libs.sh`. This requires the Linux bash shell. On Windows, you need to install and configure an environment like MSYS2. You can follow RetDec's Windows environment setup [guide](https://github.com/avast-tl/retdec/wiki/Windows-Environment) to help you get everything you need.
 
-## Build and Installation
+### Process
 
 * Recursively clone the repository (it contains submodules):
   * `git clone --recursive https://github.com/avast-tl/retdec-idaplugin.git`
@@ -45,7 +67,7 @@ You can pass the following additional parameters to `cmake`:
 
 ## User Guide
 
-The user guide in a PDF form is located in `doc/user_guide/user_guide.pdf`.
+The [User Guide](https://github.com/avast-tl/retdec-idaplugin/blob/master/doc/user_guide/user_guide.pdf) in a PDF form is located in `doc/user_guide/user_guide.pdf`.
 
 You can build your own guide by running `make` in `doc/user_guide` directory:
 * Requires [GNU make](https://www.gnu.org/software/make/).
