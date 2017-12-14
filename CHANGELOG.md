@@ -2,6 +2,10 @@
 
 ## dev
 
+* nothing yet
+
+## v0.4 (December 14, 2017)
+
 * Added support for local decompilations. Requires locally installed [RetDec](https://github.com/avast-tl/retdec).
 
 ## v0.3.1 (September 7, 2016)
