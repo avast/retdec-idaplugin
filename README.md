@@ -13,7 +13,7 @@ Currently, we support only Windows and Linux.
 
 1. Either download and unpack a pre-built package from the following list, or build and install the RetDec IDA plugin by yourself (the process is described below):
 
-    * [32b Windows](https://github.com/avast-tl/retdec-idaplugin/releases/download/v0.4/retdec-idaplugin-v0.4-win.zip) (v0.4)
+    * [Windows - for 32-bit IDA](https://github.com/avast-tl/retdec-idaplugin/releases/download/v0.4/retdec-idaplugin-v0.4-win.zip) (v0.4)
     
 2. Follow the user guide (`user_guide.pdf`) that is part of the downloaded package, or use the [current version](https://github.com/avast-tl/retdec-idaplugin/blob/master/doc/user_guide/user_guide.pdf) from this repository.
 
@@ -21,7 +21,7 @@ Currently, we support only Windows and Linux.
 
 1. Either download and unpack a pre-built package from the following list, or build and install the RetDec IDA plugin by yourself (the process is described below):
 
-    * [32b Linux](https://github.com/avast-tl/retdec-idaplugin/releases/download/v0.4/retdec-idaplugin-v0.4-linux.zip) (v0.4)
+    * [Linux - for 32-bit IDA](https://github.com/avast-tl/retdec-idaplugin/releases/download/v0.4/retdec-idaplugin-v0.4-linux.zip) (v0.4)
 
 2. Follow the user guide (`user_guide.pdf`) that is part of the downloaded package, or use the [current version](https://github.com/avast-tl/retdec-idaplugin/blob/master/doc/user_guide/user_guide.pdf) from this repository.
 
