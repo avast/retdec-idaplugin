@@ -93,7 +93,7 @@ class RdGlobalInfo
 		std::string pluginEmail            = "support@retdec.com";
 		std::string pluginURL              = "https://retdec.com/";
 		std::string pluginContact          = pluginURL + "\nEMAIL: " + pluginEmail;
-		std::string pluginVersion          = "0.3.1";
+		std::string pluginVersion          = "0.4";
 		std::string pluginVersionCheckDate = "";
 		std::string pluginLatestVersion    = "";
 		std::string pluginHotkey           = "Ctrl-d";
