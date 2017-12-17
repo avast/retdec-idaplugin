@@ -1,6 +1,7 @@
 #!/bin/bash
 #
-# Downloads, builds, and install libraries that our IDA plugin needs.
+# Downloads, builds, and install libraries that our IDA plugin needs during its
+# build.
 #
 # The script works on Linux (GCC) and Windows (GCC or MSVC via MSYS).
 #
