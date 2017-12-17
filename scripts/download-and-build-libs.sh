@@ -207,7 +207,8 @@ if [ ! -d "openssl" ]; then
 		# Download pre-built binaries, i.e. we do not need to build OpenSSL from
 		# scratch.
 		if [ ! -f "openssl-1.0.2d-vs2015.7z" ]; then
-			wget "http://www.npcglib.org/~stathis/downloads/openssl-1.0.2d-vs2015.7z" || exit 1
+			wget "https://www.npcglib.org/~stathis/downloads/openssl-1.0.2d-vs2015.7z" \
+				--no-check-certificate || exit 1
 		fi
 		echo "Extracting openssl-1.0.2d-vs2015.7z"
 		7z x "openssl-1.0.2d-vs2015.7z" > /dev/null || exit 1
