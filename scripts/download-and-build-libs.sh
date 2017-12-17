@@ -76,9 +76,8 @@ cd "$IDA_LIBS_DIR" || exit 1
 if [ ! -d "jsoncpp" ]; then
 	rm -rf "jsoncpp-1.6.5" || exit 1
 	if [ ! -f "jsoncpp-1.6.5.zip" ]; then
-		# --no-check-certificate is for Windows.
 		wget "https://github.com/open-source-parsers/jsoncpp/archive/1.6.5.zip" \
-			--no-check-certificate -O "jsoncpp-1.6.5.zip" || exit 1
+			-O "jsoncpp-1.6.5.zip" || exit 1
 	fi
 	echo "Extracting jsoncpp-1.6.5.zip"
 	unzip -q "jsoncpp-1.6.5.zip" || exit 1
@@ -180,9 +179,7 @@ if [ ! -d "openssl" ]; then
 	if [ "$COMPILER" = "gcc" ]; then
 		rm -rf "openssl-1.0.2d" || exit 1
 		if [ ! -f "openssl-1.0.2d.tar.gz" ]; then
-			# --no-check-certificate is for Windows.
-			wget "https://www.openssl.org/source/openssl-1.0.2d.tar.gz" \
-				--no-check-certificate || exit 1
+			wget "https://www.openssl.org/source/openssl-1.0.2d.tar.gz" || exit 1
 		fi
 		echo "Extracting openssl-1.0.2d.tar.gz"
 		tar xf "openssl-1.0.2d.tar.gz" || exit 1
@@ -207,8 +204,7 @@ if [ ! -d "openssl" ]; then
 		# Download pre-built binaries, i.e. we do not need to build OpenSSL from
 		# scratch.
 		if [ ! -f "openssl-1.0.2d-vs2015.7z" ]; then
-			wget "https://www.npcglib.org/~stathis/downloads/openssl-1.0.2d-vs2015.7z" \
-				--no-check-certificate || exit 1
+			wget "https://www.npcglib.org/~stathis/downloads/openssl-1.0.2d-vs2015.7z" || exit 1
 		fi
 		echo "Extracting openssl-1.0.2d-vs2015.7z"
 		7z x "openssl-1.0.2d-vs2015.7z" > /dev/null || exit 1
@@ -260,9 +256,8 @@ fi
 if [ ! -d "retdec-cpp" ]; then
 	rm -rf "retdec-cpp-0.1" || exit 1
 	if [ ! -f "retdec-cpp.zip" ]; then
-		# --no-check-certificate is for Windows.
 		wget "https://github.com/s3rvac/retdec-cpp/archive/0.1.zip" \
-			--no-check-certificate -O "retdec-cpp.zip" || exit 1
+			-O "retdec-cpp.zip" || exit 1
 	fi
 	echo "Extracting retdec-cpp.zip"
 	unzip -q "retdec-cpp.zip" || exit 1
