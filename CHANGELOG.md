@@ -2,7 +2,7 @@
 
 ## dev
 
-* nothing yet
+* Fix: Allow decompilation of input files with `f_LOADER` file type (#3).
 
 ## v0.4 (December 14, 2017)
 
