@@ -370,8 +370,18 @@ bool canDecompileInput()
 
 	if (!(inf.filetype == f_BIN || inf.filetype == f_PE || inf.filetype == f_ELF || inf.filetype == f_COFF || inf.filetype == f_HEX))
 	{
-		warning("%s version %s cannot decompile this input file.\n", decompInfo.pluginName.c_str(), decompInfo.pluginVersion.c_str());
-		return false;
+		if (inf.filetype == f_LOADER)
+		{
+			warning("Custom IDA loader plugin was used.\n"
+					"Decompilation will be attempted, but:\n"
+					"1. RetDec idaplugin can not check if the input can be decompiled. Decompilation may fail.\n"
+					"2. If the custom loader behaves differently than the RetDec loader, decompilation may fail or produce nonsensical result.");
+		}
+		else
+		{
+			warning("%s version %s cannot decompile this input file (file type = %d).\n", decompInfo.pluginName.c_str(), decompInfo.pluginVersion.c_str(), inf.filetype);
+			return false;
+		}
 	}
 
 	if (!setInputPath())
