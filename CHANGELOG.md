@@ -2,7 +2,7 @@
 
 ## dev
 
-* Fix: Allow decompilation of input files with `f_LOADER` file type (#3).
+* Fix: Allow decompilation of input files with `f_LOADER` file type ([#3](https://github.com/avast-tl/retdec-idaplugin/issues/3)).
 
 ## v0.4 (December 14, 2017)
 
