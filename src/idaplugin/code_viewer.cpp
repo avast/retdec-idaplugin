@@ -139,7 +139,7 @@ bool isWordGlobal(const std::string& word, int color)
 	return color == COLOR_DEFAULT && decompInfo.configDB.globals.getObjectByNameOrRealName(word) != nullptr;
 }
 
-const retdec_config::Object* getWordGlobal(const std::string& word, int color)
+const retdec::config::Object* getWordGlobal(const std::string& word, int color)
 {
 	return color == COLOR_DEFAULT ? decompInfo.configDB.globals.getObjectByNameOrRealName(word) : nullptr;
 }
@@ -154,7 +154,7 @@ bool isWordIdentifier(const std::string& word, int color)
 	return color == COLOR_DREF;
 }
 
-const retdec_config::Function* getWordFunction(const std::string& word, int color)
+const retdec::config::Function* getWordFunction(const std::string& word, int color)
 {
 	return color == COLOR_DEFAULT ? decompInfo.configDB.functions.getFunctionByName(word) : nullptr;
 }
@@ -415,8 +415,8 @@ bool idaapi changeFunctionGlobalName(void *ud)
 
 	std::string askString;
 	ea_t address;
-	const retdec_config::Function* fnc = nullptr;
-	const retdec_config::Object* gv = nullptr;
+	const retdec::config::Function* fnc = nullptr;
+	const retdec::config::Object* gv = nullptr;
 	if ((fnc = getWordFunction(word, color)))
 	{
 		askString = "Please enter function name";
@@ -612,8 +612,8 @@ bool idaapi ct_keyboard(TCustomControl *cv, int key, int shift, void *ud)
 		return false;
 	}
 	auto* idaFnc = getIdaFunction(word, color);
-	const retdec_config::Function* cFnc = getWordFunction(word, color);
-	const retdec_config::Object* cGv = getWordGlobal(word, color);
+	const retdec::config::Function* cFnc = getWordFunction(word, color);
+	const retdec::config::Object* cGv = getWordGlobal(word, color);
 
 	// 45 = INSERT
 	// 186 = ';'
@@ -718,8 +718,8 @@ void idaapi ct_popup(TCustomControl *cv, void *ud)
 	}
 
 	auto* idaFnc = getIdaFunction(word, color);
-	const retdec_config::Function* cFnc = getWordFunction(word, color);
-	const retdec_config::Object* cGv = getWordGlobal(word, color);
+	const retdec::config::Function* cFnc = getWordFunction(word, color);
+	const retdec::config::Object* cGv = getWordGlobal(word, color);
 
 	set_custom_viewer_popup_menu(cv, nullptr);
 

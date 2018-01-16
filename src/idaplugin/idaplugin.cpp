@@ -7,8 +7,8 @@
 #include <fstream>
 #include <iostream>
 
-#include "tl-cpputils/file_io.h"
-#include "tl-cpputils/filesystem_path.h"
+#include "retdec/utils/file_io.h"
+#include "retdec/utils/filesystem_path.h"
 #include "code_viewer.h"
 #include "config_generator.h"
 #include "decompiler.h"
@@ -280,13 +280,13 @@ bool setInputPath()
 	std::string workIdb;
 	if (!idb.empty())
 	{
-		tl_cpputils::FilesystemPath fsIdb(idb);
+		retdec::utils::FilesystemPath fsIdb(idb);
 		workDir = fsIdb.getParentPath();
 		workIdb = idb;
 	}
 	else if (!id0.empty())
 	{
-		tl_cpputils::FilesystemPath fsId0(id0);
+		retdec::utils::FilesystemPath fsId0(id0);
 		workDir = fsId0.getParentPath();
 		workIdb = id0;
 	}
@@ -302,12 +302,12 @@ bool setInputPath()
 	workDir += "/";
 #endif
 
-	if (!tl_cpputils::fileExists(inPath))
+	if (!retdec::utils::fileExists(inPath))
 	{
 		INFO_MSG("Input \"%s\" does not exist, trying to recover ...\n", inPath.c_str());
 
 		inPath = workDir + inName;
-		if (!tl_cpputils::fileExists(inPath))
+		if (!retdec::utils::fileExists(inPath))
 		{
 			INFO_MSG("Input \"%s\" does not exist, asking user to specify the input file ...\n", inPath.c_str());
 
@@ -322,7 +322,7 @@ bool setInputPath()
 			{
 				return false;
 			}
-			else if (!tl_cpputils::fileExists(std::string(tmp)))
+			else if (!retdec::utils::fileExists(std::string(tmp)))
 			{
 				warning("Cannot decompile this input file, there is no such file: %s\n", tmp);
 				return false;
@@ -392,8 +392,8 @@ bool canDecompileInput()
 	decompInfo.mode.clear();
 	decompInfo.architecture.clear();
 	decompInfo.endian.clear();
-	decompInfo.rawEntryPoint = tl_cpputils::Address();
-	decompInfo.rawSectionVma = tl_cpputils::Address();
+	decompInfo.rawEntryPoint = retdec::utils::Address();
+	decompInfo.rawSectionVma = retdec::utils::Address();
 
 	// Check Intel HEX.
 	//

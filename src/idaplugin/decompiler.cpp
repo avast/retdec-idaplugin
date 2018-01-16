@@ -12,7 +12,7 @@
 #include <sstream>
 
 #include "boost/network/protocol/http/client.hpp"
-#include "tl-cpputils/os.h"
+#include "retdec/utils/os.h"
 #include "code_viewer.h"
 #include "decompiler.h"
 #include "plugin_config.h"
@@ -87,11 +87,11 @@ bool getLatestPluginVersion(RdGlobalInfo *di)
  */
 bool checkPluginVersion(RdGlobalInfo *di)
 {
-	if (di->pluginVersionCheckDate != tl_cpputils::getCurrentDate())
+	if (di->pluginVersionCheckDate != retdec::utils::getCurrentDate())
 	{
 		INFO_MSG("Download the latest available plugin version ...\n");
 		getLatestPluginVersion(di);
-		di->pluginVersionCheckDate = tl_cpputils::getCurrentDate(); // TODO: setter for this which auto saves to config?
+		di->pluginVersionCheckDate = retdec::utils::getCurrentDate(); // TODO: setter for this which auto saves to config?
 		saveConfigTofile(*di);
 	}
 	else

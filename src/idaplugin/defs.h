@@ -28,10 +28,10 @@
 #include <idasdk/include/ua.hpp>
 #include <idasdk/include/xref.hpp>
 
-#include "retdec-config/config.h"
-#include "tl-cpputils/address.h"
-#include "tl-cpputils/os.h"
-#include "tl-cpputils/time.h"
+#include "retdec/config/config.h"
+#include "retdec/utils/address.h"
+#include "retdec/utils/os.h"
+#include "retdec/utils/time.h"
 
 namespace idaplugin {
 
@@ -97,7 +97,7 @@ class RdGlobalInfo
 		std::string pluginVersionCheckDate = "";
 		std::string pluginLatestVersion    = "";
 		std::string pluginHotkey           = "Ctrl-d";
-		std::string pluginBuildDate        = tl_cpputils::getCurrentDate();
+		std::string pluginBuildDate        = retdec::utils::getCurrentDate();
 #ifdef OS_WINDOWS
 		std::string pluginBuildSystem      = "Windows";
 #else
@@ -115,12 +115,12 @@ class RdGlobalInfo
 		std::string inputName;
 		/// Retargetable decompilation DB file name.
 		std::string dbFile;
-		retdec_config::Config configDB;
+		retdec::config::Config configDB;
 		std::string mode;
 		std::string architecture;
 		std::string endian;
-		tl_cpputils::Address rawEntryPoint;
-		tl_cpputils::Address rawSectionVma;
+		retdec::utils::Address rawEntryPoint;
+		retdec::utils::Address rawSectionVma;
 
 		std::map<func_t*, FunctionInfo> fnc2code;
 		std::list<func_t*> navigationList;
@@ -173,9 +173,9 @@ class RdGlobalInfo
 		std::string apiUserAgent = "RetDec IDA Plugin (v" + pluginVersion + ", " + pluginBuildDate + ", " + pluginBuildSystem + ")";
 		const std::string apiUrl = "https://retdec.com/service/api";
 		std::string apiKey;
-		/// Path to decompile.sh set by used in configuration menu.
+		/// Path to the decompilation script set by used in configuration menu.
 		std::string decompileShPath;
-		/// Path to decompile.sh which will be used in local decompilation.
+		/// Path to the decompilation script which will be used in local decompilation.
 		std::string decompilationShCmd;
 
 	private:

@@ -9,8 +9,8 @@
 
 #include <json/json.h>
 
-#include "tl-cpputils/file_io.h"
-#include "tl-cpputils/string.h"
+#include "retdec/utils/file_io.h"
+#include "retdec/utils/string.h"
 #include "plugin_config.h"
 
 namespace {
@@ -51,7 +51,7 @@ bool getConfigRootFromString(
 		if (!errs.empty())
 		{
 			errMsg = errs.front().message;
-			auto loc = tl_cpputils::getLineAndColumnFromPosition(
+			auto loc = retdec::utils::getLineAndColumnFromPosition(
 					json,
 					errs.front().offset_start
 			);
@@ -213,7 +213,7 @@ bool askUserToConfigurePlugin(RdGlobalInfo& rdgi)
 		"<##Select the decompilation mode to use##Local decompilation (RetDec must be installed):R1>\n"
 		"<Remote API decompilation (your data are sent to the RetDec server):R2>>\n"
 		"\n"
-		"Path to decompile.sh (unnecessary if it is in the system PATH):\n"
+		"Path to retdec-decompiler.sh (unnecessary if it is in the system PATH):\n"
 		"<:f3:1:64::>\n"
 		"\n"
 		"API URL   %A\n"
@@ -226,7 +226,7 @@ bool askUserToConfigurePlugin(RdGlobalInfo& rdgi)
 
 	if (rdgi.decompileShPath.empty())
 	{
-		std::string pattern = "decompile.sh";
+		std::string pattern = "retdec-decompiler.sh";
 		std::copy(pattern.begin(), pattern.begin() + QMAXPATH, cDecompileSh);
 	}
 	else

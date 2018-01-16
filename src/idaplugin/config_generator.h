@@ -27,10 +27,10 @@ class ConfigGenerator
 	private:
 		void generateHeader();
 		void generateFunctions();
-		void generateFunctionType(const tinfo_t &fncType, retdec_config::Function &ccFnc);
+		void generateFunctionType(const tinfo_t &fncType, retdec::config::Function &ccFnc);
 		void generateSegmentsAndGlobals();
-		retdec_config::Storage generateObjectLocation(const argloc_t &loc, const tinfo_t &locType);
-		void generateCallingConvention(const cm_t &idaCC, retdec_config::CallingConvention &configCC);
+		retdec::config::Storage generateObjectLocation(const argloc_t &loc, const tinfo_t &locType);
+		void generateCallingConvention(const cm_t &idaCC, retdec::config::CallingConvention &configCC);
 
 		std::string addrType2string(ea_t addr);
 		std::string type2string(const tinfo_t &type);
@@ -41,7 +41,7 @@ class ConfigGenerator
 
 	private:
 		RdGlobalInfo &decompInfo;
-		retdec_config::Config &config; ///< Configuration object.
+		retdec::config::Config &config; ///< Configuration object.
 		std::map<tinfo_t,std::string> structIdSet; ///< Global variables.
 };
 

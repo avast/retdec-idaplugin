@@ -131,6 +131,7 @@ Follow the next steps to install RetDec plugin in a Linux environment:
 \begin{verbatim}
 libc.so.6 libgcc_s.so.1 libm.so.6 libpthread.so.0 libstdc++.so.6
 \end{verbatim}
+	\item If you plan to use local RetDec build, install Python 3 and \href{http://pygments.org/}{Pygments}.
 	\item Download the Linux installation package (Table~\ref{table:installation-package-linux}) from the \href{https://github.com/avast-tl/retdec-idaplugin/releases}{project's release page}.
 	\item Copy \texttt{retdec.plx} to the IDA's plugin directory (\texttt{<IDA\_ROOT>/plugins}).
 \end{enumerate}
@@ -156,6 +157,7 @@ The Windows version of the plugin requires Windows 7 or later, with the MSVC 201
 
 Follow the next steps to install RetDec plugin in a Windows environment:
 \begin{enumerate}
+	\item If you plan to use local RetDec build, install Python 3 and \href{http://pygments.org/}{Pygments}.
 	\item Download the Windows installation package (Table~\ref{table:installation-package-windows}) from the \href{https://github.com/avast-tl/retdec-idaplugin/releases}{project's release page}.
 	\item Copy \texttt{retdec.plw} to the IDA's plugin directory (\texttt{<IDA\_ROOT>/plugins}).
 \end{enumerate}
@@ -216,7 +218,7 @@ These lines tell IDA which hotkeys invoke the plugin and what argument is passed
 Each time a decompilation is triggered, plugin checks that it is properly configured. If it is not, warning shown in Figure~\ref{fig:config-warning} is displayed. After you hit \texttt{OK}, the configuration dialog (Figure~\ref{fig:config-dialog-1}) appears. Here, you can choose the decompilation mode to use:
 \begin{enumerate}
 	\item Remote API decompilation (plugin's default) -- you have to provide your API key. To access it, register to \url{https://retdec.com}, login, and click on \texttt{Account}.
-	\item Local decompilation -- you have to install \href{https://github.com/avast-tl/retdec}{RetDec} local build and make sure plugin finds the \texttt{decompile.sh} script. Either add the decompiler's \texttt{bin} directory to the system \texttt{PATH}, or set path to \texttt{decompile.sh} in the form as shown in Figure~\ref{fig:config-dialog-2}.
+	\item Local decompilation -- you have to install \href{https://github.com/avast-tl/retdec}{RetDec} local build and make sure plugin finds the \texttt{retdec-decompiler.sh} script. Either add the decompiler's \texttt{bin} directory to the system \texttt{PATH}, or set path to \texttt{retdec-decompiler.sh} in the form as shown in Figure~\ref{fig:config-dialog-2}.
 \end{enumerate}
 
 The settings will be saved and if you want to change them later, you need to manually invoke the plugin's configuration from IDA (see Section~\ref{sec:config:from-ida}).
@@ -238,7 +240,7 @@ The settings will be saved and if you want to change them later, you need to man
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[width=13cm]{figures/config-2}
-	\caption{RetDec plugin's configuration dialog -- path to \texttt{decompile.sh} set.}
+	\caption{RetDec plugin's configuration dialog -- path to \texttt{retdec-decompiler.sh} set.}
 	\label{fig:config-dialog-2}
 \end{figure}
 

@@ -73,7 +73,7 @@ get_SYS()
 			echo "linux"
 			;;
 		*Windows*|*CYGWIN*|*MINGW*|*MSYS*)
-			echo "windows"
+			echo "win"
 			;;
 		*)
 			echo "unknown"
@@ -211,13 +211,13 @@ IDB=$(readlink -f "$IDB")
 # Get directories.
 OUT_DIR="$(dirname "$OUT")"
 
-# Check that decompile.sh is reachable from PATH (the plugin requires that).
-# When decompile.sh is not reachable from PATH, the plugin would fail, and
+# Check that the decompilation script is reachable from PATH (the plugin requires that).
+# When the decompilation script is not reachable from PATH, the plugin would fail, and
 # since we are discarding the plugin's output, debugging of this problem would
-# be very hard. To this end, when decompile.sh is not reachable from PATH,
+# be very hard. To this end, when the decompilation script is not reachable from PATH,
 # we update PATH to make it reachable.
-if ! hash "decompile.sh" &> /dev/null; then
-	echo "error: The plugin requires decompile.sh to be reachable from PATH." >&2
+if ! hash "retdec-decompiler.sh" &> /dev/null; then
+	echo "error: The plugin requires retdec-decompiler.sh to be reachable from PATH." >&2
 	echo "       You have to properly adjust your PATH before running this script." >&2
 	exit 1
 fi
@@ -261,7 +261,7 @@ IN_NEW="$OUT_DIR/$(basename "$IN")"
 
 # On Windows, we need to convert the path to the input file from "/c/XYZ" to
 # "c:/XYZ". Otherwise, the plugin will use Linux paths and fail to read/write
-# files (e.g. the JSON configuration file that is the input to decompile.sh,
+# files (e.g. the JSON configuration file that is the input to the decompilation script,
 # see #1485).
 if [ "$SYS" = "win" ] && [ "${IN_NEW:0:1}" = "/" ]; then
 	IN_NEW="$(sed 's/^\/\([a-zA-Z]\)\//\1:\//' <<< "$IN_NEW")"
