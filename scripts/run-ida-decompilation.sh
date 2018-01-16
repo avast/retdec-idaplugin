@@ -81,7 +81,7 @@ get_SYS()
 	esac
 }
 
-SYS="$(get_SYS)"s
+SYS="$(get_SYS)"
 if [ "$SYS" != "windows" -a "$SYS" != "linux" ]; then
 	echo "Error: Cannot detect OS type: $(uname -s)" >&2
 	exit 1
