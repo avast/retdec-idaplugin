@@ -50,7 +50,7 @@ set(RETDEC_CONFIG_SOURCES
 	${source_dir}/src/config/vtables.cpp
 )
 
-add_custom_command(OUTPUT ${RETDEC_UTILS_SOURCES} ${RETDEC_CONFIG_SOURCES} DEPENDS retdec-project COMMAND "")
+add_custom_command(OUTPUT ${RETDEC_UTILS_SOURCES} ${RETDEC_CONFIG_SOURCES} DEPENDS retdec-project)
 
 # Add libraries.
 add_library(retdec ${RETDEC_UTILS_SOURCES} ${RETDEC_CONFIG_SOURCES})
