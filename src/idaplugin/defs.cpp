@@ -41,9 +41,9 @@ bool RdGlobalInfo::isSelectiveDecompilation()
 bool RdGlobalInfo::isDecompileShInSystemPath() const
 {
 #ifdef OS_WINDOWS
-	return std::system("sh decompile.sh --help") == 0;
+	return std::system("sh retdec-decompiler.sh --help") == 0;
 #else
-	return std::system("decompile.sh --help") == 0;
+	return std::system("retdec-decompiler.sh --help") == 0;
 #endif
 }
 
@@ -103,13 +103,13 @@ bool RdGlobalInfo::configureDecompilation()
 {
 	if (isLocalDecompilation() && isDecompileShInSystemPath())
 	{
-		INFO_MSG("decompile.sh in system PATH -> using local decompilation\n");
-		decompilationShCmd = "decompile.sh";
+		INFO_MSG("retdec-decompiler.sh in system PATH -> using local decompilation\n");
+		decompilationShCmd = "retdec-decompiler.sh";
 		return false;
 	}
 	else if (isLocalDecompilation() && isDecompileShInSpecifiedPath())
 	{
-		INFO_MSG("decompile.sh at %s -> using local decompilation\n", decompileShPath.c_str());
+		INFO_MSG("retdec-decompiler.sh at %s -> using local decompilation\n", decompileShPath.c_str());
 		decompilationShCmd = decompileShPath;
 		return false;
 	}
@@ -121,8 +121,8 @@ bool RdGlobalInfo::configureDecompilation()
 	else
 	{
 		warning("Decompilation is not properly configured.\n"
-				"Either decompile.sh must be in system PATH,\n"
-				"or path to decompile.sh must be provided in configuration menu,\n"
+				"Either retdec-decompiler.sh must be in system PATH,\n"
+				"or path to retdec-decompiler.sh must be provided in configuration menu,\n"
 				"or API key and URL must be set.");
 		auto canceled = pluginConfigurationMenu(*this);
 		if (canceled)

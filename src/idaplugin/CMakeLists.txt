@@ -6,15 +6,6 @@
 ## retdec-cpp
 ##
 
-# The plugin uses several third-party libraries, so make their includes work.
-include_directories(SYSTEM
-	"${IDAPLUGIN_LIBS_DIR}/boost/include"
-	"${IDAPLUGIN_LIBS_DIR}/cpp-netlib/include"
-	"${IDAPLUGIN_LIBS_DIR}/jsoncpp/include"
-	"${IDAPLUGIN_LIBS_DIR}/openssl/include"
-	"${IDAPLUGIN_LIBS_DIR}/retdec-cpp/include"
-)
-
 # The order of the libraries below is important (at least on Windows).
 # Otherwise, there are "undefined reference" problems.
 if(MSVC)
@@ -61,56 +52,6 @@ endif()
 set(TARGET_NAME "idaplugin")
 set(FINAL_PLUGIN_NAME "retdec")
 
-# Build parameters.
-if(MSVC)
-	# Disable warnings (there are too many of them, including warnings from
-	# third-party libraries, which cannot be selectively disabled when using MSVC).
-	string(REGEX REPLACE "/W[0-4]" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W0")
-
-	# Disable the min() and max() macros to prevent errors when using e.g.
-	# std::numeric_limits<...>::max()
-	# (http://stackoverflow.com/questions/1904635/warning-c4003-and-errors-c2589-and-c2059-on-x-stdnumeric-limitsintmax).
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DNOMINMAX")
-else() # Linux/MSYS
-	# Common options.
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra")
-
-	# Ignore the following warnings (they are not fixable).
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-format")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
-
-	# 32-bit plugin.
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32")
-
-	# On Windows, link statically to minimize external dependencies.
-	if(MSYS)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
-	endif()
-endif()
-
-# Defines.
-add_definitions(-DBOOST_NETWORK_ENABLE_HTTPS)
-add_definitions(-D__IDP__ -D__PLUGIN__ -DNO_OBSOLETE_FUNCS)
-
-if(NOT MSVC)
-	# Use the old C++ ABI in stdlibc++. This allows us to build the plugin with
-	# both GCC >= 5.1 and Clang while keeping the same build of IDA SDK and IDA
-	# plugin libraries ($ROOT_DIR/{idasdk,idaplugin-libs}). Otherwise, we would
-	# need to rebuild them with the new ABI, which is impossible since IDA SDK
-	# distributes only binary packages.
-	#
-	# See the following link for more details:
-	#
-	#     https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_dual_abi.html
-	#
-	add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
-endif()
-
 # Windows.
 if(WIN32)
 	set(FINAL_PLUGIN_NAME "${FINAL_PLUGIN_NAME}.plw")
@@ -145,42 +86,9 @@ include_directories("..")
 include_directories(SYSTEM
 	"${IDA_SDK_DIR}/.." # So we can include idasdk's headers as "<idasdk/include/*.hpp>".
 	"${IDA_SDK_DIR}/include"
-	"../../deps/tl-cpputils/include"
-	"../../deps/retdec-config/include"
 )
 
 # Build.
-set(TL_CPPUTILS_SOURCES
-	../../deps/tl-cpputils/src/tl-cpputils/address.cpp
-	../../deps/tl-cpputils/src/tl-cpputils/alignment.cpp
-	../../deps/tl-cpputils/src/tl-cpputils/byte_value_storage.cpp
-	../../deps/tl-cpputils/src/tl-cpputils/conversion.cpp
-	../../deps/tl-cpputils/src/tl-cpputils/file_io.cpp
-	../../deps/tl-cpputils/src/tl-cpputils/filesystem_path.cpp
-	../../deps/tl-cpputils/src/tl-cpputils/math.cpp
-	../../deps/tl-cpputils/src/tl-cpputils/string.cpp
-	../../deps/tl-cpputils/src/tl-cpputils/system.cpp
-	../../deps/tl-cpputils/src/tl-cpputils/time.cpp
-)
-set(RETDEC_CONFIG_SOURCES
-	../../deps/retdec-config/src/retdec-config/architecture.cpp
-	../../deps/retdec-config/src/retdec-config/base.cpp
-	../../deps/retdec-config/src/retdec-config/calling_convention.cpp
-	../../deps/retdec-config/src/retdec-config/classes.cpp
-	../../deps/retdec-config/src/retdec-config/config.cpp
-	../../deps/retdec-config/src/retdec-config/file_format.cpp
-	../../deps/retdec-config/src/retdec-config/file_type.cpp
-	../../deps/retdec-config/src/retdec-config/functions.cpp
-	../../deps/retdec-config/src/retdec-config/language.cpp
-	../../deps/retdec-config/src/retdec-config/objects.cpp
-	../../deps/retdec-config/src/retdec-config/parameters.cpp
-	../../deps/retdec-config/src/retdec-config/patterns.cpp
-	../../deps/retdec-config/src/retdec-config/segments.cpp
-	../../deps/retdec-config/src/retdec-config/storage.cpp
-	../../deps/retdec-config/src/retdec-config/tool_info.cpp
-	../../deps/retdec-config/src/retdec-config/types.cpp
-	../../deps/retdec-config/src/retdec-config/vtables.cpp
-)
 set(IDAPLUGIN_SOURCES
 	code_viewer.cpp
 	config_generator.cpp
@@ -190,12 +98,10 @@ set(IDAPLUGIN_SOURCES
 	plugin_config.cpp
 )
 
-add_library(${TARGET_NAME} SHARED
-	${IDAPLUGIN_SOURCES}
-	${TL_CPPUTILS_SOURCES}
-	${RETDEC_CONFIG_SOURCES}
-)
+add_library(${TARGET_NAME} SHARED ${IDAPLUGIN_SOURCES})
+
 target_link_libraries(${TARGET_NAME}
+	retdec
 	${RETDEC_LIBRARIES}
 	${IDASDK_LIBRARIES}
 )

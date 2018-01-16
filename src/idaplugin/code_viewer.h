@@ -12,7 +12,7 @@
 #include <regex>
 #include <sstream>
 
-#include "tl-cpputils/string.h"
+#include "retdec/utils/string.h"
 #include "defs.h"
 
 namespace idaplugin {
@@ -194,7 +194,7 @@ struct ShowOutput : public exec_request_t
 			char cFncName[MAXSTR];
 			get_func_name(fnc->startEA, cFncName, sizeof(cFncName));
 			std::string tmpFncName = cFncName;
-			std::string tmpFncNameTrim = tl_cpputils::removeLeadingCharacter(tmpFncName, '_');
+			std::string tmpFncNameTrim = retdec::utils::removeLeadingCharacter(tmpFncName, '_');
 
 			std::regex e4( ".*" + std::string(SCOLOR_ON) + SCOLOR_DEFAULT + tmpFncName + SCOLOR_OFF + SCOLOR_DEFAULT + ".*" );
 			std::regex e5( ".*" + std::string(SCOLOR_ON) + SCOLOR_DEFAULT + tmpFncNameTrim + SCOLOR_OFF + SCOLOR_DEFAULT + ".*" );
