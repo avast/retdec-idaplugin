@@ -42,8 +42,8 @@ Currently, we support only Windows and Linux.
 
 ### Process
 
-* Recursively clone the repository (it contains submodules):
-  * `git clone --recursive https://github.com/avast-tl/retdec-idaplugin.git`
+* Clone the repository:
+  * `git clone https://github.com/avast-tl/retdec-idaplugin.git`
 * Linux:
   * `cd retdec-idaplugin`
   * `mkdir build && cd build`
