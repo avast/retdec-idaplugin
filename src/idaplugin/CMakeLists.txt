@@ -120,7 +120,7 @@ set_target_properties(${TARGET_NAME} PROPERTIES SUFFIX "")
 set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME "${FINAL_PLUGIN_NAME}")
 
 if(IDA_PATH)
-	install(TARGETS ${TARGET_NAME} 
+	install(TARGETS ${TARGET_NAME}
 		LIBRARY DESTINATION "${IDA_PATH}/plugins/"
 		RUNTIME DESTINATION "${IDA_PATH}/plugins/"
 	)

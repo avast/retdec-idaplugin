@@ -56,4 +56,4 @@ add_custom_command(OUTPUT ${RETDEC_UTILS_SOURCES} ${RETDEC_CONFIG_SOURCES} DEPEN
 add_library(retdec ${RETDEC_UTILS_SOURCES} ${RETDEC_CONFIG_SOURCES})
 add_dependencies(retdec retdec-project)
 target_include_directories(retdec PUBLIC ${source_dir}/include)
- 
+
