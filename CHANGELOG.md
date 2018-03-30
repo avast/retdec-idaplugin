@@ -2,6 +2,7 @@
 
 ## dev
 
+* Fix: `#!/usr/bin/env bash` is now used instead of `#!/bin/bash` to run the scripts ([avast-tl/retdec #258](https://github.com/avast-tl/retdec/issues/258)).
 * Fix: Allow decompilation of input files with `f_LOADER` file type ([#3](https://github.com/avast-tl/retdec-idaplugin/issues/3)).
 
 ## v0.4 (December 14, 2017)
