@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env hash
 #
 # Downloads, builds, and install libraries that our IDA plugin needs during its
 # build.

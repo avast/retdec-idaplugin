@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # The script decompiles the given file via RetDec IDA plugin.
 # The supported decompilation modes are:
