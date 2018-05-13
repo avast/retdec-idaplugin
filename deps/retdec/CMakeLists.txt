@@ -1,8 +1,8 @@
 include(ExternalProject)
 
 ExternalProject_Add(retdec-project
-	URL https://github.com/avast-tl/retdec/archive/cc3915ad171cf0eeb40275b0fd3590199d30fa66.zip
-	URL_HASH SHA256=c44243957da43f9effe83705d18db692e6bdc44a67290a0e8a0b0e7a8c72e711
+	URL https://github.com/avast-tl/retdec/archive/0e10fd6c3cab7d7b833a2f0b69c94af05f4830db.zip
+	URL_HASH SHA256=a68135f297e5a79da539299e434f0916f0cdff7e4df9d3b760c54cd9c76856a4
 	# Disable the update step.
 	UPDATE_COMMAND ""
 	# Disable the build step.
