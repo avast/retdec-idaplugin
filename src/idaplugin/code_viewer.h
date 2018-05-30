@@ -29,7 +29,6 @@ void idaapi ct_close(TCustomControl *cv, void *ud);
 /// @name Functions working with GUI from threads.
 /// @{
 int idaapi showDecompiledCode(void *ud);
-int idaapi showVersionCheckForm(RdGlobalInfo *di);
 /// @}
 
 bool addCommentToFunctionCode(func_t* fnc);
@@ -225,45 +224,6 @@ struct ShowOutput : public exec_request_t
 			fit->second.code += l + "\n";
 
 		qfree(static_cast<void*>(fncCmt));
-	}
-};
-
-/**
- * Inform user about new RetDec plugin version.
- * See comment for @c ShowOutput structure.
- */
-struct ShowVersionCheckForm : public exec_request_t
-{
-	RdGlobalInfo *di;
-
-	ShowVersionCheckForm(RdGlobalInfo *i) : di(i) {}
-	virtual ~ShowVersionCheckForm() override {}
-
-	virtual int idaapi execute() override
-	{
-		static const char format[] =
-			"BUTTON YES ~D~ownload\n"
-			"BUTTON NO NONE\n"
-			"BUTTON CANCEL ~C~ancel\n"
-			"New Version of RetDec Plugin Available\n"
-			"\n"
-			"\n"
-			"Your RetDec plugins's version %A does not match the latest available version %A!\n"
-			"\n"
-			"Decompilation cannot be performed with your old version.\n"
-			"Please, download and install the latest version.\n"
-			"\n";
-
-		if (AskUsingForm_c(format, di->pluginVersion.c_str(), di->pluginLatestVersion.c_str()) == 0)
-		{
-			// ESC or CANCEL
-		}
-		else
-		{
-			open_url("https://retdec.com/idaplugin/");
-		}
-
-		return 0;
 	}
 };
 

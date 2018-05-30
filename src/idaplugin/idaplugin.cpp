@@ -524,14 +524,6 @@ void idaapi run(int arg)
 		return;
 	}
 
-	// Special modes for regression tests -> force local decompilation.
-	//
-	auto oldFlagVal = decompInfo.isLocalDecompilation();
-	if (arg == 4 || arg == 5)
-	{
-		decompInfo.setIsLocalDecompilation(true);
-	}
-
 	if (decompInfo.configureDecompilation())
 	{
 		return;
@@ -585,7 +577,6 @@ void idaapi run(int arg)
 				decompInfo.outputFile = decompInfo.inputPath + ".c";
 				decompInfo.setIsUseThreads(false);
 				runSelectiveDecompilation(fnc);
-				decompInfo.setIsLocalDecompilation(oldFlagVal);
 				break;
 			}
 		}
@@ -598,7 +589,6 @@ void idaapi run(int arg)
 	{
 		decompInfo.setIsUseThreads(false);
 		runAllDecompilation();
-		decompInfo.setIsLocalDecompilation(oldFlagVal);
 		return;
 	}
 	else

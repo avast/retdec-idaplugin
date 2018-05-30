@@ -806,13 +806,4 @@ int idaapi showDecompiledCode(void *ud)
 	return 0;
 }
 
-/**
- * Use @c ShowVersionCheckForm structure to show new version info form.
- */
-int idaapi showVersionCheckForm(RdGlobalInfo *di)
-{
-	ShowVersionCheckForm show(di);
-	return execute_sync(show, MFF_FAST);
-}
-
 } // namespace idaplugin

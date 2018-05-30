@@ -15,29 +15,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
 # Check that obligatory parameters were defined.
-if(NOT IDAPLUGIN_LIBS_DIR)
-	message(FATAL_ERROR "Path to idaplugin libraries was not specified. Use -DIDAPLUGIN_LIBS_DIR=<path>.")
-endif()
-if(NOT EXISTS "${IDAPLUGIN_LIBS_DIR}")
-	message(FATAL_ERROR "Specified idaplugin libraries path does not exist.")
-endif()
-
 if(NOT IDA_SDK_DIR)
 	message(FATAL_ERROR "Path to IDA SDK was not specified. Use -DIDA_SDK_DIR=<path>.")
 endif()
 if(NOT EXISTS "${IDA_SDK_DIR}")
 	message(FATAL_ERROR "Specified IDA SDK path does not exist.")
 endif()
-
-# Includes.
-# The plugin uses several third-party libraries, so make their includes work.
-include_directories(SYSTEM
-	"${IDAPLUGIN_LIBS_DIR}/boost/include"
-	"${IDAPLUGIN_LIBS_DIR}/cpp-netlib/include"
-	"${IDAPLUGIN_LIBS_DIR}/jsoncpp/include"
-	"${IDAPLUGIN_LIBS_DIR}/openssl/include"
-	"${IDAPLUGIN_LIBS_DIR}/retdec-cpp/include"
-)
 
 # Build parameters.
 if(MSVC)
@@ -72,7 +55,6 @@ else() # Linux/MSYS
 endif()
 
 # Defines.
-add_definitions(-DBOOST_NETWORK_ENABLE_HTTPS)
 add_definitions(-D__IDP__ -D__PLUGIN__ -DNO_OBSOLETE_FUNCS)
 
 if(NOT MSVC)

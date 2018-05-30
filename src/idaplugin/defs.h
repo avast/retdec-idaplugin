@@ -94,8 +94,6 @@ class RdGlobalInfo
 		std::string pluginURL              = "https://retdec.com/";
 		std::string pluginContact          = pluginURL + "\nEMAIL: " + pluginEmail;
 		std::string pluginVersion          = "0.4";
-		std::string pluginVersionCheckDate = "";
-		std::string pluginLatestVersion    = "";
 		std::string pluginHotkey           = "Ctrl-d";
 		std::string pluginBuildDate        = retdec::utils::getCurrentDate();
 #ifdef OS_WINDOWS
@@ -154,25 +152,15 @@ class RdGlobalInfo
 	public:
 		bool isDecompileShInSystemPath() const;
 		bool isDecompileShInSpecifiedPath() const;
-		bool isApiKeyOk() const;
-		bool isApiUrlOk() const;
 
 		bool configureDecompilation();
 
 		bool isUseThreads() const;
 		void setIsUseThreads(bool f);
 
-		bool isApiDecompilation() const;
-		bool isLocalDecompilation() const;
-		void setIsApiDecompilation(bool f);
-		void setIsLocalDecompilation(bool f);
-
 	public:
 		const std::string pluginConfigFileName = "retdec-config.json";
 		std::string pluginConfigFile;
-		std::string apiUserAgent = "RetDec IDA Plugin (v" + pluginVersion + ", " + pluginBuildDate + ", " + pluginBuildSystem + ")";
-		const std::string apiUrl = "https://retdec.com/service/api";
-		std::string apiKey;
 		/// Path to the decompilation script set by used in configuration menu.
 		std::string decompileShPath;
 		/// Path to the decompilation script which will be used in local decompilation.
@@ -181,7 +169,6 @@ class RdGlobalInfo
 	private:
 		/// Only for debugging during development.
 		bool useThreads = true;
-		bool locaDecomp = false;
 };
 
 } // namespace idaplugin

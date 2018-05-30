@@ -15,12 +15,7 @@
 
 namespace {
 
-//const std::string JSON_apiUrl               = "apiUrl";
-const std::string JSON_apiKey               = "apiKey";
-const std::string JSON_decompileShPath      = "decompileShPath";
-const std::string JSON_versionCheckDate     = "versionCheckDate";
-const std::string JSON_pluginLatestVersion  = "pluginLatestVersion";
-const std::string JSON_localDecomp          = "localDecompilation";
+const std::string JSON_decompileShPath = "decompileShPath";
 
 } // anonymous namespace
 
@@ -111,12 +106,7 @@ bool readConfigFile(RdGlobalInfo& rdgi)
 		return true;
 	}
 
-	rdgi.pluginVersionCheckDate = root.get(JSON_versionCheckDate, "").asString();
-	rdgi.pluginLatestVersion = root.get(JSON_pluginLatestVersion, "").asString();
-	rdgi.apiKey = root.get(JSON_apiKey, "").asString();
-//	rdgi.apiUrl = root.get(JSON_apiUrl, "").asString();
 	rdgi.decompileShPath = root.get(JSON_decompileShPath, "").asString();
-	rdgi.setIsLocalDecompilation(root.get(JSON_localDecomp, rdgi.isLocalDecompilation()).asBool());
 
 	return false;
 }
@@ -135,65 +125,11 @@ void saveConfigTofile(RdGlobalInfo& rdgi)
 		// Problem when reading config -- does not matter, we use empty root.
 	}
 
-	root[JSON_versionCheckDate] = rdgi.pluginVersionCheckDate;
-	root[JSON_pluginLatestVersion] = rdgi.pluginLatestVersion;
-	root[JSON_apiKey] = rdgi.apiKey;
-//	root[JSON_apiUrl] = rdgi.apiUrl;
 	root[JSON_decompileShPath] = rdgi.decompileShPath;
-	root[JSON_localDecomp] = rdgi.isLocalDecompilation();
 
 	Json::StyledWriter writer;
 	std::ofstream jsonFile(rdgi.pluginConfigFile.c_str());
 	jsonFile << writer.write(root);
-}
-
-int idaapi modcb(int fid, form_actions_t &fa)
-{
-	ushort isLocalActivated = 0;
-	ushort isApiActivated = 0;
-
-	switch (fid)
-	{
-		// Form is going to be displayed.
-		case -1:
-			fa.get_checkbox_value(1, &isLocalActivated);
-			fa.get_checkbox_value(2, &isApiActivated);
-			if (isLocalActivated)
-			{
-				fa.enable_field(3, true);
-				fa.enable_field(4, false);
-			}
-			else if (isApiActivated)
-			{
-				fa.enable_field(3, false);
-				fa.enable_field(4, true);
-			}
-			else
-			{
-				fa.enable_field(3, false);
-				fa.enable_field(4, false);
-			}
-			break;
-		// Form is going to be closed with OK.
-		case -2:
-			break;
-		// Local decompilation checkbox changed.
-		case 1:
-			fa.get_checkbox_value(fid, &isLocalActivated);
-			fa.enable_field(3, isLocalActivated);
-			fa.enable_field(4, !isLocalActivated);
-			break;
-		// API decompilation checkbox changed.
-		case 2:
-			fa.get_checkbox_value(fid, &isApiActivated);
-			fa.enable_field(3, !isApiActivated);
-			fa.enable_field(4, isApiActivated);
-			break;
-		default:
-			break;
-	}
-
-	return 1;
 }
 
 /**
@@ -207,21 +143,12 @@ bool askUserToConfigurePlugin(RdGlobalInfo& rdgi)
 		"RetDec Plugin Settings\n"
 		"\n"
 		"\n"
-		"%/"
 		"Settings will be permanently stored and you will not have to fill them each time you run decompilation.\n"
-		"\n"
-		"<##Select the decompilation mode to use##Local decompilation (RetDec must be installed):R1>\n"
-		"<Remote API decompilation (your data are sent to the RetDec server):R2>>\n"
 		"\n"
 		"Path to retdec-decompiler.sh (unnecessary if it is in the system PATH):\n"
 		"<:f3:1:64::>\n"
-		"\n"
-		"API URL   %A\n"
-		"<API key:A4::50::>\n"
 		"\n";
 
-	int decMode = rdgi.isApiDecompilation() ? 1 : 0;
-	char cApiKey[MAXSTR] = {};
 	char cDecompileSh[QMAXPATH] = {};
 
 	if (rdgi.decompileShPath.empty())
@@ -233,18 +160,15 @@ bool askUserToConfigurePlugin(RdGlobalInfo& rdgi)
 	{
 		std::copy(rdgi.decompileShPath.begin(), rdgi.decompileShPath.begin() + QMAXPATH, cDecompileSh);
 	}
-	std::copy(rdgi.apiKey.begin(), rdgi.apiKey.begin() + MAXSTR, cApiKey);
 
-	if (AskUsingForm_c(format, modcb, &decMode, cDecompileSh, rdgi.apiUrl.c_str(), cApiKey) == 0)
+	if (AskUsingForm_c(format, cDecompileSh) == 0)
 	{
 		// ESC or CANCEL
 		return true;
 	}
 	else
 	{
-		rdgi.apiKey = cApiKey;
 		rdgi.decompileShPath = cDecompileSh;
-		rdgi.setIsLocalDecompilation(decMode == 0);
 	}
 
 	return false;
