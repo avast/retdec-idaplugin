@@ -8,8 +8,6 @@ set(FINAL_PLUGIN_NAME "retdec")
 
 # Windows.
 if(WIN32)
-	set(FINAL_PLUGIN_NAME "${FINAL_PLUGIN_NAME}.plw")
-
 	# _WIN32_WINNT is defined for Boost (otherwise, it complains during
 	# compilation). It is the minimum required system for running the plugin.
 	# 0x0501 is WindowsXP.
@@ -17,13 +15,9 @@ if(WIN32)
 
 	if(MSVC)
 		set(IDASDK_LIBRARIES "${IDA_SDK_DIR}/lib/x86_win_vc_32/ida.lib")
-	else() # GCC
-		set(IDASDK_LIBRARIES "${IDA_SDK_DIR}/lib/x86_win_gcc_32/ida.a")
 	endif()
 # Linux.
 else()
-	set(FINAL_PLUGIN_NAME "${FINAL_PLUGIN_NAME}.plx")
-
 	add_definitions(-D__LINUX__)
 
 	# From idasdk/readme.txt:
@@ -70,7 +64,6 @@ endif()
 # Set a proper name of the library that represents the plugin (e.g. retdec.plx
 # on Linux and retdec.plw on Windows).
 set_target_properties(${TARGET_NAME} PROPERTIES PREFIX "")
-set_target_properties(${TARGET_NAME} PROPERTIES SUFFIX "")
 set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME "${FINAL_PLUGIN_NAME}")
 
 if(IDA_PATH)

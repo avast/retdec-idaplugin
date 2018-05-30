@@ -23,7 +23,7 @@ if(NOT EXISTS "${IDA_SDK_DIR}")
 endif()
 
 # Build parameters.
-if(MSVC)
+if(MSVC) # Windows
 	# Disable warnings (there are too many of them, including warnings from
 	# third-party libraries, which cannot be selectively disabled when using MSVC).
 	string(REGEX REPLACE "/W[0-4]" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -33,7 +33,7 @@ if(MSVC)
 	# std::numeric_limits<...>::max()
 	# (http://stackoverflow.com/questions/1904635/warning-c4003-and-errors-c2589-and-c2059-on-x-stdnumeric-limitsintmax).
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DNOMINMAX")
-else() # Linux/MSYS
+else() # Linux
 	# Common options.
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")
@@ -45,17 +45,12 @@ else() # Linux/MSYS
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-format")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
 
-	# 32-bit plugin.
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32")
-
-	# On Windows, link statically to minimize external dependencies.
-	if(MSYS)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
-	endif()
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif()
 
 # Defines.
 add_definitions(-D__IDP__ -D__PLUGIN__ -DNO_OBSOLETE_FUNCS)
+add_definitions(-D__X64__)
 
 if(NOT MSVC)
 	# Use the old C++ ABI in stdlibc++. This allows us to build the plugin with

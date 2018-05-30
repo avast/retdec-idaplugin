@@ -11,7 +11,7 @@
 
 namespace idaplugin {
 
-void runSelectiveDecompilation(func_t *fnc2decomp = nullptr, bool force = false);
+//void runSelectiveDecompilation(func_t *fnc2decomp = nullptr, bool force = false);
 
 } // namespace idaplugin
 
