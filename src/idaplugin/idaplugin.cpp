@@ -27,56 +27,56 @@ RdGlobalInfo decompInfo;
  * TODO: Killing is not good enough, thread dies but process created by 'call_system()' lives.
  * This might be solved by usage of Petr's API library, so no need to fix it now.
  */
-//void killDecompilation()
-//{
-//	if (decompInfo.decompRunning)
-//	{
-//		INFO_MSG("Unfinished decompilation was KILLED !!!\n");
-//		qthread_kill(decompInfo.decompThread);
-//		qthread_join(decompInfo.decompThread);
-//		qthread_free(decompInfo.decompThread);
-//		decompInfo.decompRunning = false;
-//	}
-//}
+void killDecompilation()
+{
+	if (decompInfo.decompRunning)
+	{
+		INFO_MSG("Unfinished decompilation was KILLED !!!\n");
+		qthread_kill(decompInfo.decompThread);
+		qthread_join(decompInfo.decompThread);
+		qthread_free(decompInfo.decompThread);
+		decompInfo.decompRunning = false;
+	}
+}
 
 /**
  * Save IDA database before decompilation to protect it if something goes wrong.
  * @param inSitu If true, DB is saved with the same name as IDA default database.
  * @param suffix If @p inSitu is false, use this suffix to distinguish DBs.
  */
-//void saveIdaDatabase(bool inSitu = false, const std::string &suffix = ".dec-backup")
-//{
-//	INFO_MSG("Saving IDA database ...\n");
-//
-//	std::string workIdb = decompInfo.workIdb;
-//
-//	auto dotPos = workIdb.find_last_of(".");
-//	if (dotPos != std::string::npos)
-//	{
-//		workIdb.erase(dotPos, std::string::npos);
-//	}
-//
-//	if (!inSitu)
-//	{
-//		workIdb += suffix;
-//	}
-//	workIdb += ".idb";
-//
-//	save_database_ex(workIdb.c_str(), DBFL_COMP);
-//
-//	INFO_MSG("IDA database saved into :  %s\n", workIdb.c_str());
-//}
+void saveIdaDatabase(bool inSitu = false, const std::string &suffix = ".dec-backup")
+{
+	INFO_MSG("Saving IDA database ...\n");
+
+	std::string workIdb = decompInfo.workIdb;
+
+	auto dotPos = workIdb.find_last_of(".");
+	if (dotPos != std::string::npos)
+	{
+		workIdb.erase(dotPos, std::string::npos);
+	}
+
+	if (!inSitu)
+	{
+		workIdb += suffix;
+	}
+	workIdb += ".idb";
+
+	save_database(workIdb.c_str(), DBFL_COMP);
+
+	INFO_MSG("IDA database saved into :  %s\n", workIdb.c_str());
+}
 
 /**
  * Generate retargetable decompiler database from IDA database.
  */
-//void generatePluginDatabase()
-//{
-//	INFO_MSG("Generating retargetable decompilation DB ...\n");
-//
-//	ConfigGenerator jg(decompInfo);
-//	decompInfo.dbFile = jg.generate();
-//}
+void generatePluginDatabase()
+{
+	INFO_MSG("Generating retargetable decompilation DB ...\n");
+
+	ConfigGenerator jg(decompInfo);
+	decompInfo.dbFile = jg.generate();
+}
 
 /**
  * Find out if input file is relocatable -- object file.
@@ -225,41 +225,33 @@ RdGlobalInfo decompInfo;
 /**
  * Decompile everything, but do not show it in viewer, instead dump it into file.
  */
-//void runAllDecompilation()
-//{
-//	std::string defaultOut = decompInfo.inputPath + ".c";
-//
-//	char *tmp = askfile_cv(         ///< Returns: file name
-//			true,                   ///< int savefile
-//			defaultOut.data(),      ///< const char *default_answer
-//			"Save decompiled file", ///< const char *format
-//			nullptr                 ///< va_list va
-//	);
-//
-//	if (!tmp) ///< canceled
-//	{
-//		return;
-//	}
-//
-//	decompInfo.outputFile = tmp;
-//	decompInfo.ranges.clear();
-//	decompInfo.decompiledFunction = nullptr;
-//
-//	INFO_MSG("Selected file: %s\n", decompInfo.outputFile.c_str());
-//
-//	killDecompilation();
-//	saveIdaDatabase();
-//	generatePluginDatabase();
-//	decompileInput(decompInfo);
-//}
+void runAllDecompilation()
+{
+	std::string defaultOut = decompInfo.inputPath + ".c";
 
-/**
- * Only generate config database.
- */
-//void runDatabasegeneration()
-//{
-//	generatePluginDatabase();
-//}
+	char *tmp = ask_file(                ///< Returns: file name
+			true,                        ///< bool for_saving
+			defaultOut.data(),           ///< const char *default_answer
+			"Save decompiled file",      ///< const char *format
+			nullptr                      ///< va_list va
+	);
+
+	if (tmp == nullptr) ///< canceled
+	{
+		return;
+	}
+
+	decompInfo.outputFile = tmp;
+	decompInfo.ranges.clear();
+	decompInfo.decompiledFunction = nullptr;
+
+	INFO_MSG("Selected file: %s\n", decompInfo.outputFile.c_str());
+
+	killDecompilation();
+	saveIdaDatabase();
+	generatePluginDatabase();
+//	decompileInput(decompInfo);
+}
 
 /**
  *
@@ -549,43 +541,48 @@ bool idaapi run(size_t arg)
 		return false;
 	}
 
-//	if (decompInfo.configureDecompilation())
-//	{
-//		return;
-//	}
-//
-//	// ordinary selective decompilation
-//	//
-//	if (arg == 0)
-//	{
+	if (decompInfo.configureDecompilation())
+	{
+		return false;
+	}
+
+	// ordinary selective decompilation
+	//
+	if (arg == 0)
+	{
+		msg("\n=================== RetDec selective decompilation\n\n");
 //		runSelectiveDecompilation();
-//	}
-//	// ordinary full decompilation
-//	//
-//	else if (arg == 1)
-//	{
-//		runAllDecompilation();
-//	}
-//	// only plugin configuration
-//	//
-//	else if (arg == 2)
-//	{
-//		pluginConfigurationMenu(decompInfo);
-//		return;
-//	}
-//	// only run database generation
-//	//
-//	else if (arg == 3)
-//	{
-//		runDatabasegeneration();
-//		return;
-//	}
-//	// selective decompilation used in plugin's regression tests
-//	// forced local decompilation + disabled threads
-//	// function to decompile is selected by "<retdec_select>" string in function's comment
-//	//
-//	else if (arg == 4)
-//	{
+	}
+	// ordinary full decompilation
+	//
+	else if (arg == 1)
+	{
+		msg("\n=================== RetDec full decompilation\n\n");
+		runAllDecompilation();
+	}
+	// only plugin configuration
+	//
+	else if (arg == 2)
+	{
+		msg("\n=================== RetDec config\n\n");
+		pluginConfigurationMenu(decompInfo);
+		return true;
+	}
+	// only run database generation
+	//
+	else if (arg == 3)
+	{
+		msg("\n=================== RetDec DB generation\n\n");
+		generatePluginDatabase();
+		return true;
+	}
+	// selective decompilation used in plugin's regression tests
+	// forced local decompilation + disabled threads
+	// function to decompile is selected by "<retdec_select>" string in function's comment
+	//
+	else if (arg == 4)
+	{
+		msg("\n=================== RetDec selective in tests\n\n");
 //		for (unsigned i = 0; i < get_func_qty(); ++i)
 //		{
 //			func_t *fnc = getn_func(i);
@@ -605,24 +602,26 @@ bool idaapi run(size_t arg)
 //				break;
 //			}
 //		}
-//		return;
-//	}
-//	// full decompilation used in plugin's regression tests
-//	// forced local decompilation + disabled threads
-//	//
-//	else if (arg == 5)
-//	{
+		return true;
+	}
+	// full decompilation used in plugin's regression tests
+	// forced local decompilation + disabled threads
+	//
+	else if (arg == 5)
+	{
+		msg("\n=================== RetDec full in tests\n\n");
 //		decompInfo.setIsUseThreads(false);
 //		runAllDecompilation();
-//		return;
-//	}
-//	else
-//	{
-//		warning("%s version %s cannot handle argument '%d'.\n", decompInfo.pluginName.c_str(), decompInfo.pluginVersion.c_str(), arg);
-//		return;
-//	}
+		return true;
+	}
+	else
+	{
+		warning("%s version %s cannot handle argument '%d'.\n",
+				decompInfo.pluginName.c_str(),
+				decompInfo.pluginVersion.c_str(), arg);
+		return false;
+	}
 
-	msg("\n=================== RetDec run()\n\n");
 	return true;
 }
 
@@ -675,7 +674,7 @@ int idaapi init()
 void idaapi term()
 {
 	msg("\n[RetDec] =========> term()\n");
-//	killDecompilation();
+	killDecompilation();
 }
 
 /**

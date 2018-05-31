@@ -131,12 +131,12 @@ class RdGlobalInfo
 //		const std::string formName  = "RetDec";
 //		TForm *form                 = nullptr;
 //		TCustomControl *viewer      = nullptr;
-//
-//	// One decompilation information.
-//	//
-//	public:
-//		bool isAllDecompilation();
-//		bool isSelectiveDecompilation();
+
+	// One decompilation information.
+	//
+	public:
+		bool isAllDecompilation();
+		bool isSelectiveDecompilation();
 
 	public:
 		std::string decCmd;
@@ -145,19 +145,19 @@ class RdGlobalInfo
 		bool decompRunning          = false;
 		bool decompSuccess          = false;
 		bool decompiledAll          = false;
-//		qthread_t decompThread      = nullptr;
-//		func_t *decompiledFunction  = nullptr;
+		qthread_t decompThread      = nullptr;
+		func_t *decompiledFunction  = nullptr;
 
-//	// Plugin configuration information.
-//	//
-//	public:
-//		bool isDecompileShInSystemPath() const;
-//		bool isDecompileShInSpecifiedPath() const;
-//
-//		bool configureDecompilation();
-//
-//		bool isUseThreads() const;
-//		void setIsUseThreads(bool f);
+	// Plugin configuration information.
+	//
+	public:
+		bool isDecompileShInSystemPath() const;
+		bool isDecompileShInSpecifiedPath() const;
+
+		bool configureDecompilation();
+
+		bool isUseThreads() const;
+		void setIsUseThreads(bool f);
 
 	public:
 		const std::string pluginConfigFileName = "retdec-config.json";
