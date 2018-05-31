@@ -63,7 +63,7 @@ if(NOT MSVC)
 	#
 	#     https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_dual_abi.html
 	#
-	add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+	#add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 endif()
 
 add_subdirectory(deps)

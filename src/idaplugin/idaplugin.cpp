@@ -264,240 +264,265 @@ RdGlobalInfo decompInfo;
 /**
  *
  */
-//bool setInputPath()
-//{
-//	char buff[MAXSTR];
-//
-//	get_root_filename(buff, sizeof(buff));
-//	std::string inName = buff;
-//
-//	get_input_file_path(buff, sizeof(buff));
-//	std::string inPath = buff;
-//
-//	std::string idb = database_idb;
-//	std::string id0 = database_id0;
-//	std::string workDir;
-//	std::string workIdb;
-//	if (!idb.empty())
-//	{
-//		retdec::utils::FilesystemPath fsIdb(idb);
-//		workDir = fsIdb.getParentPath();
-//		workIdb = idb;
-//	}
-//	else if (!id0.empty())
-//	{
-//		retdec::utils::FilesystemPath fsId0(id0);
-//		workDir = fsId0.getParentPath();
-//		workIdb = id0;
-//	}
-//	if (workIdb.empty() || workDir.empty())
-//	{
-//		warning("Cannot decompile this input file, IDB and ID0 are not set.\n");
-//		return false;
-//	}
-//
-//#ifdef OS_WINDOWS
-//	workDir += "\\";
-//#else // Linux
-//	workDir += "/";
-//#endif
-//
-//	if (!retdec::utils::fileExists(inPath))
-//	{
-//		INFO_MSG("Input \"%s\" does not exist, trying to recover ...\n", inPath.c_str());
-//
-//		inPath = workDir + inName;
-//		if (!retdec::utils::fileExists(inPath))
-//		{
-//			INFO_MSG("Input \"%s\" does not exist, asking user to specify the input file ...\n", inPath.c_str());
-//
-//			char *tmp = askfile_cv(              ///< Returns: file name
-//					false,                       ///< int savefile
-//					nullptr,                     ///< const char *default_answer
-//					"Input binary to decompile", ///< const char *format
-//					nullptr                      ///< va_list va
-//			);
-//
-//			if (!tmp)
-//			{
-//				return false;
-//			}
-//			else if (!retdec::utils::fileExists(std::string(tmp)))
-//			{
-//				warning("Cannot decompile this input file, there is no such file: %s\n", tmp);
-//				return false;
-//			}
-//
-//			inPath = tmp;
-//
-//			INFO_MSG("Successfully recovered, using user selected file \"%s\".\n", inPath.c_str());
-//		}
-//		else
-//		{
-//			INFO_MSG("Successfully recovered, using input file \"%s\".\n", inPath.c_str());
-//		}
-//	}
-//	else
-//	{
-//		INFO_MSG("Working on input file \"%s\".\n", inPath.c_str());
-//	}
-//
-//	decompInfo.inputName = inName;
-//	decompInfo.inputPath = inPath;
-//	decompInfo.workDir = workDir;
-//	decompInfo.workIdb = workIdb;
-//
-//	DBG_MSG("Input Path : %s\n", decompInfo.inputPath.c_str());
-//	DBG_MSG("Input Name : %s\n", decompInfo.inputName.c_str());
-//	DBG_MSG("Work dir   : %s\n", decompInfo.workDir.c_str());
-//	DBG_MSG("Work IDB   : %s\n", decompInfo.workIdb.c_str());
-//
-//	return true;
-//}
+bool setInputPath()
+{
+	char buff[MAXSTR];
+
+	get_root_filename(buff, sizeof(buff));
+	std::string inName = buff;
+
+	get_input_file_path(buff, sizeof(buff));
+	std::string inPath = buff;
+
+	std::string idb = get_path(PATH_TYPE_IDB);
+	std::string id0 = get_path(PATH_TYPE_ID0);
+	std::string workDir;
+	std::string workIdb;
+	if (!idb.empty())
+	{
+		retdec::utils::FilesystemPath fsIdb(idb);
+		workDir = fsIdb.getParentPath();
+		workIdb = idb;
+	}
+	else if (!id0.empty())
+	{
+		retdec::utils::FilesystemPath fsId0(id0);
+		workDir = fsId0.getParentPath();
+		workIdb = id0;
+	}
+	if (workIdb.empty() || workDir.empty())
+	{
+		warning("Cannot decompile this input file, IDB and ID0 are not set.\n");
+		return false;
+	}
+
+#ifdef OS_WINDOWS
+	workDir += "\\";
+#else // Linux
+	workDir += "/";
+#endif
+
+	if (!retdec::utils::fileExists(inPath))
+	{
+		INFO_MSG("Input \"%s\" does not exist, trying to recover ...\n",
+				inPath.c_str());
+
+		inPath = workDir + inName;
+		if (!retdec::utils::fileExists(inPath))
+		{
+			INFO_MSG("Input \"%s\" does not exist, asking user to specify the "
+					"input file ...\n",
+					inPath.c_str());
+
+			char *tmp = ask_file(                ///< Returns: file name
+					false,                       ///< bool for_saving
+					nullptr,                     ///< const char *default_answer
+					"Input binary to decompile", ///< const char *format
+					nullptr                      ///< va_list va
+			);
+
+			if (!tmp)
+			{
+				return false;
+			}
+			else if (!retdec::utils::fileExists(std::string(tmp)))
+			{
+				warning("Cannot decompile this input file, there is no such "
+						"file: %s\n",
+						tmp);
+				return false;
+			}
+
+			inPath = tmp;
+
+			INFO_MSG("Successfully recovered, using user selected "
+					"file \"%s\".\n",
+					inPath.c_str());
+		}
+		else
+		{
+			INFO_MSG("Successfully recovered, using input file \"%s\".\n",
+					inPath.c_str());
+		}
+	}
+	else
+	{
+		INFO_MSG("Working on input file \"%s\".\n", inPath.c_str());
+	}
+
+	decompInfo.inputName = inName;
+	decompInfo.inputPath = inPath;
+	decompInfo.workDir = workDir;
+	decompInfo.workIdb = workIdb;
+
+	DBG_MSG("Input Path : %s\n", decompInfo.inputPath.c_str());
+	DBG_MSG("Input Name : %s\n", decompInfo.inputName.c_str());
+	DBG_MSG("Work dir   : %s\n", decompInfo.workDir.c_str());
+	DBG_MSG("Work IDB   : %s\n", decompInfo.workIdb.c_str());
+
+	return true;
+}
 
 /**
  * Perform startup check that determines, if plugin can decompile IDA's input file.
  * @return True if plugin can decompile IDA's input, false otherwise.
  * TODO: do some more checking (architecture, ...).
  */
-//bool canDecompileInput()
-//{
-//	if (!inf.is_32bit())
-//	{
-//		warning("%s version %s can decompile only 32-bit input files.\n", decompInfo.pluginName.c_str(), decompInfo.pluginVersion.c_str());
-//		return false;
-//	}
-//
-//	if (!(inf.filetype == f_BIN || inf.filetype == f_PE || inf.filetype == f_ELF || inf.filetype == f_COFF || inf.filetype == f_HEX))
-//	{
-//		if (inf.filetype == f_LOADER)
-//		{
-//			warning("Custom IDA loader plugin was used.\n"
-//					"Decompilation will be attempted, but:\n"
-//					"1. RetDec idaplugin can not check if the input can be decompiled. Decompilation may fail.\n"
-//					"2. If the custom loader behaves differently than the RetDec loader, decompilation may fail or produce nonsensical result.");
-//		}
-//		else
-//		{
-//			warning("%s version %s cannot decompile this input file (file type = %d).\n", decompInfo.pluginName.c_str(), decompInfo.pluginVersion.c_str(), inf.filetype);
-//			return false;
-//		}
-//	}
-//
-//	if (!setInputPath())
-//	{
-//		return false;
-//	}
-//
-//	decompInfo.mode.clear();
-//	decompInfo.architecture.clear();
-//	decompInfo.endian.clear();
-//	decompInfo.rawEntryPoint = retdec::utils::Address();
-//	decompInfo.rawSectionVma = retdec::utils::Address();
-//
-//	// Check Intel HEX.
-//	//
-//	if (inf.filetype == f_HEX)
-//	{
-//		std::string procName = inf.procName;
-//		if (procName == "mipsr" || procName == "mipsb")
-//		{
-//			decompInfo.architecture = "mips";
-//			decompInfo.endian = "big";
-//		}
-//		else if (procName == "mipsrl" || procName == "mipsl" || procName == "psp")
-//		{
-//			decompInfo.architecture = "mips";
-//			decompInfo.endian = "little";
-//		}
-//		else
-//		{
-//			warning("Intel HEX input file can be decompiled only for one of these {mipsr, mipsb, mipsrl, mipsl, psp} processors, not \"%s\".\n", procName.c_str());
-//			return false;
-//		}
-//	}
-//
-//	// Check BIN (RAW).
-//	//
-//	if (inf.filetype == f_BIN)
-//	{
-//		decompInfo.mode = "raw";
-//
-//		// Section VMA.
-//		//
-//		decompInfo.rawSectionVma = inf.minEA;
-//
-//		// Entry point.
-//		//
-//		if (inf.beginEA != BADADDR)
-//		{
-//			decompInfo.rawEntryPoint = inf.beginEA;
-//		}
-//		else
-//		{
-//			decompInfo.rawEntryPoint = decompInfo.rawSectionVma;
-//		}
-//
-//		// Architecture + endian.
-//		//
-//		std::string procName = inf.procName;
-//		if (procName == "mipsr" || procName == "mipsb")
-//		{
-//			decompInfo.architecture = "mips";
-//			decompInfo.endian = "big";
-//		}
-//		else if (procName == "mipsrl" || procName == "mipsl" || procName == "psp")
-//		{
-//			decompInfo.architecture = "mips";
-//			decompInfo.endian = "little";
-//		}
-//		else if (procName == "ARM")
-//		{
-//			decompInfo.architecture = "arm";
-//			decompInfo.endian = "little";
-//		}
-//		else if (procName == "ARMB")
-//		{
-//			decompInfo.architecture = "arm";
-//			decompInfo.endian = "big";
-//		}
-//		else if (procName == "PPCL")
-//		{
-//			decompInfo.architecture = "powerpc";
-//			decompInfo.endian = "little";
-//		}
-//		else if (procName == "PPC")
-//		{
-//			decompInfo.architecture = "powerpc";
-//			decompInfo.endian = "big";
-//		}
-//		else if (procName == "80386p"
-//				|| procName == "80386r"
-//				|| procName == "80486p"
-//				|| procName == "80486r"
-//				|| procName == "80586p"
-//				|| procName == "80586r"
-//				|| procName == "80686p"
-//				|| procName == "p2"
-//				|| procName == "p3"
-//				|| procName == "p4"
-//				|| procName == "metapc")
-//		{
-//			decompInfo.architecture = "x86";
-//			decompInfo.endian = "little";
-//		}
-//		else
-//		{
-//			warning("Binary input file can be decompiled only for one of these "
-//					"{mipsr, mipsb, mipsrl, mipsl, psp, ARM, ARMB, PPCL, PPC, 80386p, "
-//					"80386r, 80486p, 80486r, 80586p, 80586r, 80686p, p2, p3, p4} "
-//					"processors, not \"%s\".\n", procName.c_str());
-//			return false;
-//		}
-//	}
-//
-//	return true;
-//}
+bool canDecompileInput()
+{
+	if (!inf.is_32bit())
+	{
+		warning("%s version %s can decompile only 32-bit input files.\n",
+				decompInfo.pluginName.c_str(),
+				decompInfo.pluginVersion.c_str());
+		return false;
+	}
+
+	if (!(inf.filetype == f_BIN
+			|| inf.filetype == f_PE
+			|| inf.filetype == f_ELF
+			|| inf.filetype == f_COFF
+			|| inf.filetype == f_HEX))
+	{
+		if (inf.filetype == f_LOADER)
+		{
+			warning("Custom IDA loader plugin was used.\n"
+					"Decompilation will be attempted, but:\n"
+					"1. RetDec idaplugin can not check if the input can be "
+					"decompiled. Decompilation may fail.\n"
+					"2. If the custom loader behaves differently than the RetDec "
+					"loader, decompilation may fail or produce nonsensical result.");
+		}
+		else
+		{
+			warning("%s version %s cannot decompile this input file "
+					"(file type = %d).\n",
+					decompInfo.pluginName.c_str(),
+					decompInfo.pluginVersion.c_str(),
+					inf.filetype);
+			return false;
+		}
+	}
+
+	if (!setInputPath())
+	{
+		return false;
+	}
+
+	decompInfo.mode.clear();
+	decompInfo.architecture.clear();
+	decompInfo.endian.clear();
+	decompInfo.rawEntryPoint = retdec::utils::Address();
+	decompInfo.rawSectionVma = retdec::utils::Address();
+
+	// Check Intel HEX.
+	//
+	if (inf.filetype == f_HEX)
+	{
+		std::string procName = inf.procname;
+		if (procName == "mipsr" || procName == "mipsb")
+		{
+			decompInfo.architecture = "mips";
+			decompInfo.endian = "big";
+		}
+		else if (procName == "mipsrl"
+				|| procName == "mipsl"
+				|| procName == "psp")
+		{
+			decompInfo.architecture = "mips";
+			decompInfo.endian = "little";
+		}
+		else
+		{
+			warning("Intel HEX input file can be decompiled only for one of "
+					"these {mipsr, mipsb, mipsrl, mipsl, psp} processors, "
+					"not \"%s\".\n",
+					procName.c_str());
+			return false;
+		}
+	}
+
+	// Check BIN (RAW).
+	//
+	if (inf.filetype == f_BIN)
+	{
+		decompInfo.mode = "raw";
+
+		// Section VMA.
+		//
+		decompInfo.rawSectionVma = inf.min_ea;
+
+		// Entry point.
+		//
+		if (inf.start_ea != BADADDR)
+		{
+			decompInfo.rawEntryPoint = inf.start_ea;
+		}
+		else
+		{
+			decompInfo.rawEntryPoint = decompInfo.rawSectionVma;
+		}
+
+		// Architecture + endian.
+		//
+		std::string procName = inf.procname;
+		if (procName == "mipsr" || procName == "mipsb")
+		{
+			decompInfo.architecture = "mips";
+			decompInfo.endian = "big";
+		}
+		else if (procName == "mipsrl" || procName == "mipsl" || procName == "psp")
+		{
+			decompInfo.architecture = "mips";
+			decompInfo.endian = "little";
+		}
+		else if (procName == "ARM")
+		{
+			decompInfo.architecture = "arm";
+			decompInfo.endian = "little";
+		}
+		else if (procName == "ARMB")
+		{
+			decompInfo.architecture = "arm";
+			decompInfo.endian = "big";
+		}
+		else if (procName == "PPCL")
+		{
+			decompInfo.architecture = "powerpc";
+			decompInfo.endian = "little";
+		}
+		else if (procName == "PPC")
+		{
+			decompInfo.architecture = "powerpc";
+			decompInfo.endian = "big";
+		}
+		else if (procName == "80386p"
+				|| procName == "80386r"
+				|| procName == "80486p"
+				|| procName == "80486r"
+				|| procName == "80586p"
+				|| procName == "80586r"
+				|| procName == "80686p"
+				|| procName == "p2"
+				|| procName == "p3"
+				|| procName == "p4"
+				|| procName == "metapc")
+		{
+			decompInfo.architecture = "x86";
+			decompInfo.endian = "little";
+		}
+		else
+		{
+			warning("Binary input file can be decompiled only for one of these "
+					"{mipsr, mipsb, mipsrl, mipsl, psp, ARM, ARMB, PPCL, PPC, 80386p, "
+					"80386r, 80486p, 80486r, 80586p, 80586r, 80686p, p2, p3, p4} "
+					"processors, not \"%s\".\n", procName.c_str());
+			return false;
+		}
+	}
+
+	return true;
+}
 
 } // namespace idaplugin
 
@@ -513,19 +538,17 @@ using namespace idaplugin;
  */
 bool idaapi run(size_t arg)
 {
-	msg("\n[RetDec] =========> run()\n");
+	if (!auto_is_ok())
+	{
+		INFO_MSG("RetDec plugin cannot run because the initial autoanalysis has not been finished.\n");
+		return false;
+	}
 
-//	if (!autoIsOk())
-//	{
-//		INFO_MSG("RetDec plugin cannot run because the initial autoanalysis has not been finished.\n");
-//		return;
-//	}
-//
-//	if (!canDecompileInput())
-//	{
-//		return;
-//	}
-//
+	if (!canDecompileInput())
+	{
+		return false;
+	}
+
 //	if (decompInfo.configureDecompilation())
 //	{
 //		return;
@@ -599,6 +622,7 @@ bool idaapi run(size_t arg)
 //		return;
 //	}
 
+	msg("\n=================== RetDec run()\n\n");
 	return true;
 }
 
@@ -608,45 +632,39 @@ bool idaapi run(size_t arg)
  */
 int idaapi init()
 {
-	msg("\n[RetDec] =========> init()\n");
+	static bool inited = false;
+	if (inited)
+	{
+		return PLUGIN_KEEP;
+	}
 
-//	static bool inited = false;
-//	if (inited)
-//	{
-//		return PLUGIN_KEEP;
-//	}
-//
-//	decompInfo.pluginRegNumber = register_addon(&decompInfo.pluginInfo);
-//	if (decompInfo.pluginRegNumber == -1)
-//	{
-//		warning("%s version %s failed to register.\n", decompInfo.pluginName.c_str(), decompInfo.pluginVersion.c_str());
-//		return PLUGIN_SKIP;
-//	}
-//	else
-//	{
-//		INFO_MSG("%s version %s registered OK\n", decompInfo.pluginName.c_str(), decompInfo.pluginVersion.c_str());
-//	}
-//
-//	readConfigFile(decompInfo);
-//
-//	add_menu_item(
-//			"Options/BinaryPaths",
-//			"RetDec plugin options...",
-//			nullptr,
-//			SETMENU_APP,
-//			pluginConfigurationMenuCallBack,
-//			&decompInfo);
-//	add_menu_item(
-//			"Options/RetDecPluginOptions",
-//			"-",
-//			nullptr,
-//			SETMENU_INS,
-//			nullptr,
-//			nullptr);
-//
-//	INFO_MSG("%s version %s loaded OK\n", decompInfo.pluginName.c_str(), decompInfo.pluginVersion.c_str());
-//
-//	inited = true;
+	decompInfo.pluginRegNumber = register_addon(&decompInfo.pluginInfo);
+	if (decompInfo.pluginRegNumber < 0)
+	{
+		warning("%s version %s failed to register.\n",
+				decompInfo.pluginName.c_str(),
+				decompInfo.pluginVersion.c_str());
+		return PLUGIN_SKIP;
+	}
+	else
+	{
+		INFO_MSG("%s version %s registered OK\n",
+				decompInfo.pluginName.c_str(),
+				decompInfo.pluginVersion.c_str());
+	}
+
+	readConfigFile(decompInfo);
+
+	if (addConfigurationMenuOption(decompInfo))
+	{
+		return PLUGIN_SKIP;
+	}
+
+	INFO_MSG("%s version %s loaded OK\n",
+			decompInfo.pluginName.c_str(),
+			decompInfo.pluginVersion.c_str());
+
+	inited = true;
 	return PLUGIN_KEEP;
 }
 
