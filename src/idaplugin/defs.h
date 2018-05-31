@@ -125,12 +125,12 @@ class RdGlobalInfo
 		std::list<func_t*> navigationList;
 		std::list<func_t*>::iterator navigationActual;
 
-//	// One viewer information.
-//	//
-//	public:
-//		const std::string formName  = "RetDec";
-//		TForm *form                 = nullptr;
-//		TCustomControl *viewer      = nullptr;
+	// One viewer information.
+	//
+	public:
+		const std::string viewerName = "RetDec";
+		TWidget* custViewer = nullptr;
+		TWidget* codeViewer = nullptr;
 
 	// One decompilation information.
 	//

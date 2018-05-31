@@ -226,7 +226,8 @@ bool addConfigurationMenuOption(RdGlobalInfo& rdgi)
 			optionsActionLabel,
 			&show_options_ah,
 			nullptr,
-			NULL, -1);
+			NULL,
+			-1);
 
 	if (!register_action(desc)
 			|| !attach_action_to_menu(
@@ -238,7 +239,7 @@ bool addConfigurationMenuOption(RdGlobalInfo& rdgi)
 					"-",
 					SETMENU_APP))
 	{
-		msg("Failed to register Options menu item for RetDec plugin!");
+		ERROR_MSG("Failed to register Options menu item for RetDec plugin!");
 		return true;
 	}
 

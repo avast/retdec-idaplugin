@@ -92,89 +92,91 @@ static int idaapi threadFunc(void* ud)
 	INFO_MSG("Local decompilation ...\n");
 	localDecompilation(di);
 
-//	if (di->decompSuccess && di->isSelectiveDecompilation())
-//	{
-//		showDecompiledCode(di);
-//	}
+	if (di->decompSuccess && di->isSelectiveDecompilation())
+	{
+		showDecompiledCode(di);
+	}
 
 	di->outputFile.clear();
 	di->decompRunning = false;
 	return 0;
 }
 
-///**
-// * Create ranges to decompile from the provided function.
-// * All functions called and all function calling the selected function
-// * are added to selected ranges -> all of them are decoded and decompiled.
-// * @param[out] decompInfo Plugin's global information.
-// * @param      fnc        Function selected for decompilation.
-// */
-//void createRangesFromSelectedFunction(RdGlobalInfo &decompInfo, func_t *fnc)
-//{
-//	std::set<ea_t> selectedFncs;
-//	std::stringstream ss;
-//
-//	ss << "0x" << std::hex << fnc->startEA << "-" << "0x" << std::hex << (fnc->endEA-1);
-//	selectedFncs.insert(fnc->startEA);
-//
-//	// Experimental -- decompile all functions called from this one.
-//	//
-//	func_item_iterator_t fii;
-//	for ( bool ok=fii.set(fnc); ok; ok=fii.next_code() )
-//	{
-//		ea_t ea = fii.current();
-//
-//		xrefblk_t xb;
-//		for ( bool ok=xb.first_from(ea, XREF_ALL); ok; ok=xb.next_from() )
-//		{
-//			if (xb.iscode == 0) // first data reference
-//				break;
-//
-//			if (xb.type == fl_CF || xb.type == fl_CN)
-//			{
-//				func_t *called = get_func(xb.to);
-//				if (called && selectedFncs.find(called->startEA) == selectedFncs.end())
-//				{
-//					selectedFncs.insert(called->startEA);
-//					ss << ",0x" << std::hex << called->startEA << "-" << "0x" << std::hex << (called->endEA-1);
-//				}
-//			}
-//		}
-//	}
-//
-//	// Experimental -- decompile all functions calling this one.
-//	//
-//	for (unsigned i = 0; i < get_func_qty(); ++i)
-//	{
-//		func_t *caller = getn_func(i);
-//
-//		func_item_iterator_t fii;
-//		for ( bool ok=fii.set(caller); ok; ok=fii.next_code() )
-//		{
-//			ea_t ea = fii.current();
-//
-//			xrefblk_t xb;
-//			for ( bool ok=xb.first_from(ea, XREF_ALL); ok; ok=xb.next_from() )
-//			{
-//				if (xb.iscode == 0) // first data reference
-//					break;
-//
-//				if (xb.type == fl_CF || xb.type == fl_CN)
-//				{
-//					func_t *called = get_func(xb.to);
-//					if (called == fnc && selectedFncs.find(caller->startEA) == selectedFncs.end())
-//					{
-//						selectedFncs.insert(caller->startEA);
-//						ss << ",0x" << std::hex << caller->startEA << "-" << "0x" << std::hex << (caller->endEA-1);
-//					}
-//				}
-//			}
-//		}
-//	}
-//
-//	decompInfo.ranges = ss.str();
-//	decompInfo.decompiledFunction = fnc;
-//}
+/**
+ * Create ranges to decompile from the provided function.
+ * All functions called and all function calling the selected function
+ * are added to selected ranges -> all of them are decoded and decompiled.
+ * @param[out] decompInfo Plugin's global information.
+ * @param      fnc        Function selected for decompilation.
+ */
+void createRangesFromSelectedFunction(RdGlobalInfo& decompInfo, func_t* fnc)
+{
+	std::set<ea_t> selectedFncs;
+	std::stringstream ss;
+
+	ss << "0x" << std::hex << fnc->start_ea << "-" << "0x" << std::hex << (fnc->end_ea-1);
+	selectedFncs.insert(fnc->start_ea);
+
+	// Experimental -- decompile all functions called from this one.
+	//
+	func_item_iterator_t fii;
+	for (bool ok=fii.set(fnc); ok; ok=fii.next_code())
+	{
+		ea_t ea = fii.current();
+
+		xrefblk_t xb;
+		for ( bool ok=xb.first_from(ea, XREF_ALL); ok; ok=xb.next_from() )
+		{
+			if (xb.iscode == 0) // first data reference
+				break;
+
+			if (xb.type == fl_CF || xb.type == fl_CN)
+			{
+				func_t *called = get_func(xb.to);
+				if (called && selectedFncs.find(called->start_ea) == selectedFncs.end())
+				{
+					selectedFncs.insert(called->start_ea);
+					ss << ",0x" << std::hex << called->start_ea << "-"
+							<< "0x" << std::hex << (called->end_ea-1);
+				}
+			}
+		}
+	}
+
+	// Experimental -- decompile all functions calling this one.
+	//
+	for (unsigned i = 0; i < get_func_qty(); ++i)
+	{
+		func_t *caller = getn_func(i);
+
+		func_item_iterator_t fii;
+		for ( bool ok=fii.set(caller); ok; ok=fii.next_code() )
+		{
+			ea_t ea = fii.current();
+
+			xrefblk_t xb;
+			for ( bool ok=xb.first_from(ea, XREF_ALL); ok; ok=xb.next_from() )
+			{
+				if (xb.iscode == 0) // first data reference
+					break;
+
+				if (xb.type == fl_CF || xb.type == fl_CN)
+				{
+					func_t *called = get_func(xb.to);
+					if (called == fnc && selectedFncs.find(caller->start_ea) == selectedFncs.end())
+					{
+						selectedFncs.insert(caller->start_ea);
+						ss << ",0x" << std::hex << caller->start_ea << "-"
+								<< "0x" << std::hex << (caller->end_ea-1);
+					}
+				}
+			}
+		}
+	}
+
+	decompInfo.ranges = ss.str();
+	decompInfo.decompiledFunction = fnc;
+}
 
 /**
  * Decompile IDA's input.

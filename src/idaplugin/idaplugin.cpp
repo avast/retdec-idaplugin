@@ -82,145 +82,156 @@ void generatePluginDatabase()
  * Find out if input file is relocatable -- object file.
  * @return @c True if file relocatable, @c false otherwise.
  */
-//bool isRelocatable()
-//{
-//	if (inf.filetype == f_COFF && inf.beginEA == BADADDR)
-//	{
-//		return true;
-//	}
-//	else if (inf.filetype == f_ELF)
-//	{
-//		std::ifstream infile(decompInfo.inputPath, std::ios::binary);
-//		if (infile.good())
-//		{
-//			std::size_t e_type_offset = 0x10;
-//			infile.seekg(e_type_offset, std::ios::beg);
-//
-//			// relocatable -- constant 0x1 at <0x10-0x11>
-//			// little endian -- 0x01 0x00
-//			// big endian -- 0x00 0x01
-//			char b1 = 0;
-//			char b2 = 0;
-//			if (infile.get(b1))
-//			{
-//				if (infile.get(b2))
-//				{
-//					if (std::size_t(b1) + std::size_t(b2) == 1)
-//					{
-//						return true;
-//					}
-//				}
-//			}
-//		}
-//	}
-//
-//	// f_BIN || f_PE || f_HEX || other
-//	return false;
-//}
+bool isRelocatable()
+{
+	if (inf.filetype == f_COFF && inf.start_ea == BADADDR)
+	{
+		return true;
+	}
+	else if (inf.filetype == f_ELF)
+	{
+		std::ifstream infile(decompInfo.inputPath, std::ios::binary);
+		if (infile.good())
+		{
+			std::size_t e_type_offset = 0x10;
+			infile.seekg(e_type_offset, std::ios::beg);
+
+			// relocatable -- constant 0x1 at <0x10-0x11>
+			// little endian -- 0x01 0x00
+			// big endian -- 0x00 0x01
+			char b1 = 0;
+			char b2 = 0;
+			if (infile.get(b1))
+			{
+				if (infile.get(b2))
+				{
+					if (std::size_t(b1) + std::size_t(b2) == 1)
+					{
+						return true;
+					}
+				}
+			}
+		}
+	}
+
+	// f_BIN || f_PE || f_HEX || other
+	return false;
+}
 
 /**
  * Decompile only provided function or if nothing provided then the current function under focus.
  * @param fnc2decomp Function to decompile.
  * @param force      If @c true, decompilation is always performed.
  */
-//void runSelectiveDecompilation(func_t *fnc2decomp = nullptr, bool force = false)
-//{
-//	if (isRelocatable() && inf.minEA != 0)
-//	{
-//		warning("%s version %s can selectively decompile only relocatable objects loaded at 0x0.\n"
-//				"Rebase the program to 0x0 or use full decompilation or our web interface at: %s",
-//				decompInfo.pluginName.c_str(), decompInfo.pluginVersion.c_str(), decompInfo.pluginURL.c_str());
-//		return;
-//	}
-//
-//	// Decompilation triggered by double click.
-//	//
-//	if (fnc2decomp)
-//	{
-//		decompInfo.navigationList.erase(++decompInfo.navigationActual, decompInfo.navigationList.end());
-//		decompInfo.navigationList.push_back( fnc2decomp );
-//		decompInfo.navigationActual = decompInfo.navigationList.end();
-//		decompInfo.navigationActual--;
-//
-//		// Show existing function.
-//		//
-//		auto fit = decompInfo.fnc2code.find(fnc2decomp);
-//		if (!force && fit != decompInfo.fnc2code.end())
-//		{
-//			decompInfo.decompiledFunction = fnc2decomp;
-//
-//			char fncName[MAXSTR];
-//			get_func_name(fnc2decomp->startEA, fncName, sizeof(fncName));
-//			INFO_MSG("Show already decompiled function: %s @ %a\n", fncName, fnc2decomp->startEA);
-//
-//			qthread_create(showDecompiledCode, static_cast<void*>(&decompInfo));
-//
-//			return;
-//		}
-//		// Decompile new function.
-//		//
-//		else
-//		{
-//			createRangesFromSelectedFunction(decompInfo, fnc2decomp);
-//		}
-//	}
-//	// Decompilation run from our viewer.
-//	//
-//	else if (get_current_viewer() == decompInfo.viewer && get_current_tform() == decompInfo.form)
-//	{
-//		// Re-decompile current function.
-//		//
-//		if (decompInfo.decompiledFunction)
-//		{
-//			createRangesFromSelectedFunction(decompInfo, decompInfo.decompiledFunction);
-//
-//			decompInfo.navigationList.erase(decompInfo.navigationActual, decompInfo.navigationList.end());
-//			decompInfo.navigationList.push_back( decompInfo.decompiledFunction );
-//			decompInfo.navigationActual = decompInfo.navigationList.end();
-//			decompInfo.navigationActual--;
-//		}
-//		// No current function -> something went wrong.
-//		//
-//		else
-//		{
-//			return;
-//		}
-//	}
-//	// Decompilation run from some other window.
-//	//
-//	else
-//	{
-//		ea_t addr = get_screen_ea();
-//		func_t *fnc = get_func(addr);
-//
-//		// Decompilation run from IDA disasm window (or some other window that allows it).
-//		//
-//		if (fnc)
-//		{
-//			createRangesFromSelectedFunction(decompInfo, fnc);
-//			decompInfo.decompiledFunction = fnc;
-//
-//			decompInfo.navigationList.clear();
-//			decompInfo.navigationList.push_back( decompInfo.decompiledFunction );
-//			decompInfo.navigationActual = decompInfo.navigationList.end();
-//			decompInfo.navigationActual--;
-//		}
-//		// Bad window or bad position in disasm code.
-//		//
-//		else
-//		{
-//			warning("Function must be selected by the cursor.\n");
-//			return;
-//		}
-//	}
-//
-//	INFO_MSG("Running retargetable decompiler plugin:\n");
-//
-//	killDecompilation();
-//	saveIdaDatabase();
-//	generatePluginDatabase();
-//	decompileInput(decompInfo);
-//}
+void runSelectiveDecompilation(func_t *fnc2decomp = nullptr, bool force = false)
+{
+	if (isRelocatable() && inf.min_ea != 0)
+	{
+		warning("%s version %s can selectively decompile only relocatable objects loaded at 0x0.\n"
+				"Rebase the program to 0x0 or use full decompilation or our web interface at: %s",
+				decompInfo.pluginName.c_str(),
+				decompInfo.pluginVersion.c_str(),
+				decompInfo.pluginURL.c_str());
+		return;
+	}
+
+	// Decompilation triggered by double click.
+	//
+	if (fnc2decomp)
+	{
+		decompInfo.navigationList.erase(
+				++decompInfo.navigationActual,
+				decompInfo.navigationList.end());
+		decompInfo.navigationList.push_back(fnc2decomp);
+		decompInfo.navigationActual = decompInfo.navigationList.end();
+		decompInfo.navigationActual--;
+
+		// Show existing function.
+		//
+		auto fit = decompInfo.fnc2code.find(fnc2decomp);
+		if (!force && fit != decompInfo.fnc2code.end())
+		{
+			decompInfo.decompiledFunction = fnc2decomp;
+
+			qstring fncName;
+			get_func_name(&fncName, fnc2decomp->start_ea);
+			INFO_MSG("Show already decompiled function: %s @ %a\n",
+					fncName,
+					fnc2decomp->start_ea);
+
+			qthread_create(showDecompiledCode, static_cast<void*>(&decompInfo));
+
+			return;
+		}
+		// Decompile new function.
+		//
+		else
+		{
+			createRangesFromSelectedFunction(decompInfo, fnc2decomp);
+		}
+	}
+	// Decompilation run from our viewer.
+	//
+	else if (get_current_viewer() == decompInfo.custViewer
+			|| get_current_viewer() == decompInfo.codeViewer)
+	{
+		// Re-decompile current function.
+		//
+		if (decompInfo.decompiledFunction)
+		{
+			createRangesFromSelectedFunction(
+					decompInfo,
+					decompInfo.decompiledFunction);
+
+			decompInfo.navigationList.erase(
+					decompInfo.navigationActual,
+					decompInfo.navigationList.end());
+			decompInfo.navigationList.push_back(decompInfo.decompiledFunction);
+			decompInfo.navigationActual = decompInfo.navigationList.end();
+			decompInfo.navigationActual--;
+		}
+		// No current function -> something went wrong.
+		//
+		else
+		{
+			return;
+		}
+	}
+	// Decompilation run from some other window.
+	//
+	else
+	{
+		ea_t addr = get_screen_ea();
+		func_t *fnc = get_func(addr);
+
+		// Decompilation run from IDA disasm window (or some other window that allows it).
+		//
+		if (fnc)
+		{
+			createRangesFromSelectedFunction(decompInfo, fnc);
+			decompInfo.decompiledFunction = fnc;
+
+			decompInfo.navigationList.clear();
+			decompInfo.navigationList.push_back( decompInfo.decompiledFunction );
+			decompInfo.navigationActual = decompInfo.navigationList.end();
+			decompInfo.navigationActual--;
+		}
+		// Bad window or bad position in disasm code.
+		//
+		else
+		{
+			warning("Function must be selected by the cursor.\n");
+			return;
+		}
+	}
+
+	INFO_MSG("Running retargetable decompiler plugin:\n");
+
+	killDecompilation();
+	saveIdaDatabase();
+	generatePluginDatabase();
+	decompileInput(decompInfo);
+}
 
 /**
  * Decompile everything, but do not show it in viewer, instead dump it into file.
@@ -546,25 +557,29 @@ bool idaapi run(size_t arg)
 		return false;
 	}
 
+	static bool hooked = false;
+	if (!hooked)
+	{
+		hook_to_notification_point(HT_UI, ui_callback, &decompInfo);
+//		hooked = true;
+	}
+
 	// ordinary selective decompilation
 	//
 	if (arg == 0)
 	{
-		msg("\n=================== RetDec selective decompilation\n\n");
-//		runSelectiveDecompilation();
+		runSelectiveDecompilation();
 	}
 	// ordinary full decompilation
 	//
 	else if (arg == 1)
 	{
-		msg("\n=================== RetDec full decompilation\n\n");
 		runAllDecompilation();
 	}
 	// only plugin configuration
 	//
 	else if (arg == 2)
 	{
-		msg("\n=================== RetDec config\n\n");
 		pluginConfigurationMenu(decompInfo);
 		return true;
 	}
@@ -572,7 +587,6 @@ bool idaapi run(size_t arg)
 	//
 	else if (arg == 3)
 	{
-		msg("\n=================== RetDec DB generation\n\n");
 		generatePluginDatabase();
 		return true;
 	}
@@ -582,26 +596,24 @@ bool idaapi run(size_t arg)
 	//
 	else if (arg == 4)
 	{
-		msg("\n=================== RetDec selective in tests\n\n");
-//		for (unsigned i = 0; i < get_func_qty(); ++i)
-//		{
-//			func_t *fnc = getn_func(i);
-//			auto* c = get_func_cmt(fnc, false);
-//			if (c == nullptr)
-//			{
-//				continue;
-//			}
-//			std::string cmt = c;
-//			qfree(static_cast<void*>(c));
-//
-//			if (cmt.find("<retdec_select>") != std::string::npos)
-//			{
-//				decompInfo.outputFile = decompInfo.inputPath + ".c";
-//				decompInfo.setIsUseThreads(false);
-//				runSelectiveDecompilation(fnc);
-//				break;
-//			}
-//		}
+		for (unsigned i = 0; i < get_func_qty(); ++i)
+		{
+			qstring qCmt;
+			func_t *fnc = getn_func(i);
+			if (get_func_cmt(&qCmt, fnc, false) <= 0)
+			{
+				continue;
+			}
+
+			std::string cmt = qCmt.c_str();;
+			if (cmt.find("<retdec_select>") != std::string::npos)
+			{
+				decompInfo.outputFile = decompInfo.inputPath + ".c";
+				decompInfo.setIsUseThreads(false);
+				runSelectiveDecompilation(fnc);
+				break;
+			}
+		}
 		return true;
 	}
 	// full decompilation used in plugin's regression tests
@@ -609,9 +621,8 @@ bool idaapi run(size_t arg)
 	//
 	else if (arg == 5)
 	{
-		msg("\n=================== RetDec full in tests\n\n");
-//		decompInfo.setIsUseThreads(false);
-//		runAllDecompilation();
+		decompInfo.setIsUseThreads(false);
+		runAllDecompilation();
 		return true;
 	}
 	else
@@ -673,8 +684,8 @@ int idaapi init()
  */
 void idaapi term()
 {
-	msg("\n[RetDec] =========> term()\n");
 	killDecompilation();
+	unhook_from_notification_point(HT_UI, ui_callback);
 }
 
 /**
