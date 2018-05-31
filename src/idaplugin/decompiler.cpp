@@ -1,103 +1,107 @@
-///**
-// * @file idaplugin/decompiler.cpp
-// * @brief Module contains classes/methods dealing with program decompilation.
-// * @copyright (c) 2017 Avast Software, licensed under the MIT license
-// */
-//
-//#include <algorithm>
-//#include <cstdlib>
-//#include <fstream>
-//#include <iostream>
-//#include <set>
-//#include <sstream>
-//
-//#include "retdec/utils/os.h"
-//#include "code_viewer.h"
-//#include "decompiler.h"
-//#include "plugin_config.h"
-//
-//using namespace retdec;
-//
-//namespace idaplugin {
-//
-///**
-// * Decompile locally on work station.
-// * Working RetDec must be installed on the station.
-// * @param di Plugin's global information.
-// */
-//static void idaapi localDecompilation(RdGlobalInfo *di)
-//{
-//	auto tmp = di->decCmd;
-//	std::replace(tmp.begin(), tmp.end(), ' ', '\n');
-//	INFO_MSG("Decompilation command: %s\n", tmp.c_str());
-//	INFO_MSG("Running the decompilation command ...\n");
-//
-//	// Do NOT use call_system() because it prevents us to kill the run program
-//	// by killing IDA. This is needed in, e.g., regression tests (timeout
-//	// handling). Instead, use std::system(), which works as expected.
-//	int decRet = std::system(di->decCmd.c_str());
-//	if (decRet != 0)
-//	{
-//		warning("std::system(%s) failed with error code %d\n", di->decCmd.c_str(), decRet);
-//		return;
-//	}
-//
-//	// Get decompiled and colored file content.
-//	//
-//	std::ifstream decFile;
-//	std::string decName;
-//
-//	if (!di->outputFile.empty())
-//	{
-//		decName = di->outputFile;
-//	}
-//	else
-//	{
-//		decName = di->inputPath + ".c";
-//	}
-//	decFile.open( decName.c_str() );
-//
-//	if (!decFile.is_open())
-//	{
-//		warning("Loading of output C file FAILED.\n");
-//		di->decompSuccess = false;
-//		return;
-//	}
-//
-//	INFO_MSG("Decompiled file: %s\n", decName.c_str());
-//
-//	if (di->isSelectiveDecompilation())
-//	{
-//		std::string code((std::istreambuf_iterator<char>(decFile)),std::istreambuf_iterator<char>());
-//		di->fnc2code[di->decompiledFunction].code = code;
-//	}
-//
-//	decFile.close();
-//	di->decompSuccess = true;
-//}
-//
-///**
-// * Thread function, it runs the decompilation and displays decompiled code.
-// * @param ud Plugin's global information.
-// */
-//static int idaapi threadFunc(void *ud)
-//{
-//	RdGlobalInfo *di = static_cast<RdGlobalInfo*>(ud);
-//	di->decompRunning = true;
-//
-//	INFO_MSG("Local decompilation ...\n");
-//	localDecompilation(di);
-//
+/**
+ * @file idaplugin/decompiler.cpp
+ * @brief Module contains classes/methods dealing with program decompilation.
+ * @copyright (c) 2017 Avast Software, licensed under the MIT license
+ */
+
+#include <algorithm>
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
+#include <set>
+#include <sstream>
+
+#include "retdec/utils/os.h"
+#include "code_viewer.h"
+#include "decompiler.h"
+#include "plugin_config.h"
+
+using namespace retdec;
+
+namespace idaplugin {
+
+/**
+ * Decompile locally on work station.
+ * Working RetDec must be installed on the station.
+ * @param di Plugin's global information.
+ */
+static void idaapi localDecompilation(RdGlobalInfo *di)
+{
+	auto tmp = di->decCmd;
+	std::replace(tmp.begin(), tmp.end(), ' ', '\n');
+	INFO_MSG("Decompilation command: %s\n", tmp.c_str());
+	INFO_MSG("Running the decompilation command ...\n");
+
+	// Do NOT use call_system() because it prevents us to kill the run program
+	// by killing IDA. This is needed in, e.g., regression tests (timeout
+	// handling). Instead, use std::system(), which works as expected.
+	int decRet = std::system(di->decCmd.c_str());
+	if (decRet != 0)
+	{
+		warning("std::system(%s) failed with error code %d\n",
+				di->decCmd.c_str(),
+				decRet);
+		return;
+	}
+
+	// Get decompiled and colored file content.
+	//
+	std::ifstream decFile;
+	std::string decName;
+
+	if (!di->outputFile.empty())
+	{
+		decName = di->outputFile;
+	}
+	else
+	{
+		decName = di->inputPath + ".c";
+	}
+	decFile.open( decName.c_str() );
+
+	if (!decFile.is_open())
+	{
+		warning("Loading of output C file FAILED.\n");
+		di->decompSuccess = false;
+		return;
+	}
+
+	INFO_MSG("Decompiled file: %s\n", decName.c_str());
+
+	if (di->isSelectiveDecompilation())
+	{
+		std::string code(
+				(std::istreambuf_iterator<char>(decFile)),
+				std::istreambuf_iterator<char>());
+		di->fnc2code[di->decompiledFunction].code = code;
+	}
+
+	decFile.close();
+	di->decompSuccess = true;
+}
+
+/**
+ * Thread function, it runs the decompilation and displays decompiled code.
+ * @param ud Plugin's global information.
+ */
+static int idaapi threadFunc(void* ud)
+{
+	RdGlobalInfo* di = static_cast<RdGlobalInfo*>(ud);
+	di->decompRunning = true;
+
+	INFO_MSG("Local decompilation ...\n");
+	localDecompilation(di);
+
 //	if (di->decompSuccess && di->isSelectiveDecompilation())
 //	{
 //		showDecompiledCode(di);
 //	}
-//
-//	di->outputFile.clear();
-//	di->decompRunning = false;
-//	return 0;
-//}
-//
+
+	di->outputFile.clear();
+	di->decompRunning = false;
+	return 0;
+}
+
 ///**
 // * Create ranges to decompile from the provided function.
 // * All functions called and all function calling the selected function
@@ -171,72 +175,72 @@
 //	decompInfo.ranges = ss.str();
 //	decompInfo.decompiledFunction = fnc;
 //}
-//
-///**
-// * Decompile IDA's input.
-// * @param decompInfo Plugin's global information.
-// */
-//void decompileInput(RdGlobalInfo &decompInfo)
-//{
-//	INFO_MSG("Decompile input ...\n");
-//
-//	// Construct decompiler call command.
-//	//
-//	decompInfo.decCmd = "";
-//#ifdef OS_WINDOWS
-//	// On Windows, shell scripts have to be run through 'sh'; otherwise, they
-//	// are not run through Bash, which causes us problems.
-//	decompInfo.decCmd += "sh ";
-//#endif
-//	decompInfo.decCmd += "'" + decompInfo.decompilationShCmd + "' '" + decompInfo.inputPath;
-//	decompInfo.decCmd += "' --config='" + decompInfo.dbFile + "'";
-//
-//	if (!decompInfo.mode.empty())
-//	{
-//		decompInfo.decCmd += " -m " + decompInfo.mode + " ";
-//	}
-//	if (!decompInfo.architecture.empty())
-//	{
-//		decompInfo.decCmd += " -a " + decompInfo.architecture + " ";
-//	}
-//	if (!decompInfo.endian.empty())
-//	{
-//		decompInfo.decCmd += " -e " + decompInfo.endian + " ";
-//	}
-//	if (decompInfo.rawEntryPoint.isDefined())
-//	{
-//		decompInfo.decCmd += " --raw-entry-point " + decompInfo.rawEntryPoint.toHexPrefixString() + " ";
-//	}
-//	if (decompInfo.rawSectionVma.isDefined())
-//	{
-//		decompInfo.decCmd += " --raw-section-vma " + decompInfo.rawSectionVma.toHexPrefixString() + " ";
-//	}
-//
-//	if (decompInfo.isSelectiveDecompilation())
-//	{
-//		decompInfo.decCmd += " --color-for-ida";
-//		decompInfo.decCmd += " -o '" + decompInfo.inputPath + ".c'";
-//	}
-//	else
-//	{
-//		decompInfo.decCmd += " -o '" + decompInfo.outputFile + "'";
-//	}
-//
-//	if ( !decompInfo.ranges.empty() )
-//	{
-//		decompInfo.decCmd += " --select-decode-only --select-ranges='" + decompInfo.ranges + "'";
-//	}
-//
-//	// Create decompilation thread.
-//	//
-//	if (decompInfo.isUseThreads())
-//	{
-//		decompInfo.decompThread = qthread_create(threadFunc, static_cast<void*>(&decompInfo));
-//	}
-//	else
-//	{
-//		threadFunc(static_cast<void*>(&decompInfo));
-//	}
-//}
-//
-//} // namespace idaplugin
+
+/**
+ * Decompile IDA's input.
+ * @param decompInfo Plugin's global information.
+ */
+void decompileInput(RdGlobalInfo &decompInfo)
+{
+	INFO_MSG("Decompile input ...\n");
+
+	// Construct decompiler call command.
+	//
+	decompInfo.decCmd = "";
+#ifdef OS_WINDOWS
+	// On Windows, shell scripts have to be run through 'sh'; otherwise, they
+	// are not run through Bash, which causes us problems.
+	decompInfo.decCmd += "sh ";
+#endif
+	decompInfo.decCmd += "'" + decompInfo.decompilationShCmd + "' '" + decompInfo.inputPath;
+	decompInfo.decCmd += "' --config='" + decompInfo.dbFile + "'";
+
+	if (!decompInfo.mode.empty())
+	{
+		decompInfo.decCmd += " -m " + decompInfo.mode + " ";
+	}
+	if (!decompInfo.architecture.empty())
+	{
+		decompInfo.decCmd += " -a " + decompInfo.architecture + " ";
+	}
+	if (!decompInfo.endian.empty())
+	{
+		decompInfo.decCmd += " -e " + decompInfo.endian + " ";
+	}
+	if (decompInfo.rawEntryPoint.isDefined())
+	{
+		decompInfo.decCmd += " --raw-entry-point " + decompInfo.rawEntryPoint.toHexPrefixString() + " ";
+	}
+	if (decompInfo.rawSectionVma.isDefined())
+	{
+		decompInfo.decCmd += " --raw-section-vma " + decompInfo.rawSectionVma.toHexPrefixString() + " ";
+	}
+
+	if (decompInfo.isSelectiveDecompilation())
+	{
+		decompInfo.decCmd += " --color-for-ida";
+		decompInfo.decCmd += " -o '" + decompInfo.inputPath + ".c'";
+	}
+	else
+	{
+		decompInfo.decCmd += " -o '" + decompInfo.outputFile + "'";
+	}
+
+	if ( !decompInfo.ranges.empty() )
+	{
+		decompInfo.decCmd += " --select-decode-only --select-ranges='" + decompInfo.ranges + "'";
+	}
+
+	// Create decompilation thread.
+	//
+	if (decompInfo.isUseThreads())
+	{
+		decompInfo.decompThread = qthread_create(threadFunc, static_cast<void*>(&decompInfo));
+	}
+	else
+	{
+		threadFunc(static_cast<void*>(&decompInfo));
+	}
+}
+
+} // namespace idaplugin

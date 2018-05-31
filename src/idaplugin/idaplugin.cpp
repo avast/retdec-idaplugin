@@ -250,7 +250,7 @@ void runAllDecompilation()
 	killDecompilation();
 	saveIdaDatabase();
 	generatePluginDatabase();
-//	decompileInput(decompInfo);
+	decompileInput(decompInfo);
 }
 
 /**
