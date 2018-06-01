@@ -32,7 +32,6 @@ include_directories("..")
 
 # Make includes from IDA SDK work.
 include_directories(SYSTEM
-	"${IDA_SDK_DIR}/.." # So we can include idasdk's headers as "<idasdk/include/*.hpp>".
 	"${IDA_SDK_DIR}/include"
 )
 

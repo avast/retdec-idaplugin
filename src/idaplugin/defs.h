@@ -11,24 +11,28 @@
 #include <list>
 #include <map>
 
-#include <idasdk/include/ida.hpp> // this must be included before other idasdk headers
-#include <idasdk/include/auto.hpp>
-#include <idasdk/include/bytes.hpp>
-#include <idasdk/include/demangle.hpp>
-#include <idasdk/include/diskio.hpp>
-#include <idasdk/include/frame.hpp>
-#include <idasdk/include/funcs.hpp>
-#include <idasdk/include/idp.hpp>
-#include <idasdk/include/kernwin.hpp>
-#include <idasdk/include/lines.hpp>
-#include <idasdk/include/loader.hpp>
-#include <idasdk/include/segment.hpp>
-#include <idasdk/include/strlist.hpp>
-#include <idasdk/include/struct.hpp>
-#include <idasdk/include/typeinf.hpp>
-#include <idasdk/include/ua.hpp>
-#include <idasdk/include/xref.hpp>
+// IDA SDK includes.
+//
+#include <ida.hpp> // this must be included before other idasdk headers
+#include <auto.hpp>
+#include <bytes.hpp>
+#include <demangle.hpp>
+#include <diskio.hpp>
+#include <frame.hpp>
+#include <funcs.hpp>
+#include <idp.hpp>
+#include <kernwin.hpp>
+#include <lines.hpp>
+#include <loader.hpp>
+#include <segment.hpp>
+#include <strlist.hpp>
+#include <struct.hpp>
+#include <typeinf.hpp>
+#include <ua.hpp>
+#include <xref.hpp>
 
+// RetDec includes.
+//
 #include "retdec/config/config.h"
 #include "retdec/utils/address.h"
 #include "retdec/utils/os.h"
