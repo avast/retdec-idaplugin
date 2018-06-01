@@ -21,6 +21,7 @@ namespace idaplugin {
 /// @{
 bool idaapi ct_keyboard(TWidget* cv, int key, int shift, void* ud);
 bool idaapi ct_double(TWidget* cv, int shift, void* ud);
+void idaapi ct_close(TWidget* cv, void* ud);
 /// @}
 
 void registerPermanentActions();
@@ -41,7 +42,7 @@ static const custom_viewer_handlers_t handlers(
 		nullptr,     // click
 		ct_double,   // dblclick
 		nullptr,     // current position change
-		nullptr,     // close
+		ct_close,     // close
 		nullptr,     // help
 		nullptr,     // adjust_place
 		nullptr,
@@ -70,11 +71,11 @@ struct ShowOutput : public exec_request_t
 
 	virtual int idaapi execute() override
 	{
-		auto* existing = find_widget(di->viewerName.c_str());
-		if (existing)
+		if (di->codeViewer)
 		{
-			destroy_custom_viewer(existing);
+			close_widget(di->codeViewer, 0);
 			di->custViewer = nullptr;
+			di->codeViewer = nullptr;
 		}
 
 		addCommentToFunctionCode();
@@ -102,29 +103,20 @@ struct ShowOutput : public exec_request_t
 				&contents,              // contents of viewer
 				&handlers,              // handlers for the viewer (can be NULL)
 				di,                     // handlers' user data
-				existing ? di->codeViewer : nullptr // widget to hold viewer
+				nullptr                 // widget to hold viewer
 		);
 
-		if (existing)
-		{
-			activate_widget(di->codeViewer, true);
-		}
-		else
-		{
-			di->codeViewer = create_code_viewer(di->custViewer);
+		di->codeViewer = create_code_viewer(di->custViewer);
 
-			set_code_viewer_is_source(di->codeViewer);
+		set_code_viewer_is_source(di->codeViewer);
 
-			display_widget(
-					di->codeViewer,
-					WOPN_TAB |
-					WOPN_MENU |
-					WOPN_RESTORE |
-					WOPN_PERSIST |
-					/// we want to catch ESC and use it for navigation
-					WOPN_NOT_CLOSED_BY_ESC
-			);
-		}
+		display_widget(
+				di->codeViewer,
+				WOPN_TAB |
+				WOPN_MENU |
+				/// we want to catch ESC and use it for navigation
+				WOPN_NOT_CLOSED_BY_ESC
+		);
 
 		return 0;
 	}

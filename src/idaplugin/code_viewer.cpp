@@ -1166,6 +1166,18 @@ bool idaapi ct_double(TWidget* cv, int shift, void* ud)
 //==============================================================================
 //
 
+void idaapi ct_close(TWidget* cv, void* ud)
+{
+	RdGlobalInfo* di = static_cast<RdGlobalInfo*>(ud);
+
+	di->custViewer = nullptr;
+	di->codeViewer = nullptr;
+}
+
+//
+//==============================================================================
+//
+
 /**
  * Use @c ShowOutput structure to show decompiled code from thread.
  */
