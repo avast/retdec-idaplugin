@@ -113,6 +113,8 @@ struct ShowOutput : public exec_request_t
 		{
 			di->codeViewer = create_code_viewer(di->custViewer);
 
+			set_code_viewer_is_source(di->codeViewer);
+
 			display_widget(
 					di->codeViewer,
 					WOPN_TAB |
