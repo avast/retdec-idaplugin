@@ -23,6 +23,7 @@ bool idaapi ct_keyboard(TWidget* cv, int key, int shift, void* ud);
 bool idaapi ct_double(TWidget* cv, int shift, void* ud);
 /// @}
 
+void registerPermanentActions();
 ssize_t idaapi ui_callback(void* ud, int notification_code, va_list va);
 
 /// @name Functions working with GUI from threads.

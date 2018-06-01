@@ -557,13 +557,6 @@ bool idaapi run(size_t arg)
 		return false;
 	}
 
-	static bool hooked = false;
-	if (!hooked)
-	{
-		hook_to_notification_point(HT_UI, ui_callback, &decompInfo);
-//		hooked = true;
-	}
-
 	// ordinary selective decompilation
 	//
 	if (arg == 0)
@@ -673,6 +666,9 @@ int idaapi init()
 	INFO_MSG("%s version %s loaded OK\n",
 			decompInfo.pluginName.c_str(),
 			decompInfo.pluginVersion.c_str());
+
+	hook_to_notification_point(HT_UI, ui_callback, &decompInfo);
+	registerPermanentActions();
 
 	inited = true;
 	return PLUGIN_KEEP;

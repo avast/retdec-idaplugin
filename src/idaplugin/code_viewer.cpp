@@ -166,7 +166,7 @@ bool isWordGlobal(const std::string& word, int color)
 
 const retdec::config::Object* getWordGlobal(const std::string& word, int color)
 {
-	return color == COLOR_DEFAULT
+	return !word.empty() && color == COLOR_DEFAULT
 			? decompInfo.configDB.globals.getObjectByNameOrRealName(word)
 			: nullptr;
 }
@@ -186,30 +186,29 @@ const retdec::config::Function* getWordFunction(
 		const std::string& word,
 		int color)
 {
-	return color == COLOR_DEFAULT
+	return !word.empty() && color == COLOR_DEFAULT
 			? decompInfo.configDB.functions.getFunctionByName(word)
 			: nullptr;
 }
 
 func_t* getIdaFunction(const std::string& word, int color)
 {
-	if (!isWordFunction(word, color))
-		return nullptr;
-
-	auto* cfgFnc = decompInfo.configDB.functions.getFunctionByName( word );
-	if (cfgFnc == nullptr)
-		return nullptr;
-
-	for (unsigned i = 0; i < get_func_qty(); ++i)
+	if (word.empty())
 	{
-		func_t *fnc = getn_func(i);
-		if (fnc->start_ea == cfgFnc->getStart())
-		{
-			return fnc;
-		}
+		return nullptr;
+	}
+	if (!isWordFunction(word, color))
+	{
+		return nullptr;
 	}
 
-	return nullptr;
+	auto* cfgFnc = decompInfo.configDB.functions.getFunctionByName(word);
+	if (cfgFnc == nullptr)
+	{
+		return nullptr;
+	}
+
+	return get_func(cfgFnc->getStart());
 }
 
 bool isCurrentFunction(func_t* fnc)
@@ -329,7 +328,7 @@ void decompileFunction(
 //==============================================================================
 //
 
-bool idaapi moveToPrevious(void *)
+bool idaapi moveToPrevious()
 {
 	DBG_MSG("\t ESC : [ ");
 	for (auto& fnc : decompInfo.navigationList)
@@ -368,7 +367,42 @@ bool idaapi moveToPrevious(void *)
 	return false;
 }
 
-bool idaapi moveToNext(void*)
+struct move_backward_ah_t : public action_handler_t
+{
+	static const char* actionName;
+	static const char* actionLabel;
+	static const char* actionHotkey;
+
+	virtual int idaapi activate(action_activation_ctx_t*)
+	{
+		moveToPrevious();
+		return false;
+	}
+
+	virtual action_state_t idaapi update(action_update_ctx_t*)
+	{
+		return AST_ENABLE_ALWAYS;
+	}
+};
+
+const char* move_backward_ah_t::actionName   = "retdec:ActionMoveBackward";
+const char* move_backward_ah_t::actionLabel  = "Move backward";
+const char* move_backward_ah_t::actionHotkey = "ESC";
+
+static move_backward_ah_t move_backward_ah;
+static const action_desc_t move_backward_ah_desc = ACTION_DESC_LITERAL(
+		move_backward_ah_t::actionName,
+		move_backward_ah_t::actionLabel,
+		&move_backward_ah,
+		nullptr,
+		move_backward_ah_t::actionHotkey,
+		-1);
+
+//
+//==============================================================================
+//
+
+bool idaapi moveToNext()
 {
 	DBG_MSG("\t CTRL + F : [ ");
 	for (auto& fnc : decompInfo.navigationList)
@@ -409,11 +443,42 @@ bool idaapi moveToNext(void*)
 	return false;
 }
 
+struct move_forward_ah_t : public action_handler_t
+{
+	static const char* actionName;
+	static const char* actionLabel;
+	static const char* actionHotkey;
+
+	virtual int idaapi activate(action_activation_ctx_t*)
+	{
+		moveToNext();
+		return false;
+	}
+
+	virtual action_state_t idaapi update(action_update_ctx_t*)
+	{
+		return AST_ENABLE_ALWAYS;
+	}
+};
+
+const char* move_forward_ah_t::actionName   = "retdec:ActionMoveForward";
+const char* move_forward_ah_t::actionLabel  = "Move forward";
+const char* move_forward_ah_t::actionHotkey = "Ctrl+F";
+
+static move_forward_ah_t move_forward_ah;
+static const action_desc_t move_forward_ah_desc = ACTION_DESC_LITERAL(
+		move_forward_ah_t::actionName,
+		move_forward_ah_t::actionLabel,
+		&move_forward_ah,
+		nullptr,
+		move_forward_ah_t::actionHotkey,
+		-1);
+
 //
 //==============================================================================
 //
 
-bool idaapi insertCurrentFunctionComment(void*)
+bool idaapi insertCurrentFunctionComment()
 {
 	auto* fnc = getCurrentFunction();
 	if (fnc == nullptr)
@@ -440,14 +505,43 @@ bool idaapi insertCurrentFunctionComment(void*)
 	return false;
 }
 
+struct change_fnc_comment_ah_t : public action_handler_t
+{
+	static const char* actionName;
+	static const char* actionLabel;
+	static const char* actionHotkey;
+
+	virtual int idaapi activate(action_activation_ctx_t*)
+	{
+		insertCurrentFunctionComment();
+		return false;
+	}
+
+	virtual action_state_t idaapi update(action_update_ctx_t*)
+	{
+		return AST_ENABLE_ALWAYS;
+	}
+};
+
+const char* change_fnc_comment_ah_t::actionName   = "retdec:ActionChangeFncComment";
+const char* change_fnc_comment_ah_t::actionLabel  = "Edit func comment";
+const char* change_fnc_comment_ah_t::actionHotkey = ";";
+
+static change_fnc_comment_ah_t change_fnc_comment_ah;
+static const action_desc_t change_fnc_comment_ah_desc = ACTION_DESC_LITERAL(
+		change_fnc_comment_ah_t::actionName,
+		change_fnc_comment_ah_t::actionLabel,
+		&change_fnc_comment_ah,
+		nullptr,
+		change_fnc_comment_ah_t::actionHotkey,
+		-1);
+
 //
 //==============================================================================
 //
 
-bool idaapi changeFunctionGlobalName(void* ud)
+bool idaapi changeFunctionGlobalName(TWidget* cv)
 {
-	TWidget* cv = static_cast<TWidget*>(ud);
-
 	std::string word;
 	int color = -1;
 	if (get_current_word(cv, false, word, color))
@@ -544,39 +638,150 @@ bool idaapi changeFunctionGlobalName(void* ud)
 	return false;
 }
 
+struct change_fnc_global_name_ah_t : public action_handler_t
+{
+	TWidget* view = nullptr;
+	static const char* actionName;
+	static const char* actionLabel;
+	static const char* actionHotkey;
+
+	virtual int idaapi activate(action_activation_ctx_t*)
+	{
+		changeFunctionGlobalName(view);
+		return false;
+	}
+
+	virtual action_state_t idaapi update(action_update_ctx_t*)
+	{
+		return AST_ENABLE_ALWAYS;
+	}
+
+	void setView(TWidget* v)
+	{
+		view = v;
+	}
+};
+
+const char* change_fnc_global_name_ah_t::actionName  = "retdec:ActionChangeFncGlobName";
+const char* change_fnc_global_name_ah_t::actionLabel = "Rename";
+const char* change_fnc_global_name_ah_t::actionHotkey = "N";
+
+static change_fnc_global_name_ah_t change_fnc_global_name_ah;
+static const action_desc_t change_fnc_global_name_ah_desc = ACTION_DESC_LITERAL(
+		change_fnc_global_name_ah_t::actionName,
+		change_fnc_global_name_ah_t::actionLabel,
+		&change_fnc_global_name_ah,
+		nullptr,
+		change_fnc_global_name_ah_t::actionHotkey,
+		-1);
+
 //
 //==============================================================================
 //
 
-bool idaapi openXrefsWindow(void *ud)
+bool idaapi openXrefsWindow(func_t* fnc)
 {
-	func_t* fnc = static_cast<func_t*>(ud);
 	open_xrefs_window(fnc->start_ea);
 	return false;
 }
 
-bool idaapi openCallsWindow(void *ud)
+struct open_xrefs_ah_t : public action_handler_t
 {
-	func_t* fnc = static_cast<func_t*>(ud);
-	open_calls_window(fnc->start_ea);
-	return false;
-}
+	func_t* fnc = nullptr;
+	static const char* actionName;
+	static const char* actionLabel;
+	static const char* actionHotkey;
+
+	virtual int idaapi activate(action_activation_ctx_t*)
+	{
+		openXrefsWindow(fnc);
+		return false;
+	}
+
+	virtual action_state_t idaapi update(action_update_ctx_t*)
+	{
+		return AST_ENABLE_ALWAYS;
+	}
+
+	void setFunction(func_t* f)
+	{
+		fnc = f;
+	}
+};
+
+const char* open_xrefs_ah_t::actionName   = "retdec:ActionOpenXrefs";
+const char* open_xrefs_ah_t::actionLabel  = "Open xrefs window";
+const char* open_xrefs_ah_t::actionHotkey = "X";
+
+static open_xrefs_ah_t open_xrefs_ah;
+static const action_desc_t open_xrefs_ah_desc = ACTION_DESC_LITERAL(
+		open_xrefs_ah_t::actionName,
+		open_xrefs_ah_t::actionLabel,
+		&open_xrefs_ah,
+		nullptr,
+		open_xrefs_ah_t::actionHotkey,
+		-1);
 
 //
 //==============================================================================
 //
 
-bool idaapi changeTypeDeclaration(void* ud)
+bool idaapi openCallsWindow(func_t* fnc)
 {
-	TWidget* cv = static_cast<TWidget*>(ud);
+	open_calls_window(fnc->start_ea);
+	return false;
+}
 
+struct open_calls_ah_t : public action_handler_t
+{
+	func_t* fnc = nullptr;
+	static const char* actionName;
+	static const char* actionLabel;
+	static const char* actionHotkey;
+
+	virtual int idaapi activate(action_activation_ctx_t*)
+	{
+		openCallsWindow(fnc);
+		return false;
+	}
+
+	virtual action_state_t idaapi update(action_update_ctx_t*)
+	{
+		return AST_ENABLE_ALWAYS;
+	}
+
+	void setFunction(func_t* f)
+	{
+		fnc = f;
+	}
+};
+
+const char* open_calls_ah_t::actionName   = "retdec:ActionOpenCalls";
+const char* open_calls_ah_t::actionLabel  = "Open calls window";
+const char* open_calls_ah_t::actionHotkey = "C";
+
+static open_calls_ah_t open_calls_ah;
+static const action_desc_t open_calls_ah_desc = ACTION_DESC_LITERAL(
+		open_calls_ah_t::actionName,
+		open_calls_ah_t::actionLabel,
+		&open_calls_ah,
+		nullptr,
+		open_calls_ah_t::actionHotkey,
+		-1);
+
+//
+//==============================================================================
+//
+
+bool idaapi changeTypeDeclaration(TWidget* cv)
+{
 	std::string word;
 	int color = -1;
 	if (get_current_word(cv, false, word, color))
 	{
 		return false;
 	}
-	auto* idaFnc= getIdaFunction(word, color);
+	auto* idaFnc = getIdaFunction(word, color);
 	auto* cFnc = getWordFunction(word, color);
 	auto* cGv = getWordGlobal(word, color);
 
@@ -625,6 +830,43 @@ bool idaapi changeTypeDeclaration(void* ud)
 	return false;
 }
 
+struct change_fnc_type_ah_t : public action_handler_t
+{
+	TWidget* view = nullptr;
+	static const char* actionName;
+	static const char* actionLabel;
+	static const char* actionHotkey;
+
+	virtual int idaapi activate(action_activation_ctx_t*)
+	{
+		changeTypeDeclaration(view);
+		return false;
+	}
+
+	virtual action_state_t idaapi update(action_update_ctx_t*)
+	{
+		return AST_ENABLE_ALWAYS;
+	}
+
+	void setView(TWidget* v)
+	{
+		view = v;
+	}
+};
+
+const char* change_fnc_type_ah_t::actionName   = "retdec:ActionChangeFncType";
+const char* change_fnc_type_ah_t::actionLabel  = "Change type declaration";
+const char* change_fnc_type_ah_t::actionHotkey = "Y";
+
+static change_fnc_type_ah_t change_fnc_type_ah;
+static const action_desc_t change_fnc_type_ah_desc = ACTION_DESC_LITERAL(
+		change_fnc_type_ah_t::actionName,
+		change_fnc_type_ah_t::actionLabel,
+		&change_fnc_type_ah,
+		nullptr,
+		change_fnc_type_ah_t::actionHotkey,
+		-1);
+
 //
 //==============================================================================
 //
@@ -644,8 +886,7 @@ struct jump_to_asm_ah_t : public action_handler_t
 	ea_t addr;
 	static const char* actionName;
 	static const char* actionLabel;
-
-	jump_to_asm_ah_t(ea_t ea) : addr(ea) {}
+	static const char* actionHotkey;
 
 	virtual int idaapi activate(action_activation_ctx_t*)
 	{
@@ -657,10 +898,25 @@ struct jump_to_asm_ah_t : public action_handler_t
 	{
 		return AST_ENABLE_ALWAYS;
 	}
+
+	void setAddress(ea_t a)
+	{
+		addr = a;
+	}
 };
 
 const char* jump_to_asm_ah_t::actionName  = "retdec:ActionJumpToAsm";
 const char* jump_to_asm_ah_t::actionLabel = "Jump to ASM";
+const char* jump_to_asm_ah_t::actionHotkey = "A";
+
+static jump_to_asm_ah_t jump_to_asm_ah;
+static const action_desc_t jump_to_asm_ah_desc = ACTION_DESC_LITERAL(
+		jump_to_asm_ah_t::actionName,
+		jump_to_asm_ah_t::actionLabel,
+		&jump_to_asm_ah,
+		nullptr,
+		jump_to_asm_ah_t::actionHotkey,
+		-1);
 
 //
 //==============================================================================
@@ -675,14 +931,14 @@ bool idaapi ct_keyboard(TWidget* cv, int key, int shift, void* ud)
 	//
 	if (key == 27 && shift == 0)
 	{
-		return moveToPrevious(static_cast<void*>(cv));
+		return moveToPrevious();
 	}
 	// CTRL + F : move to the next saved position.
 	// 70 = 'F'
 	//
 	else if (key == 70 && shift == 4)
 	{
-		return moveToNext(static_cast<void*>(cv));
+		return moveToNext();
 	}
 
 	// Get word, function, global, ...
@@ -702,7 +958,7 @@ bool idaapi ct_keyboard(TWidget* cv, int key, int shift, void* ud)
 	//
 	if ((key == 45 && shift == 0) || (key == 186 && shift == 0))
 	{
-		return insertCurrentFunctionComment(static_cast<void*>(cv));
+		return insertCurrentFunctionComment();
 	}
 	// 78 = N
 	//
@@ -715,7 +971,7 @@ bool idaapi ct_keyboard(TWidget* cv, int key, int shift, void* ud)
 
 		if (cFnc || cGv)
 		{
-			return changeFunctionGlobalName(static_cast<void*>(cv));
+			return changeFunctionGlobalName(cv);
 		}
 		else
 		{
@@ -751,7 +1007,7 @@ bool idaapi ct_keyboard(TWidget* cv, int key, int shift, void* ud)
 	//
 	else if (key == 89 && shift == 0)
 	{
-		return changeTypeDeclaration(static_cast<void*>(cv));
+		return changeTypeDeclaration(cv);
 	}
 	// 65 = A
 	//
@@ -786,28 +1042,9 @@ bool idaapi ct_keyboard(TWidget* cv, int key, int shift, void* ud)
 //==============================================================================
 //
 
-#define REGISTER_POPUP(ah_ty, ah_name, desc_name, param, shortcut, v, p) \
-		static ah_ty ah_name(param); \
-		static const action_desc_t desc_name = ACTION_DESC_LITERAL( \
-				ah_ty::actionName, \
-				ah_ty::actionLabel, \
-				&ah_name, \
-				nullptr, \
-				shortcut, \
-				-1); \
-		if (!register_action(desc_name) \
-				|| !attach_action_to_popup(v, p, ah_ty::actionName)) \
-		{ \
-			ERROR_MSG("Failed to register popup"); \
-			return true; \
-		}
-
-
 ssize_t idaapi ui_callback(void* ud, int notification_code, va_list va)
 {
 	RdGlobalInfo* di = static_cast<RdGlobalInfo*>(ud);
-
-//msg("\n=============================> 1\n\n");
 
 	switch (notification_code)
 	{
@@ -815,11 +1052,9 @@ ssize_t idaapi ui_callback(void* ud, int notification_code, va_list va)
 		// Here dynamic context-depending user menu items can be added.
 		case ui_populating_widget_popup:
 		{
-//msg("\n=============================> 2\n\n");
 			TWidget* view = va_arg(va, TWidget*);
 			if (view != di->custViewer && view != di->codeViewer)
 			{
-//msg("\n=============================> 3\n\n");
 				return false;
 			}
 
@@ -827,11 +1062,8 @@ ssize_t idaapi ui_callback(void* ud, int notification_code, va_list va)
 			int color = -1;
 			if (get_current_word(view, false, word, color))
 			{
-//msg("\n=============================> 4\n\n");
-				return false;
+				// fail -> nothing
 			}
-
-//msg("\n=============================> 5\n\n");
 
 			auto* idaFnc = getIdaFunction(word, color);
 			const retdec::config::Function* cFnc = getWordFunction(word, color);
@@ -843,58 +1075,65 @@ ssize_t idaapi ui_callback(void* ud, int notification_code, va_list va)
 			//
 			if (idaFnc && cFnc)
 			{
-//msg("\n=============================> 6\n\n");
-				REGISTER_POPUP(jump_to_asm_ah_t, jumpA, jumpAdesc, idaFnc->start_ea, "A", view, p);
+				attach_action_to_popup(view, p, "-");
 
-//				static jump_to_asm_ah_t jumpA(idaFnc->start_ea);
-//				static const action_desc_t jump_to_asm_ah_t_desc = ACTION_DESC_LITERAL(
-//						jump_to_asm_ah_t::actionName,
-//						jump_to_asm_ah_t::actionLabel,
-//						&jumpA,
-//						nullptr,
-//						"A",
-//						-1);
-//				if (!register_action(jump_to_asm_ah_t_desc)
-//						|| attach_action_to_popup(view, p, jump_to_asm_ah_t::actionName))
-//				{
-//					msg("Failed to register jump_to_asm_ah_t");
-//					return true;
-//				}
+				jump_to_asm_ah.setAddress(idaFnc->start_ea);
+				attach_action_to_popup(view, p, jump_to_asm_ah_t::actionName);
 
-//				add_custom_viewer_popup_item(cv, "Jump to ASM", "A", jumpToASM, &idaFnc->startEA);
+				change_fnc_global_name_ah.setView(view);
+				attach_action_to_popup(view, p, change_fnc_global_name_ah_t::actionName);
 
-//				add_custom_viewer_popup_item(cv, "Rename function", "N", changeFunctionGlobalName, cv);
-//				if (isCurrentFunction(idaFnc))
-//				{
-//					add_custom_viewer_popup_item(cv, "Change type declaration", "Y", changeTypeDeclaration, cv);
-//				}
-//				add_custom_viewer_popup_item(cv, "Open xrefs window", "X", openXrefsWindow, idaFnc);
-//				add_custom_viewer_popup_item(cv, "Open calls window", "C", openCallsWindow, idaFnc);
+				if (isCurrentFunction(idaFnc))
+				{
+					change_fnc_type_ah.setView(view);
+					attach_action_to_popup(view, p, change_fnc_type_ah_t::actionName);
+				}
+
+				open_xrefs_ah.setFunction(idaFnc);
+				attach_action_to_popup(view, p, open_xrefs_ah_t::actionName);
+
+				open_calls_ah.setFunction(idaFnc);
+				attach_action_to_popup(view, p, open_calls_ah_t::actionName);
 			}
 			// Global var context.
 			//
 			else if (cGv)
 			{
-//msg("\n=============================> 7\n\n");
 				globalAddress = cGv->getStorage().getAddress();
-//				add_custom_viewer_popup_item(cv, "Jump to ASM", "A", jumpToASM, &globalAddress);
-//				add_custom_viewer_popup_item(cv, "Rename global variable", "N", changeFunctionGlobalName, cv);
+
+				attach_action_to_popup(view, p, "-");
+
+				jump_to_asm_ah.setAddress(globalAddress);
+				attach_action_to_popup(view, p, jump_to_asm_ah_t::actionName);
+
+				change_fnc_global_name_ah.setView(view);
+				attach_action_to_popup(view, p, change_fnc_global_name_ah_t::actionName);
 			}
 
 			// Common for all contexts.
 			//
-//			add_custom_viewer_popup_item(cv, "-", "", nullptr, nullptr);
-//			add_custom_viewer_popup_item(cv, "Edit func comment", ";", insertCurrentFunctionComment, cv);
-//			add_custom_viewer_popup_item(cv, "Move backward", "ESC", moveToPrevious, cv);
-//			add_custom_viewer_popup_item(cv, "Move forward", "CTRL+F", moveToNext, cv);
-
-//msg("\n=============================> 8\n\n");
+			attach_action_to_popup(view, p, "-");
+			attach_action_to_popup(view, p, change_fnc_comment_ah_t::actionName);
+			attach_action_to_popup(view, p, move_backward_ah_t::actionName);
+			attach_action_to_popup(view, p, move_forward_ah_t::actionName);
+			attach_action_to_popup(view, p, "-");
 			break;
 		}
 	}
 
-//msg("\n=============================> 9\n\n");
 	return false;
+}
+
+void registerPermanentActions()
+{
+	register_action(jump_to_asm_ah_desc);
+	register_action(change_fnc_global_name_ah_desc);
+	register_action(open_xrefs_ah_desc);
+	register_action(open_calls_ah_desc);
+	register_action(change_fnc_type_ah_desc);
+	register_action(change_fnc_comment_ah_desc);
+	register_action(move_forward_ah_desc);
+	register_action(move_backward_ah_desc);
 }
 
 //
