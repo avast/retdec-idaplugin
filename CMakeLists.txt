@@ -52,20 +52,6 @@ endif()
 add_definitions(-D__IDP__ -D__PLUGIN__ -DNO_OBSOLETE_FUNCS)
 add_definitions(-D__X64__)
 
-if(NOT MSVC)
-	# Use the old C++ ABI in stdlibc++. This allows us to build the plugin with
-	# both GCC >= 5.1 and Clang while keeping the same build of IDA SDK and IDA
-	# plugin libraries ($ROOT_DIR/{idasdk,idaplugin-libs}). Otherwise, we would
-	# need to rebuild them with the new ABI, which is impossible since IDA SDK
-	# distributes only binary packages.
-	#
-	# See the following link for more details:
-	#
-	#     https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_dual_abi.html
-	#
-	#add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
-endif()
-
 add_subdirectory(deps)
 add_subdirectory(scripts)
 add_subdirectory(src)
