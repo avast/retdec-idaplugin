@@ -189,9 +189,9 @@ do
 done
 
 if [ "$SYS" = "win" ]; then
-	IDAL="$IDA_DIR/idaw.exe"
+	IDAL="$IDA_DIR/idat.exe"
 else # Linux
-	IDAL="$IDA_DIR/idal"
+	IDAL="$IDA_DIR/idat"
 fi
 
 # Check arguments and set default values for unset options.
@@ -284,7 +284,7 @@ if [ "$MODE" = "full" ]; then
 	else
 		echo "$IDAL -A -S\"$SCRIPT_FULL '$IN_NEW' --debug\" \"$IN_NEW\""
 		# We have to use script (http://stackoverflow.com/a/1402389).
-		script -e -c "$IDAL -A -S\"$SCRIPT_FULL '$IN_NEW'\" \"$IN_NEW\"" "${IN_NEW}.idal.log" &> /dev/null
+		script -e -c "$IDAL -A -S\"$SCRIPT_FULL '$IN_NEW'\" \"$IN_NEW\"" "${IN_NEW}.idat.log" &> /dev/null
 		RET=$?
 	fi
 elif [ "$MODE" = "select" ]; then
@@ -298,7 +298,7 @@ elif [ "$MODE" = "select" ]; then
 	else
 		echo "$IDAL -A -S\"$SCRIPT_SELECT '$IN_NEW' $SELECTED --debug\" \"$IN_NEW\""
 		# We have to use script (http://stackoverflow.com/a/1402389).
-		script -e -c "$IDAL -A -S\"$SCRIPT_SELECT '$IN_NEW' $SELECTED\" \"$IN_NEW\"" "${IN_NEW}.idal.log" &> /dev/null
+		script -e -c "$IDAL -A -S\"$SCRIPT_SELECT '$IN_NEW' $SELECTED\" \"$IN_NEW\"" "${IN_NEW}.idat.log" &> /dev/null
 		RET=$?
 	fi
 fi
