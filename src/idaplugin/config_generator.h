@@ -27,22 +27,27 @@ class ConfigGenerator
 	private:
 		void generateHeader();
 		void generateFunctions();
-		void generateFunctionType(const tinfo_t &fncType, retdec::config::Function &ccFnc);
+		void generateFunctionType(
+				const tinfo_t& fncType,
+				retdec::config::Function& ccFnc);
 		void generateSegmentsAndGlobals();
-		retdec::config::Storage generateObjectLocation(const argloc_t &loc, const tinfo_t &locType);
-		void generateCallingConvention(const cm_t &idaCC, retdec::config::CallingConvention &configCC);
+		retdec::config::Storage generateObjectLocation(
+				const argloc_t& loc,
+				const tinfo_t& locType);
+		void generateCallingConvention(
+				const cm_t &idaCC,
+				retdec::config::CallingConvention &configCC);
 
 		std::string addrType2string(ea_t addr);
 		std::string type2string(const tinfo_t &type);
 		std::string defaultTypeString();
 
 	private:
-		void dumpAllRegisters();
-
-	private:
-		RdGlobalInfo &decompInfo;
-		retdec::config::Config &config; ///< Configuration object.
-		std::map<tinfo_t,std::string> structIdSet; ///< Global variables.
+		RdGlobalInfo& decompInfo;
+		/// Configuration object.
+		retdec::config::Config &config;
+		/// Global variables.
+		std::map<tinfo_t,std::string> structIdSet;
 };
 
 } // namespace idaplugin

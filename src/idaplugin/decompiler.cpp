@@ -11,210 +11,14 @@
 #include <set>
 #include <sstream>
 
-#include "boost/network/protocol/http/client.hpp"
 #include "retdec/utils/os.h"
 #include "code_viewer.h"
 #include "decompiler.h"
 #include "plugin_config.h"
-#include "retdec/retdec.h"
 
 using namespace retdec;
 
-namespace {
-
-/**
- * @brief Check if the provided version is valid.
- *
- * @param version Version string.
- *
- * @return @c true if the version is valid, @c false otherwise.
- */
-bool isValidVersion(const std::string &version)
-{
-	return std::regex_match(version, std::regex(R"(\d+(\.\d+)*)"));
-}
-
-} // anonymous namespace
-
 namespace idaplugin {
-
-// The default client setting:
-//using http = boost::network::http::client;
-// used in cpp-netlib examples causes IDA to crash.
-// It crashed when used here in the decompilation thread, but also if used in IDA's main thread.
-// However, standalone testing implementation of simple wget works with it.
-// We tried to debug it with dbg and run it in valgrind, but we were not able to find and fix the problem.
-//
-// When keepalive setting is used, IDA does not crash.
-// However, this is not perfect, since we do not really need to keep connection alive to check version.
-//
-using http = boost::network::http::basic_client<
-	boost::network::http::tags::http_keepalive_8bit_tcp_resolve, 1, 1
->;
-
-/**
- * Download the lastest plugin version from our web site.
- * @return @c False if download successful and version valid -- the latest version was updated.
- *         @c True otherwise -- the latest version was not updated.
- */
-bool getLatestPluginVersion(RdGlobalInfo *di)
-{
-	try
-	{
-		http client;
-		http::request request("https://retdec.com/idaplugin/latest-version/");
-		request << boost::network::header("Connection", "close");
-		http::response response = client.get(request);
-
-		std::string v = body(response);
-		if (isValidVersion(v))
-		{
-			di->pluginLatestVersion = v;
-			return false;
-		}
-	}
-	catch (std::exception & e)
-	{
-		warning("Version check FAILED: %s\nDecompilation will be performed, but problems might occur.\n", e.what());
-	}
-
-	return true;
-}
-
-/**
- * @return @c True if version is bad and decompilation cannot continue.
- *         @c False otherwise.
- */
-bool checkPluginVersion(RdGlobalInfo *di)
-{
-	if (di->pluginVersionCheckDate != retdec::utils::getCurrentDate())
-	{
-		INFO_MSG("Download the latest available plugin version ...\n");
-		getLatestPluginVersion(di);
-		di->pluginVersionCheckDate = retdec::utils::getCurrentDate(); // TODO: setter for this which auto saves to config?
-		saveConfigTofile(*di);
-	}
-	else
-	{
-		INFO_MSG("Using the cached latest available plugin version ...\n");
-	}
-
-	if (di->pluginLatestVersion.empty())
-	{
-		INFO_MSG("Unable to get the latest available plugin version: decompilation allowed, but there might be problems.\n");
-		return false;
-	}
-	else if(di->pluginLatestVersion != di->pluginVersion)
-	{
-		INFO_MSG("There is a newer plugin version available: download it in order to use the plugin.\n");
-		showVersionCheckForm(di);
-		return true;
-	}
-	else
-	{
-		INFO_MSG("Version check: OK\n");
-		return false;
-	}
-}
-
-/**
- * This callback is called every time decompilation progress is actualized.
- * @param d Decompilation.
- */
-static void idaapi progressCallback(const Decompilation &d)
-{
-	INFO_MSG( "Currently completed: %d %%\n", d.getCompletion() );
-}
-
-/**
- * Decompile through RetDec's API.
- * @param di Plugin's global information.
- */
-static void idaapi apiDecompilation(RdGlobalInfo *di)
-{
-	if (checkPluginVersion(di))
-	{
-		INFO_MSG("Decompilation aborted, your RetDec plugin version %s is old.\n", di->pluginVersion.c_str() );
-		di->decompSuccess = false;
-		return;
-	}
-
-	try
-	{
-		Decompiler decompiler(
-			Settings()
-				.apiUrl(di->apiUrl)
-				.apiKey(di->apiKey)
-				.userAgent(di->apiUserAgent)
-		);
-
-		DecompilationArguments args;
-
-		if (di->mode.empty())
-		{
-			args.mode("bin");
-		}
-		else
-		{
-			args.mode(di->mode);
-		}
-
-		if (di->isSelectiveDecompilation())
-		{
-			args.argument("ida_color_c", "1");
-		}
-
-		if (!di->architecture.empty())
-		{
-			args.argument("architecture", di->architecture);
-		}
-		if (!di->endian.empty())
-		{
-			args.argument("endian", di->endian);
-		}
-		if (di->rawEntryPoint.isDefined())
-		{
-			args.argument("raw_entry_point", di->rawEntryPoint.toHexPrefixString());
-		}
-		if (di->rawSectionVma.isDefined())
-		{
-			args.argument("raw_section_vma", di->rawSectionVma.toHexPrefixString());
-		}
-
-		//args.argument("decomp_optimizations", "limited"); // normal, none, limited
-		args.inputFile( File::fromFilesystem(di->inputPath) );
-		args.file("ida_config", File::fromFilesystem(di->dbFile));
-
-		if (!di->ranges.empty())
-		{
-			args.selDecompRanges(di->ranges);
-			args.selDecompDecoding("only");
-		}
-
-		auto decompilation = decompiler.runDecompilation( args );
-		INFO_MSG("Decompilation started, ID = %s\n", decompilation->getId().c_str() );
-		decompilation->waitUntilFinished( progressCallback );
-		INFO_MSG("Decompilation finished, ID = %s\n", decompilation->getId().c_str() );
-
-		if (di->isSelectiveDecompilation())
-		{
-			di->fnc2code[di->decompiledFunction].code = decompilation->getOutputHll();
-		}
-		else
-		{
-			std::ofstream outFile(di->outputFile);
-			outFile << decompilation->getOutputHll();
-		}
-
-		di->decompSuccess = true;
-	}
-	catch (const Error &ex)
-	{
-		warning( "Decompilation FAILED: %s\n", ex.what() );
-		di->decompSuccess = false;
-		return;
-	}
-}
 
 /**
  * Decompile locally on work station.
@@ -234,7 +38,9 @@ static void idaapi localDecompilation(RdGlobalInfo *di)
 	int decRet = std::system(di->decCmd.c_str());
 	if (decRet != 0)
 	{
-		warning("std::system(%s) failed with error code %d\n", di->decCmd.c_str(), decRet);
+		warning("std::system(%s) failed with error code %d\n",
+				di->decCmd.c_str(),
+				decRet);
 		return;
 	}
 
@@ -264,7 +70,9 @@ static void idaapi localDecompilation(RdGlobalInfo *di)
 
 	if (di->isSelectiveDecompilation())
 	{
-		std::string code((std::istreambuf_iterator<char>(decFile)),std::istreambuf_iterator<char>());
+		std::string code(
+				(std::istreambuf_iterator<char>(decFile)),
+				std::istreambuf_iterator<char>());
 		di->fnc2code[di->decompiledFunction].code = code;
 	}
 
@@ -276,21 +84,13 @@ static void idaapi localDecompilation(RdGlobalInfo *di)
  * Thread function, it runs the decompilation and displays decompiled code.
  * @param ud Plugin's global information.
  */
-static int idaapi threadFunc(void *ud)
+static int idaapi threadFunc(void* ud)
 {
-	RdGlobalInfo *di = static_cast<RdGlobalInfo*>(ud);
+	RdGlobalInfo* di = static_cast<RdGlobalInfo*>(ud);
 	di->decompRunning = true;
 
-	if (di->isLocalDecompilation())
-	{
-		INFO_MSG("Local decompilation ...\n");
-		localDecompilation(di);
-	}
-	else
-	{
-		INFO_MSG("API decompilation ...\n");
-		apiDecompilation(di);
-	}
+	INFO_MSG("Local decompilation ...\n");
+	localDecompilation(di);
 
 	if (di->decompSuccess && di->isSelectiveDecompilation())
 	{
@@ -309,18 +109,18 @@ static int idaapi threadFunc(void *ud)
  * @param[out] decompInfo Plugin's global information.
  * @param      fnc        Function selected for decompilation.
  */
-void createRangesFromSelectedFunction(RdGlobalInfo &decompInfo, func_t *fnc)
+void createRangesFromSelectedFunction(RdGlobalInfo& decompInfo, func_t* fnc)
 {
 	std::set<ea_t> selectedFncs;
 	std::stringstream ss;
 
-	ss << "0x" << std::hex << fnc->startEA << "-" << "0x" << std::hex << (fnc->endEA-1);
-	selectedFncs.insert(fnc->startEA);
+	ss << "0x" << std::hex << fnc->start_ea << "-" << "0x" << std::hex << (fnc->end_ea-1);
+	selectedFncs.insert(fnc->start_ea);
 
 	// Experimental -- decompile all functions called from this one.
 	//
 	func_item_iterator_t fii;
-	for ( bool ok=fii.set(fnc); ok; ok=fii.next_code() )
+	for (bool ok=fii.set(fnc); ok; ok=fii.next_code())
 	{
 		ea_t ea = fii.current();
 
@@ -333,10 +133,11 @@ void createRangesFromSelectedFunction(RdGlobalInfo &decompInfo, func_t *fnc)
 			if (xb.type == fl_CF || xb.type == fl_CN)
 			{
 				func_t *called = get_func(xb.to);
-				if (called && selectedFncs.find(called->startEA) == selectedFncs.end())
+				if (called && selectedFncs.find(called->start_ea) == selectedFncs.end())
 				{
-					selectedFncs.insert(called->startEA);
-					ss << ",0x" << std::hex << called->startEA << "-" << "0x" << std::hex << (called->endEA-1);
+					selectedFncs.insert(called->start_ea);
+					ss << ",0x" << std::hex << called->start_ea << "-"
+							<< "0x" << std::hex << (called->end_ea-1);
 				}
 			}
 		}
@@ -362,10 +163,11 @@ void createRangesFromSelectedFunction(RdGlobalInfo &decompInfo, func_t *fnc)
 				if (xb.type == fl_CF || xb.type == fl_CN)
 				{
 					func_t *called = get_func(xb.to);
-					if (called == fnc && selectedFncs.find(caller->startEA) == selectedFncs.end())
+					if (called == fnc && selectedFncs.find(caller->start_ea) == selectedFncs.end())
 					{
-						selectedFncs.insert(caller->startEA);
-						ss << ",0x" << std::hex << caller->startEA << "-" << "0x" << std::hex << (caller->endEA-1);
+						selectedFncs.insert(caller->start_ea);
+						ss << ",0x" << std::hex << caller->start_ea << "-"
+								<< "0x" << std::hex << (caller->end_ea-1);
 					}
 				}
 			}

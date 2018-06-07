@@ -62,7 +62,7 @@ void saveIdaDatabase(bool inSitu = false, const std::string &suffix = ".dec-back
 	}
 	workIdb += ".idb";
 
-	save_database_ex(workIdb.c_str(), DBFL_COMP);
+	save_database(workIdb.c_str(), DBFL_COMP);
 
 	INFO_MSG("IDA database saved into :  %s\n", workIdb.c_str());
 }
@@ -84,7 +84,7 @@ void generatePluginDatabase()
  */
 bool isRelocatable()
 {
-	if (inf.filetype == f_COFF && inf.beginEA == BADADDR)
+	if (inf.filetype == f_COFF && inf.start_ea == BADADDR)
 	{
 		return true;
 	}
@@ -125,11 +125,13 @@ bool isRelocatable()
  */
 void runSelectiveDecompilation(func_t *fnc2decomp = nullptr, bool force = false)
 {
-	if (isRelocatable() && inf.minEA != 0)
+	if (isRelocatable() && inf.min_ea != 0)
 	{
 		warning("%s version %s can selectively decompile only relocatable objects loaded at 0x0.\n"
 				"Rebase the program to 0x0 or use full decompilation or our web interface at: %s",
-				decompInfo.pluginName.c_str(), decompInfo.pluginVersion.c_str(), decompInfo.pluginURL.c_str());
+				decompInfo.pluginName.c_str(),
+				decompInfo.pluginVersion.c_str(),
+				decompInfo.pluginURL.c_str());
 		return;
 	}
 
@@ -137,8 +139,10 @@ void runSelectiveDecompilation(func_t *fnc2decomp = nullptr, bool force = false)
 	//
 	if (fnc2decomp)
 	{
-		decompInfo.navigationList.erase(++decompInfo.navigationActual, decompInfo.navigationList.end());
-		decompInfo.navigationList.push_back( fnc2decomp );
+		decompInfo.navigationList.erase(
+				++decompInfo.navigationActual,
+				decompInfo.navigationList.end());
+		decompInfo.navigationList.push_back(fnc2decomp);
 		decompInfo.navigationActual = decompInfo.navigationList.end();
 		decompInfo.navigationActual--;
 
@@ -149,9 +153,11 @@ void runSelectiveDecompilation(func_t *fnc2decomp = nullptr, bool force = false)
 		{
 			decompInfo.decompiledFunction = fnc2decomp;
 
-			char fncName[MAXSTR];
-			get_func_name(fnc2decomp->startEA, fncName, sizeof(fncName));
-			INFO_MSG("Show already decompiled function: %s @ %a\n", fncName, fnc2decomp->startEA);
+			qstring fncName;
+			get_func_name(&fncName, fnc2decomp->start_ea);
+			INFO_MSG("Show already decompiled function: %s @ %a\n",
+					fncName,
+					fnc2decomp->start_ea);
 
 			qthread_create(showDecompiledCode, static_cast<void*>(&decompInfo));
 
@@ -166,16 +172,21 @@ void runSelectiveDecompilation(func_t *fnc2decomp = nullptr, bool force = false)
 	}
 	// Decompilation run from our viewer.
 	//
-	else if (get_current_viewer() == decompInfo.viewer && get_current_tform() == decompInfo.form)
+	else if (get_current_viewer() == decompInfo.custViewer
+			|| get_current_viewer() == decompInfo.codeViewer)
 	{
 		// Re-decompile current function.
 		//
 		if (decompInfo.decompiledFunction)
 		{
-			createRangesFromSelectedFunction(decompInfo, decompInfo.decompiledFunction);
+			createRangesFromSelectedFunction(
+					decompInfo,
+					decompInfo.decompiledFunction);
 
-			decompInfo.navigationList.erase(decompInfo.navigationActual, decompInfo.navigationList.end());
-			decompInfo.navigationList.push_back( decompInfo.decompiledFunction );
+			decompInfo.navigationList.erase(
+					decompInfo.navigationActual,
+					decompInfo.navigationList.end());
+			decompInfo.navigationList.push_back(decompInfo.decompiledFunction);
 			decompInfo.navigationActual = decompInfo.navigationList.end();
 			decompInfo.navigationActual--;
 		}
@@ -229,14 +240,14 @@ void runAllDecompilation()
 {
 	std::string defaultOut = decompInfo.inputPath + ".c";
 
-	char *tmp = askfile_cv(         ///< Returns: file name
-			true,                   ///< int savefile
-			defaultOut.data(),      ///< const char *default_answer
-			"Save decompiled file", ///< const char *format
-			nullptr                 ///< va_list va
+	char *tmp = ask_file(                ///< Returns: file name
+			true,                        ///< bool for_saving
+			defaultOut.data(),           ///< const char *default_answer
+			"Save decompiled file",      ///< const char *format
+			nullptr                      ///< va_list va
 	);
 
-	if (!tmp) ///< canceled
+	if (tmp == nullptr) ///< canceled
 	{
 		return;
 	}
@@ -254,14 +265,6 @@ void runAllDecompilation()
 }
 
 /**
- * Only generate config database.
- */
-void runDatabasegeneration()
-{
-	generatePluginDatabase();
-}
-
-/**
  *
  */
 bool setInputPath()
@@ -274,8 +277,8 @@ bool setInputPath()
 	get_input_file_path(buff, sizeof(buff));
 	std::string inPath = buff;
 
-	std::string idb = database_idb;
-	std::string id0 = database_id0;
+	std::string idb = get_path(PATH_TYPE_IDB);
+	std::string id0 = get_path(PATH_TYPE_ID0);
 	std::string workDir;
 	std::string workIdb;
 	if (!idb.empty())
@@ -304,15 +307,18 @@ bool setInputPath()
 
 	if (!retdec::utils::fileExists(inPath))
 	{
-		INFO_MSG("Input \"%s\" does not exist, trying to recover ...\n", inPath.c_str());
+		INFO_MSG("Input \"%s\" does not exist, trying to recover ...\n",
+				inPath.c_str());
 
 		inPath = workDir + inName;
 		if (!retdec::utils::fileExists(inPath))
 		{
-			INFO_MSG("Input \"%s\" does not exist, asking user to specify the input file ...\n", inPath.c_str());
+			INFO_MSG("Input \"%s\" does not exist, asking user to specify the "
+					"input file ...\n",
+					inPath.c_str());
 
-			char *tmp = askfile_cv(              ///< Returns: file name
-					false,                       ///< int savefile
+			char *tmp = ask_file(                ///< Returns: file name
+					false,                       ///< bool for_saving
 					nullptr,                     ///< const char *default_answer
 					"Input binary to decompile", ///< const char *format
 					nullptr                      ///< va_list va
@@ -324,17 +330,22 @@ bool setInputPath()
 			}
 			else if (!retdec::utils::fileExists(std::string(tmp)))
 			{
-				warning("Cannot decompile this input file, there is no such file: %s\n", tmp);
+				warning("Cannot decompile this input file, there is no such "
+						"file: %s\n",
+						tmp);
 				return false;
 			}
 
 			inPath = tmp;
 
-			INFO_MSG("Successfully recovered, using user selected file \"%s\".\n", inPath.c_str());
+			INFO_MSG("Successfully recovered, using user selected "
+					"file \"%s\".\n",
+					inPath.c_str());
 		}
 		else
 		{
-			INFO_MSG("Successfully recovered, using input file \"%s\".\n", inPath.c_str());
+			INFO_MSG("Successfully recovered, using input file \"%s\".\n",
+					inPath.c_str());
 		}
 	}
 	else
@@ -364,22 +375,34 @@ bool canDecompileInput()
 {
 	if (!inf.is_32bit())
 	{
-		warning("%s version %s can decompile only 32-bit input files.\n", decompInfo.pluginName.c_str(), decompInfo.pluginVersion.c_str());
+		warning("%s version %s can decompile only 32-bit input files.\n",
+				decompInfo.pluginName.c_str(),
+				decompInfo.pluginVersion.c_str());
 		return false;
 	}
 
-	if (!(inf.filetype == f_BIN || inf.filetype == f_PE || inf.filetype == f_ELF || inf.filetype == f_COFF || inf.filetype == f_HEX))
+	if (!(inf.filetype == f_BIN
+			|| inf.filetype == f_PE
+			|| inf.filetype == f_ELF
+			|| inf.filetype == f_COFF
+			|| inf.filetype == f_HEX))
 	{
 		if (inf.filetype == f_LOADER)
 		{
 			warning("Custom IDA loader plugin was used.\n"
 					"Decompilation will be attempted, but:\n"
-					"1. RetDec idaplugin can not check if the input can be decompiled. Decompilation may fail.\n"
-					"2. If the custom loader behaves differently than the RetDec loader, decompilation may fail or produce nonsensical result.");
+					"1. RetDec idaplugin can not check if the input can be "
+					"decompiled. Decompilation may fail.\n"
+					"2. If the custom loader behaves differently than the RetDec "
+					"loader, decompilation may fail or produce nonsensical result.");
 		}
 		else
 		{
-			warning("%s version %s cannot decompile this input file (file type = %d).\n", decompInfo.pluginName.c_str(), decompInfo.pluginVersion.c_str(), inf.filetype);
+			warning("%s version %s cannot decompile this input file "
+					"(file type = %d).\n",
+					decompInfo.pluginName.c_str(),
+					decompInfo.pluginVersion.c_str(),
+					inf.filetype);
 			return false;
 		}
 	}
@@ -399,20 +422,25 @@ bool canDecompileInput()
 	//
 	if (inf.filetype == f_HEX)
 	{
-		std::string procName = inf.procName;
+		std::string procName = inf.procname;
 		if (procName == "mipsr" || procName == "mipsb")
 		{
 			decompInfo.architecture = "mips";
 			decompInfo.endian = "big";
 		}
-		else if (procName == "mipsrl" || procName == "mipsl" || procName == "psp")
+		else if (procName == "mipsrl"
+				|| procName == "mipsl"
+				|| procName == "psp")
 		{
 			decompInfo.architecture = "mips";
 			decompInfo.endian = "little";
 		}
 		else
 		{
-			warning("Intel HEX input file can be decompiled only for one of these {mipsr, mipsb, mipsrl, mipsl, psp} processors, not \"%s\".\n", procName.c_str());
+			warning("Intel HEX input file can be decompiled only for one of "
+					"these {mipsr, mipsb, mipsrl, mipsl, psp} processors, "
+					"not \"%s\".\n",
+					procName.c_str());
 			return false;
 		}
 	}
@@ -425,13 +453,13 @@ bool canDecompileInput()
 
 		// Section VMA.
 		//
-		decompInfo.rawSectionVma = inf.minEA;
+		decompInfo.rawSectionVma = inf.min_ea;
 
 		// Entry point.
 		//
-		if (inf.beginEA != BADADDR)
+		if (inf.start_ea != BADADDR)
 		{
-			decompInfo.rawEntryPoint = inf.beginEA;
+			decompInfo.rawEntryPoint = inf.start_ea;
 		}
 		else
 		{
@@ -440,7 +468,7 @@ bool canDecompileInput()
 
 		// Architecture + endian.
 		//
-		std::string procName = inf.procName;
+		std::string procName = inf.procname;
 		if (procName == "mipsr" || procName == "mipsb")
 		{
 			decompInfo.architecture = "mips";
@@ -511,30 +539,22 @@ using namespace idaplugin;
  * IDA is searching for this function.
  * @param arg Argument set to value according plugins.cfg based on invocation hotkey.
  */
-void idaapi run(int arg)
+bool idaapi run(size_t arg)
 {
-	if (!autoIsOk())
+	if (!auto_is_ok())
 	{
 		INFO_MSG("RetDec plugin cannot run because the initial autoanalysis has not been finished.\n");
-		return;
+		return false;
 	}
 
 	if (!canDecompileInput())
 	{
-		return;
-	}
-
-	// Special modes for regression tests -> force local decompilation.
-	//
-	auto oldFlagVal = decompInfo.isLocalDecompilation();
-	if (arg == 4 || arg == 5)
-	{
-		decompInfo.setIsLocalDecompilation(true);
+		return false;
 	}
 
 	if (decompInfo.configureDecompilation())
 	{
-		return;
+		return false;
 	}
 
 	// ordinary selective decompilation
@@ -554,14 +574,14 @@ void idaapi run(int arg)
 	else if (arg == 2)
 	{
 		pluginConfigurationMenu(decompInfo);
-		return;
+		return true;
 	}
 	// only run database generation
 	//
 	else if (arg == 3)
 	{
-		runDatabasegeneration();
-		return;
+		generatePluginDatabase();
+		return true;
 	}
 	// selective decompilation used in plugin's regression tests
 	// forced local decompilation + disabled threads
@@ -571,25 +591,23 @@ void idaapi run(int arg)
 	{
 		for (unsigned i = 0; i < get_func_qty(); ++i)
 		{
+			qstring qCmt;
 			func_t *fnc = getn_func(i);
-			auto* c = get_func_cmt(fnc, false);
-			if (c == nullptr)
+			if (get_func_cmt(&qCmt, fnc, false) <= 0)
 			{
 				continue;
 			}
-			std::string cmt = c;
-			qfree(static_cast<void*>(c));
 
+			std::string cmt = qCmt.c_str();;
 			if (cmt.find("<retdec_select>") != std::string::npos)
 			{
 				decompInfo.outputFile = decompInfo.inputPath + ".c";
 				decompInfo.setIsUseThreads(false);
 				runSelectiveDecompilation(fnc);
-				decompInfo.setIsLocalDecompilation(oldFlagVal);
 				break;
 			}
 		}
-		return;
+		return true;
 	}
 	// full decompilation used in plugin's regression tests
 	// forced local decompilation + disabled threads
@@ -598,14 +616,17 @@ void idaapi run(int arg)
 	{
 		decompInfo.setIsUseThreads(false);
 		runAllDecompilation();
-		decompInfo.setIsLocalDecompilation(oldFlagVal);
-		return;
+		return true;
 	}
 	else
 	{
-		warning("%s version %s cannot handle argument '%d'.\n", decompInfo.pluginName.c_str(), decompInfo.pluginVersion.c_str(), arg);
-		return;
+		warning("%s version %s cannot handle argument '%d'.\n",
+				decompInfo.pluginName.c_str(),
+				decompInfo.pluginVersion.c_str(), arg);
+		return false;
 	}
+
+	return true;
 }
 
 /**
@@ -621,34 +642,33 @@ int idaapi init()
 	}
 
 	decompInfo.pluginRegNumber = register_addon(&decompInfo.pluginInfo);
-	if (decompInfo.pluginRegNumber == -1)
+	if (decompInfo.pluginRegNumber < 0)
 	{
-		warning("%s version %s failed to register.\n", decompInfo.pluginName.c_str(), decompInfo.pluginVersion.c_str());
+		warning("%s version %s failed to register.\n",
+				decompInfo.pluginName.c_str(),
+				decompInfo.pluginVersion.c_str());
 		return PLUGIN_SKIP;
 	}
 	else
 	{
-		INFO_MSG("%s version %s registered OK\n", decompInfo.pluginName.c_str(), decompInfo.pluginVersion.c_str());
+		INFO_MSG("%s version %s registered OK\n",
+				decompInfo.pluginName.c_str(),
+				decompInfo.pluginVersion.c_str());
 	}
 
 	readConfigFile(decompInfo);
 
-	add_menu_item(
-			"Options/BinaryPaths",
-			"RetDec plugin options...",
-			nullptr,
-			SETMENU_APP,
-			pluginConfigurationMenuCallBack,
-			&decompInfo);
-	add_menu_item(
-			"Options/RetDecPluginOptions",
-			"-",
-			nullptr,
-			SETMENU_INS,
-			nullptr,
-			nullptr);
+	if (addConfigurationMenuOption(decompInfo))
+	{
+		return PLUGIN_SKIP;
+	}
 
-	INFO_MSG("%s version %s loaded OK\n", decompInfo.pluginName.c_str(), decompInfo.pluginVersion.c_str());
+	INFO_MSG("%s version %s loaded OK\n",
+			decompInfo.pluginName.c_str(),
+			decompInfo.pluginVersion.c_str());
+
+	hook_to_notification_point(HT_UI, ui_callback, &decompInfo);
+	registerPermanentActions();
 
 	inited = true;
 	return PLUGIN_KEEP;
@@ -661,6 +681,7 @@ int idaapi init()
 void idaapi term()
 {
 	killDecompilation();
+	unhook_from_notification_point(HT_UI, ui_callback);
 }
 
 /**

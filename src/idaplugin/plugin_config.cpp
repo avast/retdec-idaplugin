@@ -15,12 +15,7 @@
 
 namespace {
 
-//const std::string JSON_apiUrl               = "apiUrl";
-const std::string JSON_apiKey               = "apiKey";
-const std::string JSON_decompileShPath      = "decompileShPath";
-const std::string JSON_versionCheckDate     = "versionCheckDate";
-const std::string JSON_pluginLatestVersion  = "pluginLatestVersion";
-const std::string JSON_localDecomp          = "localDecompilation";
+const std::string JSON_decompileShPath = "decompileShPath";
 
 } // anonymous namespace
 
@@ -111,12 +106,7 @@ bool readConfigFile(RdGlobalInfo& rdgi)
 		return true;
 	}
 
-	rdgi.pluginVersionCheckDate = root.get(JSON_versionCheckDate, "").asString();
-	rdgi.pluginLatestVersion = root.get(JSON_pluginLatestVersion, "").asString();
-	rdgi.apiKey = root.get(JSON_apiKey, "").asString();
-//	rdgi.apiUrl = root.get(JSON_apiUrl, "").asString();
 	rdgi.decompileShPath = root.get(JSON_decompileShPath, "").asString();
-	rdgi.setIsLocalDecompilation(root.get(JSON_localDecomp, rdgi.isLocalDecompilation()).asBool());
 
 	return false;
 }
@@ -135,65 +125,11 @@ void saveConfigTofile(RdGlobalInfo& rdgi)
 		// Problem when reading config -- does not matter, we use empty root.
 	}
 
-	root[JSON_versionCheckDate] = rdgi.pluginVersionCheckDate;
-	root[JSON_pluginLatestVersion] = rdgi.pluginLatestVersion;
-	root[JSON_apiKey] = rdgi.apiKey;
-//	root[JSON_apiUrl] = rdgi.apiUrl;
 	root[JSON_decompileShPath] = rdgi.decompileShPath;
-	root[JSON_localDecomp] = rdgi.isLocalDecompilation();
 
 	Json::StyledWriter writer;
 	std::ofstream jsonFile(rdgi.pluginConfigFile.c_str());
 	jsonFile << writer.write(root);
-}
-
-int idaapi modcb(int fid, form_actions_t &fa)
-{
-	ushort isLocalActivated = 0;
-	ushort isApiActivated = 0;
-
-	switch (fid)
-	{
-		// Form is going to be displayed.
-		case -1:
-			fa.get_checkbox_value(1, &isLocalActivated);
-			fa.get_checkbox_value(2, &isApiActivated);
-			if (isLocalActivated)
-			{
-				fa.enable_field(3, true);
-				fa.enable_field(4, false);
-			}
-			else if (isApiActivated)
-			{
-				fa.enable_field(3, false);
-				fa.enable_field(4, true);
-			}
-			else
-			{
-				fa.enable_field(3, false);
-				fa.enable_field(4, false);
-			}
-			break;
-		// Form is going to be closed with OK.
-		case -2:
-			break;
-		// Local decompilation checkbox changed.
-		case 1:
-			fa.get_checkbox_value(fid, &isLocalActivated);
-			fa.enable_field(3, isLocalActivated);
-			fa.enable_field(4, !isLocalActivated);
-			break;
-		// API decompilation checkbox changed.
-		case 2:
-			fa.get_checkbox_value(fid, &isApiActivated);
-			fa.enable_field(3, !isApiActivated);
-			fa.enable_field(4, isApiActivated);
-			break;
-		default:
-			break;
-	}
-
-	return 1;
 }
 
 /**
@@ -203,25 +139,6 @@ int idaapi modcb(int fid, form_actions_t &fa)
  */
 bool askUserToConfigurePlugin(RdGlobalInfo& rdgi)
 {
-	static const char format[] =
-		"RetDec Plugin Settings\n"
-		"\n"
-		"\n"
-		"%/"
-		"Settings will be permanently stored and you will not have to fill them each time you run decompilation.\n"
-		"\n"
-		"<##Select the decompilation mode to use##Local decompilation (RetDec must be installed):R1>\n"
-		"<Remote API decompilation (your data are sent to the RetDec server):R2>>\n"
-		"\n"
-		"Path to retdec-decompiler.sh (unnecessary if it is in the system PATH):\n"
-		"<:f3:1:64::>\n"
-		"\n"
-		"API URL   %A\n"
-		"<API key:A4::50::>\n"
-		"\n";
-
-	int decMode = rdgi.isApiDecompilation() ? 1 : 0;
-	char cApiKey[MAXSTR] = {};
 	char cDecompileSh[QMAXPATH] = {};
 
 	if (rdgi.decompileShPath.empty())
@@ -231,22 +148,53 @@ bool askUserToConfigurePlugin(RdGlobalInfo& rdgi)
 	}
 	else
 	{
-		std::copy(rdgi.decompileShPath.begin(), rdgi.decompileShPath.begin() + QMAXPATH, cDecompileSh);
+		std::copy(
+				rdgi.decompileShPath.begin(),
+				rdgi.decompileShPath.begin() + QMAXPATH,
+				cDecompileSh);
 	}
-	std::copy(rdgi.apiKey.begin(), rdgi.apiKey.begin() + MAXSTR, cApiKey);
 
-	if (AskUsingForm_c(format, modcb, &decMode, cDecompileSh, rdgi.apiUrl.c_str(), cApiKey) == 0)
+	// Works in Linux, but not as good as the solution below.
+	//
+	char format1[] = "FILTER Bash scripts|*.sh\n"
+			"Path to retdec-decompiler.sh (unnecessary if it is in the system PATH)";
+	char *tmp = ask_file(                ///< Returns: file name
+			false,                       ///< bool for_saving
+			cDecompileSh,                ///< const char *default_answer
+			format1,                     ///< const char *format
+			nullptr                      ///< va_list va
+	);
+	if (tmp == nullptr)
 	{
 		// ESC or CANCEL
 		return true;
 	}
 	else
 	{
-		rdgi.apiKey = cApiKey;
-		rdgi.decompileShPath = cDecompileSh;
-		rdgi.setIsLocalDecompilation(decMode == 0);
+		rdgi.decompileShPath = tmp;
 	}
+	return false;
 
+	// Segfaulting on Linux, no idea why.
+	//
+	char format2[] =
+		"RetDec Plugin Settings\n"
+		"\n"
+		"\n"
+		"Settings will be permanently stored and you will not have to fill them each time you run decompilation.\n"
+		"\n"
+		"Path to retdec-decompiler.sh (unnecessary if it is in the system PATH):\n"
+		"<:f:0:64::>\n"
+		"\n";
+	if (ask_form(format2, cDecompileSh) == 0)
+	{
+		// ESC or CANCEL
+		return true;
+	}
+	else
+	{
+		rdgi.decompileShPath = cDecompileSh;
+	}
 	return false;
 }
 
@@ -264,12 +212,37 @@ bool pluginConfigurationMenu(RdGlobalInfo& rdgi)
 }
 
 /**
- * Callback wrapper for pluginConfigurationMenu() function.
+ * @return @c False if success, @c true otherwise.
  */
-bool idaapi pluginConfigurationMenuCallBack(void* ud)
+bool addConfigurationMenuOption(RdGlobalInfo& rdgi)
 {
-	RdGlobalInfo* rdgi = static_cast<RdGlobalInfo*>(ud);
-	pluginConfigurationMenu(*rdgi);
+	char optionsActionName[] = "retdec:ShowOptions";
+	char optionsActionLabel[] = "RetDec plugin options...";
+
+	static show_options_ah_t show_options_ah(&rdgi);
+
+	static const action_desc_t desc = ACTION_DESC_LITERAL(
+			optionsActionName,
+			optionsActionLabel,
+			&show_options_ah,
+			nullptr,
+			NULL,
+			-1);
+
+	if (!register_action(desc)
+			|| !attach_action_to_menu(
+					"Options/SourcePaths",
+					optionsActionName,
+					SETMENU_APP)
+			|| !attach_action_to_menu(
+					"Options/SourcePaths",
+					"-",
+					SETMENU_APP))
+	{
+		ERROR_MSG("Failed to register Options menu item for RetDec plugin!");
+		return true;
+	}
+
 	return false;
 }
 

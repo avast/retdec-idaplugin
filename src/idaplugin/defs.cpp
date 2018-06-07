@@ -56,16 +56,6 @@ bool RdGlobalInfo::isDecompileShInSpecifiedPath() const
 	return std::system(cmd.c_str()) == 0;
 }
 
-bool RdGlobalInfo::isApiKeyOk() const
-{
-	return !apiKey.empty();
-}
-
-bool RdGlobalInfo::isApiUrlOk() const
-{
-	return !apiUrl.empty();
-}
-
 bool RdGlobalInfo::isUseThreads() const
 {
 	return useThreads;
@@ -76,54 +66,28 @@ void RdGlobalInfo::setIsUseThreads(bool f)
 	useThreads = f;
 }
 
-bool RdGlobalInfo::isLocalDecompilation() const
-{
-	return locaDecomp;
-}
-
-void RdGlobalInfo::setIsLocalDecompilation(bool f)
-{
-	locaDecomp = f;
-}
-
-bool RdGlobalInfo::isApiDecompilation() const
-{
-	return !isLocalDecompilation();
-}
-
-void RdGlobalInfo::setIsApiDecompilation(bool f)
-{
-	locaDecomp = !f;
-}
-
 /**
  * @return @c True if canceled, @c false otherwise.
  */
 bool RdGlobalInfo::configureDecompilation()
 {
-	if (isLocalDecompilation() && isDecompileShInSystemPath())
+	if (isDecompileShInSystemPath())
 	{
 		INFO_MSG("retdec-decompiler.sh in system PATH -> using local decompilation\n");
 		decompilationShCmd = "retdec-decompiler.sh";
 		return false;
 	}
-	else if (isLocalDecompilation() && isDecompileShInSpecifiedPath())
+	else if (isDecompileShInSpecifiedPath())
 	{
 		INFO_MSG("retdec-decompiler.sh at %s -> using local decompilation\n", decompileShPath.c_str());
 		decompilationShCmd = decompileShPath;
-		return false;
-	}
-	else if (isApiDecompilation() && isApiKeyOk() && isApiUrlOk())
-	{
-		INFO_MSG("API key and URL ok -> using remote API decompilation");
 		return false;
 	}
 	else
 	{
 		warning("Decompilation is not properly configured.\n"
 				"Either retdec-decompiler.sh must be in system PATH,\n"
-				"or path to retdec-decompiler.sh must be provided in configuration menu,\n"
-				"or API key and URL must be set.");
+				"or path to retdec-decompiler.sh must be provided in configuration menu.");
 		auto canceled = pluginConfigurationMenu(*this);
 		if (canceled)
 		{

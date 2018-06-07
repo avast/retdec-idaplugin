@@ -7,27 +7,32 @@
 #ifndef IDAPLUGIN_DEFS_H
 #define IDAPLUGIN_DEFS_H
 
+#include <iostream>
 #include <list>
 #include <map>
 
-#include <idasdk/include/ida.hpp> // this must be included before other idasdk headers
-#include <idasdk/include/auto.hpp>
-#include <idasdk/include/bytes.hpp>
-#include <idasdk/include/demangle.hpp>
-#include <idasdk/include/diskio.hpp>
-#include <idasdk/include/frame.hpp>
-#include <idasdk/include/funcs.hpp>
-#include <idasdk/include/idp.hpp>
-#include <idasdk/include/kernwin.hpp>
-#include <idasdk/include/lines.hpp>
-#include <idasdk/include/loader.hpp>
-#include <idasdk/include/segment.hpp>
-#include <idasdk/include/strlist.hpp>
-#include <idasdk/include/struct.hpp>
-#include <idasdk/include/typeinf.hpp>
-#include <idasdk/include/ua.hpp>
-#include <idasdk/include/xref.hpp>
+// IDA SDK includes.
+//
+#include <ida.hpp> // this must be included before other idasdk headers
+#include <auto.hpp>
+#include <bytes.hpp>
+#include <demangle.hpp>
+#include <diskio.hpp>
+#include <frame.hpp>
+#include <funcs.hpp>
+#include <idp.hpp>
+#include <kernwin.hpp>
+#include <lines.hpp>
+#include <loader.hpp>
+#include <segment.hpp>
+#include <strlist.hpp>
+#include <struct.hpp>
+#include <typeinf.hpp>
+#include <ua.hpp>
+#include <xref.hpp>
 
+// RetDec includes.
+//
 #include "retdec/config/config.h"
 #include "retdec/utils/address.h"
 #include "retdec/utils/os.h"
@@ -93,9 +98,7 @@ class RdGlobalInfo
 		std::string pluginEmail            = "support@retdec.com";
 		std::string pluginURL              = "https://retdec.com/";
 		std::string pluginContact          = pluginURL + "\nEMAIL: " + pluginEmail;
-		std::string pluginVersion          = "0.4";
-		std::string pluginVersionCheckDate = "";
-		std::string pluginLatestVersion    = "";
+		std::string pluginVersion          = "0.5";
 		std::string pluginHotkey           = "Ctrl-d";
 		std::string pluginBuildDate        = retdec::utils::getCurrentDate();
 #ifdef OS_WINDOWS
@@ -129,9 +132,9 @@ class RdGlobalInfo
 	// One viewer information.
 	//
 	public:
-		const std::string formName  = "RetDec";
-		TForm *form                 = nullptr;
-		TCustomControl *viewer      = nullptr;
+		const std::string viewerName = "RetDec";
+		TWidget* custViewer = nullptr;
+		TWidget* codeViewer = nullptr;
 
 	// One decompilation information.
 	//
@@ -154,25 +157,15 @@ class RdGlobalInfo
 	public:
 		bool isDecompileShInSystemPath() const;
 		bool isDecompileShInSpecifiedPath() const;
-		bool isApiKeyOk() const;
-		bool isApiUrlOk() const;
 
 		bool configureDecompilation();
 
 		bool isUseThreads() const;
 		void setIsUseThreads(bool f);
 
-		bool isApiDecompilation() const;
-		bool isLocalDecompilation() const;
-		void setIsApiDecompilation(bool f);
-		void setIsLocalDecompilation(bool f);
-
 	public:
 		const std::string pluginConfigFileName = "retdec-config.json";
 		std::string pluginConfigFile;
-		std::string apiUserAgent = "RetDec IDA Plugin (v" + pluginVersion + ", " + pluginBuildDate + ", " + pluginBuildSystem + ")";
-		const std::string apiUrl = "https://retdec.com/service/api";
-		std::string apiKey;
 		/// Path to the decompilation script set by used in configuration menu.
 		std::string decompileShPath;
 		/// Path to the decompilation script which will be used in local decompilation.
@@ -181,7 +174,6 @@ class RdGlobalInfo
 	private:
 		/// Only for debugging during development.
 		bool useThreads = true;
-		bool locaDecomp = false;
 };
 
 } // namespace idaplugin

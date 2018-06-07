@@ -1,6 +1,7 @@
 /**
  * @file idaplugin/code_viewer.cpp
- * @brief Module contains classes/methods dealing with decompiled code visualization.
+ * @brief Module contains classes/methods dealing with decompiled code
+ *        visualization.
  * @copyright (c) 2017 Avast Software, licensed under the MIT license
  */
 
@@ -17,7 +18,7 @@ extern RdGlobalInfo decompInfo;
 ea_t globalAddress = 0;
 
 //
-//======================================================================
+//==============================================================================
 //
 
 /**
@@ -30,9 +31,15 @@ ea_t globalAddress = 0;
  * @param rx    This is horizontal position in line string *WITH* tags.
  * @return False if OK, true otherwise.
  */
-static bool get_current_line_with_tags(TCustomControl *v, bool mouse, std::string &line, int &x, int &y, unsigned &rx)
+static bool get_current_line_with_tags(
+		TWidget* v,
+		bool mouse,
+		std::string& line,
+		int& x,
+		int& y,
+		unsigned& rx)
 {
-	if ( get_custom_viewer_place(v, mouse, &x, &y) == nullptr )
+	if (get_custom_viewer_place(v, mouse, &x, &y) == nullptr)
 	{
 		return true;
 	}
@@ -66,7 +73,12 @@ static bool get_current_line_with_tags(TCustomControl *v, bool mouse, std::strin
  * @param y     This is vertical position (line number) in viewer.
  * @return False if OK, true otherwise.
  */
-bool get_current_line_without_tags(TCustomControl *v, bool mouse, std::string &line, int &x, int &y)
+bool get_current_line_without_tags(
+		TWidget* v,
+		bool mouse,
+		std::string &line,
+		int& x,
+		int& y)
 {
 	unsigned rx_unused;
 	if (get_current_line_with_tags(v, mouse, line, x, y, rx_unused))
@@ -74,14 +86,14 @@ bool get_current_line_without_tags(TCustomControl *v, bool mouse, std::string &l
 		return true;
 	}
 
-	char buf[MAXSTR];
-	tag_remove(line.c_str(), buf, sizeof(buf));
-	if ( x >= static_cast<int>(strlen(buf)) )
+	qstring buf;
+	tag_remove(&buf, line.c_str());
+	if (x >= static_cast<int>(buf.length()))
 	{
 		return true;
 	}
 
-	line = buf;
+	line = buf.c_str();
 	return false;
 }
 
@@ -93,12 +105,16 @@ bool get_current_line_without_tags(TCustomControl *v, bool mouse, std::string &l
  * @param[out] color resulted word color
  * @return False if OK, true otherwise.
  */
-static bool get_current_word(TCustomControl *v, bool mouse, std::string &word, int& color)
+static bool get_current_word(
+		TWidget* v,
+		bool mouse,
+		std::string& word,
+		int& color)
 {
 	// Use SDK function to get highlighted ID.
 	//
-	char buf[MAXSTR];
-	if (!get_highlighted_identifier(buf, sizeof(buf), 0))
+	qstring buf;
+	if (!get_highlight(&buf, v, nullptr))
 	{
 		return true;
 	}
@@ -115,38 +131,50 @@ static bool get_current_word(TCustomControl *v, bool mouse, std::string &word, i
 	int nextColor = -1;
 
 	auto onColor = taggedLine.find_last_of(COLOR_ON, rx);
-	if (onColor != std::string::npos && onColor > 0 && taggedLine[onColor-1] == COLOR_ON)
+	if (onColor != std::string::npos && onColor > 0
+			&& taggedLine[onColor-1] == COLOR_ON)
+	{
 		prevColor = taggedLine[onColor];
+	}
 	else if (onColor != std::string::npos && (onColor+1) < taggedLine.length())
+	{
 		prevColor = taggedLine[onColor+1];
+	}
 
 	auto offColor = taggedLine.find_first_of(COLOR_OFF, rx);
 	if (offColor != std::string::npos && (offColor+1) < taggedLine.length())
+	{
 		nextColor = taggedLine[offColor+1];
+	}
 
 	if (prevColor == -1 || prevColor != nextColor)
 	{
 		return false;
 	}
 
-	word = buf;
+	word = buf.c_str();
 	color = nextColor;
 	return false;
 }
 
 bool isWordGlobal(const std::string& word, int color)
 {
-	return color == COLOR_DEFAULT && decompInfo.configDB.globals.getObjectByNameOrRealName(word) != nullptr;
+	return color == COLOR_DEFAULT
+			&& decompInfo.configDB.globals.getObjectByNameOrRealName(word)
+					!= nullptr;
 }
 
 const retdec::config::Object* getWordGlobal(const std::string& word, int color)
 {
-	return color == COLOR_DEFAULT ? decompInfo.configDB.globals.getObjectByNameOrRealName(word) : nullptr;
+	return !word.empty() && color == COLOR_DEFAULT
+			? decompInfo.configDB.globals.getObjectByNameOrRealName(word)
+			: nullptr;
 }
 
 bool isWordFunction(const std::string& word, int color)
 {
-	return color == COLOR_DEFAULT && decompInfo.configDB.functions.hasFunction(word);
+	return color == COLOR_DEFAULT
+			&& decompInfo.configDB.functions.hasFunction(word);
 }
 
 bool isWordIdentifier(const std::string& word, int color)
@@ -154,30 +182,33 @@ bool isWordIdentifier(const std::string& word, int color)
 	return color == COLOR_DREF;
 }
 
-const retdec::config::Function* getWordFunction(const std::string& word, int color)
+const retdec::config::Function* getWordFunction(
+		const std::string& word,
+		int color)
 {
-	return color == COLOR_DEFAULT ? decompInfo.configDB.functions.getFunctionByName(word) : nullptr;
+	return !word.empty() && color == COLOR_DEFAULT
+			? decompInfo.configDB.functions.getFunctionByName(word)
+			: nullptr;
 }
 
 func_t* getIdaFunction(const std::string& word, int color)
 {
-	if (!isWordFunction(word, color))
-		return nullptr;
-
-	auto* cfgFnc = decompInfo.configDB.functions.getFunctionByName( word );
-	if (cfgFnc == nullptr)
-		return nullptr;
-
-	for (unsigned i = 0; i < get_func_qty(); ++i)
+	if (word.empty())
 	{
-		func_t *fnc = getn_func(i);
-		if (fnc->startEA == cfgFnc->getStart())
-		{
-			return fnc;
-		}
+		return nullptr;
+	}
+	if (!isWordFunction(word, color))
+	{
+		return nullptr;
 	}
 
-	return nullptr;
+	auto* cfgFnc = decompInfo.configDB.functions.getFunctionByName(word);
+	if (cfgFnc == nullptr)
+	{
+		return nullptr;
+	}
+
+	return get_func(cfgFnc->getStart());
 }
 
 bool isCurrentFunction(func_t* fnc)
@@ -205,16 +236,16 @@ bool isWordCurrentParameter(const std::string& word, int color)
 	{
 		return false;
 	}
-	char cFncName[MAXSTR];
-	get_func_name(idaCurrentFnc->startEA, cFncName, sizeof(cFncName));
+	qstring name;
+	get_func_name(&name, idaCurrentFnc->start_ea);
 
-	auto* confCurrentFnc = decompInfo.configDB.functions.getFunctionByName(cFncName);
-	if (confCurrentFnc == nullptr)
+	auto* ccFnc = decompInfo.configDB.functions.getFunctionByName(name.c_str());
+	if (ccFnc == nullptr)
 	{
 		return false;
 	}
 
-	for (auto& p : confCurrentFnc->parameters)
+	for (auto& p : ccFnc->parameters)
 	{
 		auto realName = p.getRealName();
 		if ((!realName.empty() && realName == word) || p.getName() == word)
@@ -227,7 +258,7 @@ bool isWordCurrentParameter(const std::string& word, int color)
 }
 
 //
-//======================================================================
+//==============================================================================
 //
 
 /**
@@ -238,9 +269,15 @@ bool isWordCurrentParameter(const std::string& word, int color)
  *                  decompile/show it again only if this is set to @c true.
  * @param forceDec  Force new decompilation.
  */
-void decompileFunction(TCustomControl *cv, const std::string &calledFnc, bool force = false, bool forceDec = false)
+void decompileFunction(
+		TWidget* cv,
+		const std::string& calledFnc,
+		bool force = false,
+		bool forceDec = false)
 {
-	auto* globVar = decompInfo.configDB.globals.getObjectByNameOrRealName(calledFnc);
+	auto* globVar = decompInfo.configDB.globals.getObjectByNameOrRealName(
+			calledFnc);
+
 	if (globVar && globVar->getStorage().isMemory())
 	{
 		INFO_MSG("Global variable -> jump to ASM.\n");
@@ -248,11 +285,12 @@ void decompileFunction(TCustomControl *cv, const std::string &calledFnc, bool fo
 		return;
 	}
 
-	auto* cfgFnc = decompInfo.configDB.functions.getFunctionByName( calledFnc );
+	auto* cfgFnc = decompInfo.configDB.functions.getFunctionByName(calledFnc);
 
 	if (!cfgFnc)
 	{
-		INFO_MSG("Unknown function to decompile \"%s\" -> do nothing.\n", calledFnc.c_str());
+		INFO_MSG("Unknown function to decompile \"%s\" -> do nothing.\n",
+				calledFnc.c_str());
 		return;
 	}
 
@@ -262,7 +300,7 @@ void decompileFunction(TCustomControl *cv, const std::string &calledFnc, bool fo
 		{
 			func_t *fnc = getn_func(i);
 
-			if (fnc->startEA != cfgFnc->getStart())
+			if (fnc->start_ea != cfgFnc->getStart())
 			{
 				continue;
 			}
@@ -280,24 +318,26 @@ void decompileFunction(TCustomControl *cv, const std::string &calledFnc, bool fo
 	}
 
 	// Such function exists in config file, but not in IDA functions.
-	// This is import/export or something similar -> jump to IDA disassembler view.
+	// This is import/export or something similar -> jump to IDA disasm view.
 	//
 	INFO_MSG("Not a user-defined function -> jump to ASM.\n");
 	jumpto( cfgFnc->getStart() );
 }
 
 //
-//======================================================================
+//==============================================================================
 //
 
-bool idaapi moveToPrevious(void *)
+bool idaapi moveToPrevious()
 {
 	DBG_MSG("\t ESC : [ ");
 	for (auto& fnc : decompInfo.navigationList)
 	{
-		DBG_MSG("%a ", fnc->startEA);
+		DBG_MSG("%a ", fnc->start_ea);
 	}
-	DBG_MSG("] (#%d) : from %a => BACK\n", decompInfo.navigationList.size(), (*decompInfo.navigationActual)->startEA);
+	DBG_MSG("] (#%d) : from %a => BACK\n",
+			decompInfo.navigationList.size(),
+			(*decompInfo.navigationActual)->start_ea);
 
 	if (decompInfo.navigationList.size() <= 1)
 	{
@@ -308,9 +348,9 @@ bool idaapi moveToPrevious(void *)
 	{
 		decompInfo.navigationActual--;
 
-		DBG_MSG("\t\t=> %a\n", (*decompInfo.navigationActual)->startEA );
+		DBG_MSG("\t\t=> %a\n", (*decompInfo.navigationActual)->start_ea);
 
-		auto fit = decompInfo.fnc2code.find( *decompInfo.navigationActual );
+		auto fit = decompInfo.fnc2code.find(*decompInfo.navigationActual);
 		if (fit == decompInfo.fnc2code.end())
 		{
 			return false;
@@ -327,14 +367,51 @@ bool idaapi moveToPrevious(void *)
 	return false;
 }
 
-bool idaapi moveToNext(void*)
+struct move_backward_ah_t : public action_handler_t
+{
+	static const char* actionName;
+	static const char* actionLabel;
+	static const char* actionHotkey;
+
+	virtual int idaapi activate(action_activation_ctx_t*)
+	{
+		moveToPrevious();
+		return false;
+	}
+
+	virtual action_state_t idaapi update(action_update_ctx_t*)
+	{
+		return AST_ENABLE_ALWAYS;
+	}
+};
+
+const char* move_backward_ah_t::actionName   = "retdec:ActionMoveBackward";
+const char* move_backward_ah_t::actionLabel  = "Move backward";
+const char* move_backward_ah_t::actionHotkey = "ESC";
+
+static move_backward_ah_t move_backward_ah;
+static const action_desc_t move_backward_ah_desc = ACTION_DESC_LITERAL(
+		move_backward_ah_t::actionName,
+		move_backward_ah_t::actionLabel,
+		&move_backward_ah,
+		nullptr,
+		move_backward_ah_t::actionHotkey,
+		-1);
+
+//
+//==============================================================================
+//
+
+bool idaapi moveToNext()
 {
 	DBG_MSG("\t CTRL + F : [ ");
 	for (auto& fnc : decompInfo.navigationList)
 	{
-		DBG_MSG("%a ", fnc->startEA);
+		DBG_MSG("%a ", fnc->start_ea);
 	}
-	DBG_MSG("] (#%d) : from %a => FORWARD\n", decompInfo.navigationList.size(), (*decompInfo.navigationActual)->startEA);
+	DBG_MSG("] (#%d) : from %a => FORWARD\n",
+			decompInfo.navigationList.size(),
+			(*decompInfo.navigationActual)->start_ea);
 
 	if (decompInfo.navigationList.size() <= 1)
 	{
@@ -347,9 +424,9 @@ bool idaapi moveToNext(void*)
 	{
 		decompInfo.navigationActual++;
 
-		DBG_MSG("\t\t=> %a\n", (*decompInfo.navigationActual)->startEA );
+		DBG_MSG("\t\t=> %a\n", (*decompInfo.navigationActual)->start_ea);
 
-		auto fit = decompInfo.fnc2code.find( *decompInfo.navigationActual );
+		auto fit = decompInfo.fnc2code.find(*decompInfo.navigationActual);
 		if (fit != decompInfo.fnc2code.end())
 		{
 			decompInfo.decompiledFunction = fit->first;
@@ -366,46 +443,105 @@ bool idaapi moveToNext(void*)
 	return false;
 }
 
+struct move_forward_ah_t : public action_handler_t
+{
+	static const char* actionName;
+	static const char* actionLabel;
+	static const char* actionHotkey;
+
+	virtual int idaapi activate(action_activation_ctx_t*)
+	{
+		moveToNext();
+		return false;
+	}
+
+	virtual action_state_t idaapi update(action_update_ctx_t*)
+	{
+		return AST_ENABLE_ALWAYS;
+	}
+};
+
+const char* move_forward_ah_t::actionName   = "retdec:ActionMoveForward";
+const char* move_forward_ah_t::actionLabel  = "Move forward";
+const char* move_forward_ah_t::actionHotkey = "Ctrl+F";
+
+static move_forward_ah_t move_forward_ah;
+static const action_desc_t move_forward_ah_desc = ACTION_DESC_LITERAL(
+		move_forward_ah_t::actionName,
+		move_forward_ah_t::actionLabel,
+		&move_forward_ah,
+		nullptr,
+		move_forward_ah_t::actionHotkey,
+		-1);
+
 //
-//======================================================================
+//==============================================================================
 //
 
-bool idaapi insertCurrentFunctionComment(void*)
+bool idaapi insertCurrentFunctionComment()
 {
 	auto* fnc = getCurrentFunction();
 	if (fnc == nullptr)
 	{
 		return false;
 	}
-	char cFncName[MAXSTR];
-	get_func_name(fnc->startEA, cFncName, sizeof(cFncName));
-	std::string word = cFncName;
 
-	auto* fncCmt = get_func_cmt(fnc, false);
-	char buff[MAXSTR];
-	if (asktext(
-			sizeof(buff),
-			buff,
-			fncCmt,
-			"Please enter function comment (max %d characters)", (sizeof(buff)-1)))
+	qstring qCmt;
+	get_func_cmt(&qCmt, fnc, false);
+
+	qstring buff;
+	if (ask_text(
+			&buff,
+			MAXSTR,
+			qCmt.c_str(),
+			"Please enter function comment (max %d characters)",
+			MAXSTR))
 	{
-		set_func_cmt(fnc, buff, false);
+		set_func_cmt(fnc, buff.c_str(), false);
 		decompInfo.decompiledFunction = fnc;
 		qthread_create(showDecompiledCode, static_cast<void*>(&decompInfo));
 	}
 
-	qfree(static_cast<void*>(fncCmt));
 	return false;
 }
 
-//
-//======================================================================
-//
-
-bool idaapi changeFunctionGlobalName(void *ud)
+struct change_fnc_comment_ah_t : public action_handler_t
 {
-	TCustomControl *cv = static_cast<TCustomControl*>(ud);
+	static const char* actionName;
+	static const char* actionLabel;
+	static const char* actionHotkey;
 
+	virtual int idaapi activate(action_activation_ctx_t*)
+	{
+		insertCurrentFunctionComment();
+		return false;
+	}
+
+	virtual action_state_t idaapi update(action_update_ctx_t*)
+	{
+		return AST_ENABLE_ALWAYS;
+	}
+};
+
+const char* change_fnc_comment_ah_t::actionName   = "retdec:ActionChangeFncComment";
+const char* change_fnc_comment_ah_t::actionLabel  = "Edit func comment";
+const char* change_fnc_comment_ah_t::actionHotkey = ";";
+
+static change_fnc_comment_ah_t change_fnc_comment_ah;
+static const action_desc_t change_fnc_comment_ah_desc = ACTION_DESC_LITERAL(
+		change_fnc_comment_ah_t::actionName,
+		change_fnc_comment_ah_t::actionLabel,
+		&change_fnc_comment_ah,
+		nullptr,
+		change_fnc_comment_ah_t::actionHotkey,
+		-1);
+
+//
+//==============================================================================
+//
+
+bool idaapi changeFunctionGlobalName(TWidget* cv)
+{
 	std::string word;
 	int color = -1;
 	if (get_current_word(cv, false, word, color))
@@ -432,45 +568,61 @@ bool idaapi changeFunctionGlobalName(void *ud)
 		return false;
 	}
 
-	char* newName = askstr(HIST_IDENT, word.c_str(), askString.c_str());
-	if (newName == nullptr)
+	qstring qNewName = word.c_str();
+	if (!ask_str(&qNewName, HIST_IDENT, askString.c_str())
+			|| qNewName.empty())
 	{
 		return false;
 	}
-	std::string newTmp = newName;
-	if (newTmp == word)
+	std::string newName = qNewName.c_str();
+	if (newName == word)
 	{
 		return false;
 	}
-	auto fit = decompInfo.fnc2code.find( *decompInfo.navigationActual );
+	auto fit = decompInfo.fnc2code.find(*decompInfo.navigationActual);
 	if (fit == decompInfo.fnc2code.end())
 	{
 		return false;
 	}
 
-	std::regex e( std::string(SCOLOR_ON) + "." + newName + SCOLOR_OFF + "." );
+	std::regex e(std::string(SCOLOR_ON)
+			+ "."
+			+ newName
+			+ SCOLOR_OFF
+			+ ".");
+
 	if (decompInfo.configDB.globals.getObjectByNameOrRealName(newName) != nullptr
 			|| decompInfo.configDB.functions.hasFunction(newName)
 			|| std::regex_search(fit->second.code, e))
 	{
-		warning("Name \"%s\" is not unique\n", newName);
+		warning("Name \"%s\" is not unique\n", newName.c_str());
 		return false;
 	}
 
-	if (set_name(address, newName) == false)
+	if (set_name(address, newName.c_str()) == false)
 	{
 		return false;
 	}
 
-	std::string oldName = std::string(SCOLOR_ON) + SCOLOR_DEFAULT + word + SCOLOR_OFF + SCOLOR_DEFAULT;
-	std::string replace = std::string(SCOLOR_ON) + SCOLOR_DEFAULT + newName + SCOLOR_OFF + SCOLOR_DEFAULT;
+	std::string oldName = std::string(SCOLOR_ON)
+			+ SCOLOR_DEFAULT
+			+ word
+			+ SCOLOR_OFF
+			+ SCOLOR_DEFAULT;
+
+	std::string replace = std::string(SCOLOR_ON)
+			+ SCOLOR_DEFAULT
+			+ newName
+			+ SCOLOR_OFF
+			+ SCOLOR_DEFAULT;
+
 	for (auto& fncItem : decompInfo.fnc2code)
 	{
 		auto& code = fncItem.second.code;
 		std::string::size_type n = 0;
-		while ( ( n = code.find( oldName, n ) ) != std::string::npos )
+		while (( n = code.find(oldName, n)) != std::string::npos)
 		{
-			code.replace( n, oldName.size(), replace );
+			code.replace(n, oldName.size(), replace);
 			n += replace.size();
 		}
 	}
@@ -486,39 +638,150 @@ bool idaapi changeFunctionGlobalName(void *ud)
 	return false;
 }
 
+struct change_fnc_global_name_ah_t : public action_handler_t
+{
+	TWidget* view = nullptr;
+	static const char* actionName;
+	static const char* actionLabel;
+	static const char* actionHotkey;
+
+	virtual int idaapi activate(action_activation_ctx_t*)
+	{
+		changeFunctionGlobalName(view);
+		return false;
+	}
+
+	virtual action_state_t idaapi update(action_update_ctx_t*)
+	{
+		return AST_ENABLE_ALWAYS;
+	}
+
+	void setView(TWidget* v)
+	{
+		view = v;
+	}
+};
+
+const char* change_fnc_global_name_ah_t::actionName  = "retdec:ActionChangeFncGlobName";
+const char* change_fnc_global_name_ah_t::actionLabel = "Rename";
+const char* change_fnc_global_name_ah_t::actionHotkey = "N";
+
+static change_fnc_global_name_ah_t change_fnc_global_name_ah;
+static const action_desc_t change_fnc_global_name_ah_desc = ACTION_DESC_LITERAL(
+		change_fnc_global_name_ah_t::actionName,
+		change_fnc_global_name_ah_t::actionLabel,
+		&change_fnc_global_name_ah,
+		nullptr,
+		change_fnc_global_name_ah_t::actionHotkey,
+		-1);
+
 //
-//======================================================================
+//==============================================================================
 //
 
-bool idaapi openXrefsWindow(void *ud)
+bool idaapi openXrefsWindow(func_t* fnc)
 {
-	func_t* fnc = static_cast<func_t*>(ud);
-	open_xrefs_window(fnc->startEA);
+	open_xrefs_window(fnc->start_ea);
 	return false;
 }
 
-bool idaapi openCallsWindow(void *ud)
+struct open_xrefs_ah_t : public action_handler_t
 {
-	func_t* fnc = static_cast<func_t*>(ud);
-	open_calls_window(fnc->startEA);
+	func_t* fnc = nullptr;
+	static const char* actionName;
+	static const char* actionLabel;
+	static const char* actionHotkey;
+
+	virtual int idaapi activate(action_activation_ctx_t*)
+	{
+		openXrefsWindow(fnc);
+		return false;
+	}
+
+	virtual action_state_t idaapi update(action_update_ctx_t*)
+	{
+		return AST_ENABLE_ALWAYS;
+	}
+
+	void setFunction(func_t* f)
+	{
+		fnc = f;
+	}
+};
+
+const char* open_xrefs_ah_t::actionName   = "retdec:ActionOpenXrefs";
+const char* open_xrefs_ah_t::actionLabel  = "Open xrefs window";
+const char* open_xrefs_ah_t::actionHotkey = "X";
+
+static open_xrefs_ah_t open_xrefs_ah;
+static const action_desc_t open_xrefs_ah_desc = ACTION_DESC_LITERAL(
+		open_xrefs_ah_t::actionName,
+		open_xrefs_ah_t::actionLabel,
+		&open_xrefs_ah,
+		nullptr,
+		open_xrefs_ah_t::actionHotkey,
+		-1);
+
+//
+//==============================================================================
+//
+
+bool idaapi openCallsWindow(func_t* fnc)
+{
+	open_calls_window(fnc->start_ea);
 	return false;
 }
 
-//
-//======================================================================
-//
-
-bool idaapi changeTypeDeclaration(void *ud)
+struct open_calls_ah_t : public action_handler_t
 {
-	TCustomControl *cv = static_cast<TCustomControl*>(ud);
+	func_t* fnc = nullptr;
+	static const char* actionName;
+	static const char* actionLabel;
+	static const char* actionHotkey;
 
+	virtual int idaapi activate(action_activation_ctx_t*)
+	{
+		openCallsWindow(fnc);
+		return false;
+	}
+
+	virtual action_state_t idaapi update(action_update_ctx_t*)
+	{
+		return AST_ENABLE_ALWAYS;
+	}
+
+	void setFunction(func_t* f)
+	{
+		fnc = f;
+	}
+};
+
+const char* open_calls_ah_t::actionName   = "retdec:ActionOpenCalls";
+const char* open_calls_ah_t::actionLabel  = "Open calls window";
+const char* open_calls_ah_t::actionHotkey = "C";
+
+static open_calls_ah_t open_calls_ah;
+static const action_desc_t open_calls_ah_desc = ACTION_DESC_LITERAL(
+		open_calls_ah_t::actionName,
+		open_calls_ah_t::actionLabel,
+		&open_calls_ah,
+		nullptr,
+		open_calls_ah_t::actionHotkey,
+		-1);
+
+//
+//==============================================================================
+//
+
+bool idaapi changeTypeDeclaration(TWidget* cv)
+{
 	std::string word;
 	int color = -1;
 	if (get_current_word(cv, false, word, color))
 	{
 		return false;
 	}
-	auto* idaFnc= getIdaFunction(word, color);
+	auto* idaFnc = getIdaFunction(word, color);
 	auto* cFnc = getWordFunction(word, color);
 	auto* cGv = getWordGlobal(word, color);
 
@@ -537,24 +800,26 @@ bool idaapi changeTypeDeclaration(void *ud)
 		return false;
 	}
 
-	char buf[MAXSTR];
+	qstring buf;
 	int flags = PRTYPE_1LINE | PRTYPE_SEMI;
-	if (print_type2(addr, buf, sizeof(buf), flags))
+	if (print_type(&buf, addr, flags))
 	{
 		std::string askString = "Please enter type declaration:";
-		char* newDeclr = askstr(HIST_TYPE, buf, askString.c_str());
-		if (newDeclr == nullptr)
+
+		qstring qNewDeclr = buf;
+		if (!ask_str(&qNewDeclr, HIST_IDENT, askString.c_str())
+				|| qNewDeclr.empty())
 		{
 			return false;
 		}
 
-		if (apply_cdecl2(idati, addr, newDeclr))
+		if (apply_cdecl(nullptr, addr, qNewDeclr.c_str()))
 		{
 			decompileFunction(cv, word, true, true);
 		}
 		else
 		{
-			WARNING_MSG("Cannot change declaration to: %s\n", newDeclr);
+			WARNING_MSG("Cannot change declaration to: %s\n", qNewDeclr.c_str());
 		}
 	}
 	else
@@ -565,42 +830,115 @@ bool idaapi changeTypeDeclaration(void *ud)
 	return false;
 }
 
+struct change_fnc_type_ah_t : public action_handler_t
+{
+	TWidget* view = nullptr;
+	static const char* actionName;
+	static const char* actionLabel;
+	static const char* actionHotkey;
+
+	virtual int idaapi activate(action_activation_ctx_t*)
+	{
+		changeTypeDeclaration(view);
+		return false;
+	}
+
+	virtual action_state_t idaapi update(action_update_ctx_t*)
+	{
+		return AST_ENABLE_ALWAYS;
+	}
+
+	void setView(TWidget* v)
+	{
+		view = v;
+	}
+};
+
+const char* change_fnc_type_ah_t::actionName   = "retdec:ActionChangeFncType";
+const char* change_fnc_type_ah_t::actionLabel  = "Change type declaration";
+const char* change_fnc_type_ah_t::actionHotkey = "Y";
+
+static change_fnc_type_ah_t change_fnc_type_ah;
+static const action_desc_t change_fnc_type_ah_desc = ACTION_DESC_LITERAL(
+		change_fnc_type_ah_t::actionName,
+		change_fnc_type_ah_t::actionLabel,
+		&change_fnc_type_ah,
+		nullptr,
+		change_fnc_type_ah_t::actionHotkey,
+		-1);
+
 //
-//======================================================================
+//==============================================================================
 //
 
 /**
  * Jump to specified address in IDA's disassembly.
  * @param ud Address to jump to.
  */
-bool idaapi jumpToASM(void *ud)
+bool idaapi jumpToASM(ea_t ea)
 {
-	ea_t* addr = static_cast<ea_t*>(ud);
-	jumpto( *addr );
+	jumpto(ea);
 	return false;
 }
 
+struct jump_to_asm_ah_t : public action_handler_t
+{
+	ea_t addr;
+	static const char* actionName;
+	static const char* actionLabel;
+	static const char* actionHotkey;
+
+	virtual int idaapi activate(action_activation_ctx_t*)
+	{
+		jumpToASM(addr);
+		return false;
+	}
+
+	virtual action_state_t idaapi update(action_update_ctx_t*)
+	{
+		return AST_ENABLE_ALWAYS;
+	}
+
+	void setAddress(ea_t a)
+	{
+		addr = a;
+	}
+};
+
+const char* jump_to_asm_ah_t::actionName  = "retdec:ActionJumpToAsm";
+const char* jump_to_asm_ah_t::actionLabel = "Jump to ASM";
+const char* jump_to_asm_ah_t::actionHotkey = "A";
+
+static jump_to_asm_ah_t jump_to_asm_ah;
+static const action_desc_t jump_to_asm_ah_desc = ACTION_DESC_LITERAL(
+		jump_to_asm_ah_t::actionName,
+		jump_to_asm_ah_t::actionLabel,
+		&jump_to_asm_ah,
+		nullptr,
+		jump_to_asm_ah_t::actionHotkey,
+		-1);
+
 //
-//======================================================================
+//==============================================================================
 //
 
 /**
  * Callback for keybord action in custom viewer.
  */
-bool idaapi ct_keyboard(TCustomControl *cv, int key, int shift, void *ud)
+bool idaapi ct_keyboard(TWidget* cv, int key, int shift, void* ud)
 {
 	// ESC : move to the previous saved position.
 	//
 	if (key == 27 && shift == 0)
 	{
-		return moveToPrevious(static_cast<void*>(cv));
+		return moveToPrevious();
 	}
 	// CTRL + F : move to the next saved position.
 	// 70 = 'F'
 	//
 	else if (key == 70 && shift == 4)
 	{
-		return moveToNext(static_cast<void*>(cv));
+		return moveToNext();
 	}
 
 	// Get word, function, global, ...
@@ -620,7 +958,7 @@ bool idaapi ct_keyboard(TCustomControl *cv, int key, int shift, void *ud)
 	//
 	if ((key == 45 && shift == 0) || (key == 186 && shift == 0))
 	{
-		return insertCurrentFunctionComment(static_cast<void*>(cv));
+		return insertCurrentFunctionComment();
 	}
 	// 78 = N
 	//
@@ -633,7 +971,7 @@ bool idaapi ct_keyboard(TCustomControl *cv, int key, int shift, void *ud)
 
 		if (cFnc || cGv)
 		{
-			return changeFunctionGlobalName(static_cast<void*>(cv));
+			return changeFunctionGlobalName(cv);
 		}
 		else
 		{
@@ -669,7 +1007,7 @@ bool idaapi ct_keyboard(TCustomControl *cv, int key, int shift, void *ud)
 	//
 	else if (key == 89 && shift == 0)
 	{
-		return changeTypeDeclaration(static_cast<void*>(cv));
+		return changeTypeDeclaration(cv);
 	}
 	// 65 = A
 	//
@@ -678,7 +1016,7 @@ bool idaapi ct_keyboard(TCustomControl *cv, int key, int shift, void *ud)
 		ea_t addr = 0;
 		if (idaFnc)
 		{
-			addr = idaFnc->startEA;
+			addr = idaFnc->start_ea;
 		}
 		else if (cGv)
 		{
@@ -688,7 +1026,7 @@ bool idaapi ct_keyboard(TCustomControl *cv, int key, int shift, void *ud)
 		{
 			return false;
 		}
-		jumpToASM(&addr);
+		jumpToASM(addr);
 	}
 	// Anything else : ignored.
 	//
@@ -700,63 +1038,112 @@ bool idaapi ct_keyboard(TCustomControl *cv, int key, int shift, void *ud)
 	return false;
 }
 
-bool dummyAction(void *ud)
+//
+//==============================================================================
+//
+
+ssize_t idaapi ui_callback(void* ud, int notification_code, va_list va)
 {
+	RdGlobalInfo* di = static_cast<RdGlobalInfo*>(ud);
+
+	switch (notification_code)
+	{
+		// called when IDA is preparing a context menu for a view
+		// Here dynamic context-depending user menu items can be added.
+		case ui_populating_widget_popup:
+		{
+			TWidget* view = va_arg(va, TWidget*);
+			if (view != di->custViewer && view != di->codeViewer)
+			{
+				return false;
+			}
+
+			std::string word;
+			int color = -1;
+			if (get_current_word(view, false, word, color))
+			{
+				// fail -> nothing
+			}
+
+			auto* idaFnc = getIdaFunction(word, color);
+			const retdec::config::Function* cFnc = getWordFunction(word, color);
+			const retdec::config::Object* cGv = getWordGlobal(word, color);
+
+			TPopupMenu* p = va_arg(va, TPopupMenu*);
+
+			// Function context.
+			//
+			if (idaFnc && cFnc)
+			{
+				attach_action_to_popup(view, p, "-");
+
+				jump_to_asm_ah.setAddress(idaFnc->start_ea);
+				attach_action_to_popup(view, p, jump_to_asm_ah_t::actionName);
+
+				change_fnc_global_name_ah.setView(view);
+				attach_action_to_popup(view, p, change_fnc_global_name_ah_t::actionName);
+
+				if (isCurrentFunction(idaFnc))
+				{
+					change_fnc_type_ah.setView(view);
+					attach_action_to_popup(view, p, change_fnc_type_ah_t::actionName);
+				}
+
+				open_xrefs_ah.setFunction(idaFnc);
+				attach_action_to_popup(view, p, open_xrefs_ah_t::actionName);
+
+				open_calls_ah.setFunction(idaFnc);
+				attach_action_to_popup(view, p, open_calls_ah_t::actionName);
+			}
+			// Global var context.
+			//
+			else if (cGv)
+			{
+				globalAddress = cGv->getStorage().getAddress();
+
+				attach_action_to_popup(view, p, "-");
+
+				jump_to_asm_ah.setAddress(globalAddress);
+				attach_action_to_popup(view, p, jump_to_asm_ah_t::actionName);
+
+				change_fnc_global_name_ah.setView(view);
+				attach_action_to_popup(view, p, change_fnc_global_name_ah_t::actionName);
+			}
+
+			// Common for all contexts.
+			//
+			attach_action_to_popup(view, p, "-");
+			attach_action_to_popup(view, p, change_fnc_comment_ah_t::actionName);
+			attach_action_to_popup(view, p, move_backward_ah_t::actionName);
+			attach_action_to_popup(view, p, move_forward_ah_t::actionName);
+			attach_action_to_popup(view, p, "-");
+			break;
+		}
+	}
+
 	return false;
 }
 
-/**
- * Callback for right click in custom viewer.
- */
-void idaapi ct_popup(TCustomControl *cv, void *ud)
+void registerPermanentActions()
 {
-	std::string word;
-	int color = -1;
-	if (get_current_word(cv, false, word, color))
-	{
-		return;
-	}
-
-	auto* idaFnc = getIdaFunction(word, color);
-	const retdec::config::Function* cFnc = getWordFunction(word, color);
-	const retdec::config::Object* cGv = getWordGlobal(word, color);
-
-	set_custom_viewer_popup_menu(cv, nullptr);
-
-	// Function context.
-	//
-	if (idaFnc && cFnc)
-	{
-		add_custom_viewer_popup_item(cv, "Jump to ASM", "A", jumpToASM, &idaFnc->startEA);
-		add_custom_viewer_popup_item(cv, "Rename function", "N", changeFunctionGlobalName, cv);
-		if (isCurrentFunction(idaFnc))
-		{
-			add_custom_viewer_popup_item(cv, "Change type declaration", "Y", changeTypeDeclaration, cv);
-		}
-		add_custom_viewer_popup_item(cv, "Open xrefs window", "X", openXrefsWindow, idaFnc);
-		add_custom_viewer_popup_item(cv, "Open calls window", "C", openCallsWindow, idaFnc);
-	}
-	// Global var context.
-	//
-	else if (cGv)
-	{
-		globalAddress = cGv->getStorage().getAddress();
-		add_custom_viewer_popup_item(cv, "Jump to ASM", "A", jumpToASM, &globalAddress);
-		add_custom_viewer_popup_item(cv, "Rename global variable", "N", changeFunctionGlobalName, cv);
-	}
-
-	// Common for all contexts.
-	//
-	add_custom_viewer_popup_item(cv, "-", "", nullptr, nullptr);
-	add_custom_viewer_popup_item(cv, "Edit func comment", ";", insertCurrentFunctionComment, cv);
-	add_custom_viewer_popup_item(cv, "Move backward", "ESC", moveToPrevious, cv);
-	add_custom_viewer_popup_item(cv, "Move forward", "CTRL+F", moveToNext, cv);
+	register_action(jump_to_asm_ah_desc);
+	register_action(change_fnc_global_name_ah_desc);
+	register_action(open_xrefs_ah_desc);
+	register_action(open_calls_ah_desc);
+	register_action(change_fnc_type_ah_desc);
+	register_action(change_fnc_comment_ah_desc);
+	register_action(move_forward_ah_desc);
+	register_action(move_backward_ah_desc);
 }
+
+//
+//==============================================================================
+//
 
 /**
  * Callback for double click in custom viewer.
  */
-bool idaapi ct_double(TCustomControl *cv, int shift, void *ud)
+bool idaapi ct_double(TWidget* cv, int shift, void* ud)
 {
 	std::string word;
 	int color = -1;
@@ -775,24 +1162,20 @@ bool idaapi ct_double(TCustomControl *cv, int shift, void *ud)
 	return false;
 }
 
-/**
- * Callback for current position change in custom viewer.
- */
-void idaapi ct_curpos(TCustomControl *v, void *)
+//
+//==============================================================================
+//
+
+void idaapi ct_close(TWidget* cv, void* ud)
 {
+	RdGlobalInfo* di = static_cast<RdGlobalInfo*>(ud);
 
-}
-
-/**
- * Callback for closing of custom viewer.
- */
-void idaapi ct_close(TCustomControl *cv, void *ud)
-{
-
+	di->custViewer = nullptr;
+	di->codeViewer = nullptr;
 }
 
 //
-//======================================================================
+//==============================================================================
 //
 
 /**
@@ -804,15 +1187,6 @@ int idaapi showDecompiledCode(void *ud)
 	ShowOutput show(di);
 	execute_sync(show, MFF_FAST);
 	return 0;
-}
-
-/**
- * Use @c ShowVersionCheckForm structure to show new version info form.
- */
-int idaapi showVersionCheckForm(RdGlobalInfo *di)
-{
-	ShowVersionCheckForm show(di);
-	return execute_sync(show, MFF_FAST);
 }
 
 } // namespace idaplugin

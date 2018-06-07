@@ -12,7 +12,26 @@
 namespace idaplugin {
 
 bool pluginConfigurationMenu(RdGlobalInfo& rdgi);
-bool idaapi pluginConfigurationMenuCallBack(void* ud);
+
+struct show_options_ah_t : public action_handler_t
+{
+	show_options_ah_t(RdGlobalInfo* i) : rdgi(i) {}
+
+	virtual int idaapi activate(action_activation_ctx_t *)
+	{
+		pluginConfigurationMenu(*rdgi);
+		return false;
+	}
+
+	virtual action_state_t idaapi update(action_update_ctx_t *)
+	{
+		return AST_ENABLE_ALWAYS;
+	}
+
+	RdGlobalInfo* rdgi = nullptr;
+};
+
+bool addConfigurationMenuOption(RdGlobalInfo& rdgi);
 
 bool readConfigFile(RdGlobalInfo& rdgi);
 void saveConfigTofile(RdGlobalInfo& rdgi);
