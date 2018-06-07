@@ -2,6 +2,10 @@
 
 ## dev
 
+## v0.5 (June 7, 2018)
+
+* Added support for IDA 7.x ([#2](https://github.com/avast-tl/retdec-idaplugin/issues/2)). Dropped support for IDA 6.x.
+* Removed remote decompilation through RetDec's API ([#9](https://github.com/avast-tl/retdec-idaplugin/issues/9), [#13](https://github.com/avast-tl/retdec-idaplugin/issues/13)).
 * Fix: `#!/usr/bin/env bash` is now used instead of `#!/bin/bash` to run the scripts ([avast-tl/retdec #258](https://github.com/avast-tl/retdec/issues/258)).
 * Fix: Allow decompilation of input files with `f_LOADER` file type ([#3](https://github.com/avast-tl/retdec-idaplugin/issues/3)).
 
