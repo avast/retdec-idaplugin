@@ -98,7 +98,7 @@ class RdGlobalInfo
 		std::string pluginEmail            = "support@retdec.com";
 		std::string pluginURL              = "https://retdec.com/";
 		std::string pluginContact          = pluginURL + "\nEMAIL: " + pluginEmail;
-		std::string pluginVersion          = "0.4";
+		std::string pluginVersion          = "0.5";
 		std::string pluginHotkey           = "Ctrl-d";
 		std::string pluginBuildDate        = retdec::utils::getCurrentDate();
 #ifdef OS_WINDOWS
