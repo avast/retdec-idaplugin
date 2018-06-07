@@ -3,7 +3,7 @@
 RetDec plugin for IDA (Interactive Disassembler).
 
 The plugin is compatible with the following IDA versions: 7.x.
-The plugin does NOT work with IDA 6.x.
+The plugin does NOT work with IDA 6.x, or freeware version of IDA 7.0.
 The plugin binary itself is 64-bit, but at the moment, it supports only 32-bit address space. I.e. it works in `ida`, not `ida64`, and can decompile only 32-bit binaries.
 
 ## Installation and Use
