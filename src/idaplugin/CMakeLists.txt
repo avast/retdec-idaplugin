@@ -7,14 +7,10 @@ set(TARGET_NAME "idaplugin")
 set(FINAL_PLUGIN_NAME "retdec")
 
 # Windows.
-if(WIN32)
-	# _WIN32_WINNT is defined for Boost (otherwise, it complains during
-	# compilation). It is the minimum required system for running the plugin.
-	# 0x0501 is WindowsXP.
-	add_definitions(-D__NT__ -DWIN32 -D_WIN32_WINNT=0x0501)
-
+if(MSVC)
+	add_definitions(-D__NT__) #-DWIN32
 	if(MSVC)
-		set(IDASDK_LIBRARIES "${IDA_SDK_DIR}/lib/x86_win_vc_32/ida.lib")
+		set(IDASDK_LIBRARIES "${IDA_SDK_DIR}/lib/x64_win_vc_32/ida.lib")
 	endif()
 # Linux.
 else()
