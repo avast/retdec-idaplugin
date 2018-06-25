@@ -658,7 +658,7 @@ int idaapi init()
 
 	readConfigFile(decompInfo);
 
-	if (addConfigurationMenuOption(decompInfo))
+	if (is_idaq() && addConfigurationMenuOption(decompInfo))
 	{
 		return PLUGIN_SKIP;
 	}
