@@ -59,8 +59,8 @@ if(MSYS)
 	target_link_libraries(${TARGET_NAME} ws2_32)
 endif()
 
-# Set a proper name of the library that represents the plugin (e.g. retdec.plx
-# on Linux and retdec.plw on Windows).
+# Set a proper name of the library that represents the plugin (e.g. retdec.dylib
+# on macOS, retdec.so on Linux and retdec.dll on Windows).
 set_target_properties(${TARGET_NAME} PROPERTIES PREFIX "")
 set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME "${FINAL_PLUGIN_NAME}")
 
