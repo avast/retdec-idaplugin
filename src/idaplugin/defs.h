@@ -101,8 +101,10 @@ class RdGlobalInfo
 		std::string pluginVersion          = "0.5";
 		std::string pluginHotkey           = "Ctrl-d";
 		std::string pluginBuildDate        = retdec::utils::getCurrentDate();
-#ifdef OS_WINDOWS
+#if defined(OS_WINDOWS)
 		std::string pluginBuildSystem      = "Windows";
+#elif defined(OS_MACOS)
+		std::string pluginBuildSystem      = "macOS";
 #else
 		std::string pluginBuildSystem      = "Linux";
 #endif
