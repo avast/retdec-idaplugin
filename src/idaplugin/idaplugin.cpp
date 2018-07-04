@@ -156,7 +156,7 @@ void runSelectiveDecompilation(func_t *fnc2decomp = nullptr, bool force = false)
 			qstring fncName;
 			get_func_name(&fncName, fnc2decomp->start_ea);
 			INFO_MSG("Show already decompiled function: %s @ %a\n",
-					fncName,
+					fncName.c_str(),
 					fnc2decomp->start_ea);
 
 			qthread_create(showDecompiledCode, static_cast<void*>(&decompInfo));
