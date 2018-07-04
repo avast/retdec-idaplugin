@@ -14,7 +14,7 @@ if(MSVC)
 	endif()
 elseif (APPLE)
 	ADD_DEFINITIONS (-D__MAC__)
-	set(IDASDK_LIBRARIES "${IDA_SDK_DIR}/lib/x64_mac_gcc_64/libida64.dylib")
+	set(IDASDK_LIBRARIES "${IDA_SDK_DIR}/lib/x64_mac_gcc_32/libida.dylib")
 # Linux.
 else()
 	add_definitions(-D__LINUX__)
