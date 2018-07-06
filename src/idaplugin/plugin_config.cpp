@@ -34,34 +34,24 @@ bool getConfigRootFromString(
 		Json::Value& root,
 		bool silent = true)
 {
-	Json::Reader reader;
-	bool parsingSuccessful = reader.parse(json, root);
+	Json::CharReaderBuilder builder;
+	Json::CharReader * reader = builder.newCharReader();
+
+	JSONCPP_STRING errors;
+
+	bool parsingSuccessful = reader->parse(json.c_str(), json.c_str() + json.size(), &root, &errors);
 	if (!parsingSuccessful || root.isNull() || !root.isObject())
 	{
-		std::string errMsg = "Failed to parse configuration";
-		std::size_t line = 0;
-		std::size_t column = 0;
-
-		auto errs = reader.getStructuredErrors();
-		if (!errs.empty())
-		{
-			errMsg = errs.front().message;
-			auto loc = retdec::utils::getLineAndColumnFromPosition(
-					json,
-					errs.front().offset_start
-			);
-			line = loc.first;
-			column = loc.second;
-		}
-
-		if (!silent)
+		if ((!silent) && (errors.size() != 0))
 		{
 			warning("Failed to parse JSON content.\n"
-					"Line: %d, Column: %d, Error: %s\n",
-					line, column, errMsg.c_str());
+					"%s\n", errors.c_str());
 		}
+		delete reader;
+
 		return true;
 	}
+	delete reader;
 
 	return false;
 }
@@ -127,9 +117,10 @@ void saveConfigTofile(RdGlobalInfo& rdgi)
 
 	root[JSON_decompileShPath] = rdgi.decompileShPath;
 
-	Json::StyledWriter writer;
+	Json::StreamWriterBuilder writer;
+	writer.settings_["commentStyle"] = "All";
 	std::ofstream jsonFile(rdgi.pluginConfigFile.c_str());
-	jsonFile << writer.write(root);
+	jsonFile << Json::writeString(writer, root);
 }
 
 /**
