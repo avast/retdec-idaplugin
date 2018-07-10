@@ -34,24 +34,20 @@ bool getConfigRootFromString(
 		Json::Value& root,
 		bool silent = true)
 {
+	std::istringstream input(json);
 	Json::CharReaderBuilder builder;
-	Json::CharReader * reader = builder.newCharReader();
-
 	JSONCPP_STRING errors;
 
-	bool parsingSuccessful = reader->parse(json.c_str(), json.c_str() + json.size(), &root, &errors);
-	if (!parsingSuccessful || root.isNull() || !root.isObject())
+	bool success = Json::parseFromStream(builder, input, &root, &errors);
+	if (!success || root.isNull() || !root.isObject())
 	{
 		if ((!silent) && (errors.size() != 0))
 		{
 			warning("Failed to parse JSON content.\n"
 					"%s\n", errors.c_str());
 		}
-		delete reader;
-
 		return true;
 	}
-	delete reader;
 
 	return false;
 }
