@@ -126,7 +126,7 @@ void saveConfigTofile(RdGlobalInfo& rdgi)
  */
 bool askUserToConfigurePlugin(RdGlobalInfo& rdgi)
 {
-	char cDecompileSh[QMAXPATH] = {};
+	char cDecompileSh[QMAXPATH];
 
 	if (rdgi.decompileShPath.empty())
 	{
@@ -141,39 +141,22 @@ bool askUserToConfigurePlugin(RdGlobalInfo& rdgi)
 				cDecompileSh);
 	}
 
-	// Works in Linux, but not as good as the solution below.
-	//
-	char format1[] = "FILTER Bash scripts|*.sh\n"
-			"Path to retdec-decompiler.sh (unnecessary if it is in the system PATH)";
-	char *tmp = ask_file(                ///< Returns: file name
-			false,                       ///< bool for_saving
-			cDecompileSh,                ///< const char *default_answer
-			format1,                     ///< const char *format
-			nullptr                      ///< va_list va
-	);
-	if (tmp == nullptr)
-	{
-		// ESC or CANCEL
-		return true;
-	}
-	else
-	{
-		rdgi.decompileShPath = tmp;
-	}
-	return false;
-
-	// Segfaulting on Linux, no idea why.
-	//
-	char format2[] =
+	qstring formRetDecPluginSettings =
 		"RetDec Plugin Settings\n"
 		"\n"
 		"\n"
 		"Settings will be permanently stored and you will not have to fill them each time you run decompilation.\n"
 		"\n"
 		"Path to retdec-decompiler.sh (unnecessary if it is in the system PATH):\n"
-		"<:f:0:64::>\n"
+		"<RetDec file:f1::60:::>\n"
 		"\n";
-	if (ask_form(format2, cDecompileSh) == 0)
+
+	int ok = ask_form(formRetDecPluginSettings.c_str(),
+		cDecompileSh,
+		&cDecompileSh
+		);
+
+	if (ok == 0)
 	{
 		// ESC or CANCEL
 		return true;
