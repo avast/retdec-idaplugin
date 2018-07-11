@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.7)
 
 project(retdec-idaplugin CXX)
 
@@ -21,6 +21,12 @@ endif()
 if(NOT EXISTS "${IDA_SDK_DIR}")
 	message(FATAL_ERROR "Specified IDA SDK path does not exist.")
 endif()
+if(NOT EA64)
+	message("We are building RetDec for ida pro 7 32bits address space, Use -DEA64=1. to Enable building for 64bits address space.")
+else()
+	message("Configuring RetDec build for ida pro 7 64bits address space.")
+	add_definitions ( -DEA64="ON" )
+endif()
 
 # Build parameters.
 if(MSVC) # Windows
@@ -33,7 +39,7 @@ if(MSVC) # Windows
 	# std::numeric_limits<...>::max()
 	# (http://stackoverflow.com/questions/1904635/warning-c4003-and-errors-c2589-and-c2059-on-x-stdnumeric-limitsintmax).
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DNOMINMAX")
-else() # Linux
+else() # Linux & macOS
 	# Common options.
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")
@@ -49,8 +55,7 @@ else() # Linux
 endif()
 
 # Defines.
-add_definitions(-D__IDP__ -D__PLUGIN__ -DNO_OBSOLETE_FUNCS)
-add_definitions(-D__X64__)
+add_definitions(-D__X64__ -D__IDP__ -D__PLUGIN__ -DNO_OBSOLETE_FUNCS)
 
 add_subdirectory(deps)
 add_subdirectory(scripts)
