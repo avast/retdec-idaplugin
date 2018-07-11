@@ -155,7 +155,7 @@ void runSelectiveDecompilation(func_t *fnc2decomp = nullptr, bool force = false)
 
 			qstring fncName;
 			get_func_name(&fncName, fnc2decomp->start_ea);
-			INFO_MSG("Show already decompiled function: %s @ %a\n",
+			INFO_MSG("Show already decompiled function: %s @ %" RetDecUInt "\n",
 					fncName.c_str(),
 					fnc2decomp->start_ea);
 
@@ -243,8 +243,7 @@ void runAllDecompilation()
 	char *tmp = ask_file(                ///< Returns: file name
 			true,                        ///< bool for_saving
 			defaultOut.data(),           ///< const char *default_answer
-			"Save decompiled file",      ///< const char *format
-			nullptr                      ///< va_list va
+			"Save decompiled file"       ///< const char *format
 	);
 
 	if (tmp == nullptr) ///< canceled
@@ -301,7 +300,7 @@ bool setInputPath()
 
 #ifdef OS_WINDOWS
 	workDir += "\\";
-#else // Linux
+#else // Linux a macOS
 	workDir += "/";
 #endif
 
@@ -321,7 +320,6 @@ bool setInputPath()
 					false,                       ///< bool for_saving
 					nullptr,                     ///< const char *default_answer
 					"Input binary to decompile", ///< const char *format
-					nullptr                      ///< va_list va
 			);
 
 			if (!tmp)
@@ -385,6 +383,7 @@ bool canDecompileInput()
 			|| inf.filetype == f_PE
 			|| inf.filetype == f_ELF
 			|| inf.filetype == f_COFF
+			|| inf.filetype == f_MACHO
 			|| inf.filetype == f_HEX))
 	{
 		if (inf.filetype == f_LOADER)
@@ -620,7 +619,7 @@ bool idaapi run(size_t arg)
 	}
 	else
 	{
-		warning("%s version %s cannot handle argument '%d'.\n",
+		warning("%s version %s cannot handle argument '%zu'.\n",
 				decompInfo.pluginName.c_str(),
 				decompInfo.pluginVersion.c_str(), arg);
 		return false;
