@@ -23,7 +23,7 @@ RdGlobalInfo::RdGlobalInfo()
 	pluginConfigFile = get_user_idadir();
 #ifdef OS_WINDOWS
 	pluginConfigFile += "\\" + pluginConfigFileName;
-#else // Linux
+#else // Linux & macOS
 	pluginConfigFile += "/" + pluginConfigFileName;
 #endif
 }
@@ -71,16 +71,16 @@ void RdGlobalInfo::setIsUseThreads(bool f)
  */
 bool RdGlobalInfo::configureDecompilation()
 {
-	if (isDecompileShInSystemPath())
-	{
-		INFO_MSG("retdec-decompiler.sh in system PATH -> using local decompilation\n");
-		decompilationShCmd = "retdec-decompiler.sh";
-		return false;
-	}
-	else if (isDecompileShInSpecifiedPath())
+	if (isDecompileShInSpecifiedPath())
 	{
 		INFO_MSG("retdec-decompiler.sh at %s -> using local decompilation\n", decompileShPath.c_str());
 		decompilationShCmd = decompileShPath;
+		return false;
+	}
+	else if (isDecompileShInSystemPath())
+	{
+		INFO_MSG("retdec-decompiler.sh in system PATH -> using local decompilation\n");
+		decompilationShCmd = "retdec-decompiler.sh";
 		return false;
 	}
 	else
