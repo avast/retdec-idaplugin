@@ -185,7 +185,8 @@ void ConfigGenerator::generateFunctionType(
 	}
 	else
 	{
-		// ???
+		// TODO: ???
+		fncType.clear();
 	}
 }
 
@@ -224,71 +225,74 @@ void ConfigGenerator::generateFunctions()
 	{
 		func_t *fnc = getn_func(i);
 
-		qstring qFncName;
-		get_func_name(&qFncName, fnc->start_ea);
-
-		std::string fncName = qFncName.c_str();
-		std::replace(fncName.begin(), fncName.end(), '.', '_');
-
-		DBG_MSG("\t%s @ %a, #args = %d\n",
-				fncName.c_str(),
-				fnc->start_ea,
-				fnc->regargqty);
-
-		retdec::config::Function ccFnc(fncName);
-		ccFnc.setStart(fnc->start_ea);
-		ccFnc.setEnd(fnc->end_ea);
-		// TODO: return type is always set to default: ugly, make it better.
-		ccFnc.returnType.setLlvmIr("i32");
-
-		qstring qCmt;
-		if (get_func_cmt(&qCmt, fnc, false) > 0)
+		while((startAddress < fnc->end_ea) && (fnc->start_ea != BADADDR))
 		{
-			ccFnc.setComment(qCmt.c_str());
-		}
+			qstring qFncName;
+			get_func_name(&qFncName, fnc->start_ea);
 
-		qstring qDemangled;
-		if (demangle_name(&qDemangled, fncName.c_str(), MNG_SHORT_FORM) > 0)
-		{
-			ccFnc.setDemangledName(qDemangled.c_str());
-		}
+			std::string fncName = qFncName.c_str();
+			std::replace(fncName.begin(), fncName.end(), '.', '_');
 
-		if (fnc->flags & FUNC_STATICDEF)
-		{
-			ccFnc.setIsStaticallyLinked();
-		}
-		else if (fnc->flags & FUNC_LIB)
-		{
-			ccFnc.setIsDynamicallyLinked();
-		}
-		if (isLinkedFunction(fnc))
-		{
-			ccFnc.setIsDynamicallyLinked();
-		}
+			INFO_MSG("\t%s @ [start:%" RetDecUInt ", end:%" RetDecUInt "], #args = %d\n",
+					fncName.c_str(),
+					fnc->start_ea,
+					fnc->end_ea,
+					fnc->regargqty);
 
-		// For IDA 6.x (don't know about IDA 7.x):
-		// get_tinfo2() is preferred before guess_func_tinfo2()
-		// for unknown reason, guess_func_tinfo2() sometimes mix up the
-		// arguments (vawtrak sub_10021A76).
-		//
-		tinfo_t fncType;
-		get_tinfo(&fncType, fnc->start_ea);
-		if (!fncType.is_func())
-		{
-			// Guess type from first instruction address.
-			//
-			if (guess_tinfo(&fncType, fnc->start_ea) != GUESS_FUNC_OK)
+			retdec::config::Function ccFnc(fncName);
+			ccFnc.setStart(fnc->start_ea);
+			ccFnc.setEnd(fnc->end_ea);
+			// TODO: return type is always set to default: ugly, make it better.
+			ccFnc.returnType.setLlvmIr("i32");
+
+			qstring qCmt;
+			if (get_func_cmt(&qCmt, fnc, false) > 0)
 			{
-				// problem
+				ccFnc.setComment(qCmt.c_str());
 			}
-		}
 
-		if (fncType.is_func())
-		{
-			generateFunctionType(fncType, ccFnc);
-		}
+			qstring qDemangled;
+			if (demangle_name(&qDemangled, fncName.c_str(), MNG_SHORT_FORM) > 0)
+			{
+				ccFnc.setDemangledName(qDemangled.c_str());
+			}
 
-		config.functions.insert( ccFnc );
+			if (fnc->flags & FUNC_STATICDEF)
+			{
+				ccFnc.setIsStaticallyLinked();
+			}
+			else if (fnc->flags & FUNC_LIB)
+			{
+				ccFnc.setIsDynamicallyLinked();
+			}
+
+			if (isLinkedFunction(fnc))
+			{
+				ccFnc.setIsDynamicallyLinked();
+			}
+
+			// Because Support has been upgraded to IDA 7 get_tinfo2 no longer exist
+			//
+			tinfo_t fncType;
+			get_tinfo(&fncType, fnc->start_ea);
+			if (!fncType.is_func())
+			{
+				// Guess type from first instruction address.
+				//
+				const auto guess = guess_tinfo(&fncType, fnc->start_ea);
+				if(guess != GUESS_FUNC_OK)
+				{
+					// TODO: problem
+					fncType.clear();
+				}
+			}
+			else
+			{
+				generateFunctionType(fncType, ccFnc);
+			}
+
+			config.functions.insert( ccFnc );
+		}
 	}
 }
 
@@ -357,9 +361,11 @@ void ConfigGenerator::generateSegmentsAndGlobals()
 			{
 				// Guess type from first instruction address.
 				//
-				if (guess_tinfo(&getType, head) != GUESS_FUNC_OK)
+				const auto guess = guess_tinfo(&getType, head);
+				if(guess != GUESS_FUNC_OK)
 				{
-					// problem
+					// TODO: problem
+					getType.clear();
 				}
 			}
 
