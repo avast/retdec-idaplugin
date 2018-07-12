@@ -102,7 +102,6 @@ if(UNIX)
 								-Wl,-undefined,warning
 								-Wl,-exported_symbol,_PLUGIN)
 	else()
-		set(script_flag )
 		target_link_libraries(${TARGET_NAME} ${CMAKE_CXX_FLAGS})
 	endif()
 elseif(WIN32)
