@@ -32,25 +32,31 @@ else()
 endif()
 
 # Windows.
-if(MSVC)
-	add_definitions(-D__NT__) #-DWIN32
-	if(MSVC)
-		set(IDASDK_LIBRARIES "${IDA_SDK_DIR}/lib/x64_win_vc_32/ida.lib")
-	endif()
-elseif (APPLE)
-	ADD_DEFINITIONS (-D__MAC__)
-	set(IDASDK_LIBRARIES "${IDA_SDK_DIR}/lib/x64_mac_gcc_32/libida.dylib")
+if(MSVC OR MSYS)
+	set(IDA_SDK_PLATFORM __NT__)
+
+	set(IDA_LIB_PATH_PLATFORM "win")
+	set(IDA_LIB_PATH_EXTENSION "lib")
+	set(PLUGIN_EXTENSION "dll")
+# macOS
+elseif(APPLE)
+	set(IDA_SDK_PLATFORM __MAC__)
+
+	set(IDA_LIB_PATH_PLATFORM "mac")
+	set(IDA_LIB_PATH_EXTENSION "dylib")
+	set(PLUGIN_EXTENSION "dylib")
 # Linux.
 elseif(UNIX)
 	set(IDA_SDK_PLATFORM __LINUX__)
 
 	set(IDA_LIB_PATH_PLATFORM "linux")
+	set(IDA_LIB_PATH_EXTENSION "so")
 	set(PLUGIN_EXTENSION "so")
 else()
   message(FATAL_ERROR "Unsupported system type: ${CMAKE_SYSTEM_NAME}")
 endif()
 
-set(IDASDK_LIBRARIES "${IDA_SDK_DIR}/lib/x64_${IDA_LIB_PATH_PLATFORM}_${IDA_LIB_PATH_COMPILER}_${IDA_LIB_PATH_TARGET}/${IDA_LIB_PATH_NAME}${IDA_LIB_ARCH_NAME}.${PLUGIN_EXTENSION}")
+set(IDASDK_LIBRARIES "${IDA_SDK_DIR}/lib/x64_${IDA_LIB_PATH_PLATFORM}_${IDA_LIB_PATH_COMPILER}_${IDA_LIB_PATH_TARGET}/${IDA_LIB_PATH_NAME}${IDA_LIB_ARCH_NAME}.${IDA_LIB_PATH_EXTENSION}")
 
 # Make our includes work.
 include_directories("..")
@@ -110,6 +116,17 @@ elseif(WIN32)
 elseif(MSYS)
 	target_link_libraries(${TARGET_NAME} ws2_32)
 endif()
+
+# For qrefcnt_obj_t in ida.hpp
+target_compile_options(${TARGET_NAME} PUBLIC -Wno-non-virtual-dtor)
+
+target_link_libraries(${TARGET_NAME}
+	retdec
+	jsoncpp
+	${IDASDK_LIBRARIES}
+)
+
+set_property(TARGET ${TARGET_NAME} PROPERTY CXX_STANDARD 14)
 
 # Set a proper name of the library that represents the plugin (e.g. retdec.dylib
 # on macOS, retdec.so on Linux and retdec.dll on Windows).
