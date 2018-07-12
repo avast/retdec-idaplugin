@@ -2,6 +2,9 @@
 
 ## dev
 
+* Added support for macOS ([#27](https://github.com/avast-tl/retdec-idaplugin/pull/27)).
+* Fix: Upgrade to a new JsonCpp API ([#28](https://github.com/avast-tl/retdec-idaplugin/pull/28)).
+
 ## v0.5 (June 7, 2018)
 
 * Added support for IDA 7.x ([#2](https://github.com/avast-tl/retdec-idaplugin/issues/2)). Dropped support for IDA 6.x.

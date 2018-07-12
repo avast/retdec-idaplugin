@@ -32,17 +32,14 @@ else()
 endif()
 
 # Windows.
-if(MSVC OR MSYS)
-	set(IDA_SDK_PLATFORM __NT__)
-
-	set(IDA_LIB_PATH_PLATFORM "win")
-	set(PLUGIN_EXTENSION "lib")
-# macOS
-elseif(APPLE)
-	set(IDA_SDK_PLATFORM __MAC__)
-
-	set(IDA_LIB_PATH_PLATFORM "mac")
-	set(PLUGIN_EXTENSION "dylib")
+if(MSVC)
+	add_definitions(-D__NT__) #-DWIN32
+	if(MSVC)
+		set(IDASDK_LIBRARIES "${IDA_SDK_DIR}/lib/x64_win_vc_32/ida.lib")
+	endif()
+elseif (APPLE)
+	ADD_DEFINITIONS (-D__MAC__)
+	set(IDASDK_LIBRARIES "${IDA_SDK_DIR}/lib/x64_mac_gcc_32/libida.dylib")
 # Linux.
 elseif(UNIX)
 	set(IDA_SDK_PLATFORM __LINUX__)
@@ -114,17 +111,6 @@ elseif(WIN32)
 elseif(MSYS)
 	target_link_libraries(${TARGET_NAME} ws2_32)
 endif()
-
-# For qrefcnt_obj_t in ida.hpp
-target_compile_options(${TARGET_NAME} PUBLIC -Wno-non-virtual-dtor)
-
-target_link_libraries(${TARGET_NAME}
-	retdec
-	jsoncpp
-	${IDASDK_LIBRARIES}
-)
-
-set_property(TARGET ${TARGET_NAME} PROPERTY CXX_STANDARD 14)
 
 # Set a proper name of the library that represents the plugin (e.g. retdec.dylib
 # on macOS, retdec.so on Linux and retdec.dll on Windows).
