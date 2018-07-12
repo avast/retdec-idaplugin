@@ -186,7 +186,6 @@ void ConfigGenerator::generateFunctionType(
 	else
 	{
 		// TODO: ???
-		fncType.clear();
 	}
 }
 
@@ -225,7 +224,7 @@ void ConfigGenerator::generateFunctions()
 	{
 		func_t *fnc = getn_func(i);
 
-		while((startAddress < fnc->end_ea) && (fnc->start_ea != BADADDR))
+		while((fnc->start_ea < fnc->end_ea) && (fnc->start_ea != BADADDR))
 		{
 			qstring qFncName;
 			get_func_name(&qFncName, fnc->start_ea);
