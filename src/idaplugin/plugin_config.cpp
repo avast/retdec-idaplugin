@@ -15,7 +15,7 @@
 
 namespace {
 
-const std::string JSON_decompileShPath = "decompileShPath";
+const std::string JSON_decompilerPyPath = "decompilerPyPath";
 
 } // anonymous namespace
 
@@ -87,12 +87,12 @@ bool readConfigFile(RdGlobalInfo& rdgi)
 {
 	Json::Value root;
 
-	if (getConfigRootFromFile(rdgi.pluginConfigFile, root))
+	if (getConfigRootFromFile(rdgi.pluginConfigFile.getPath(), root))
 	{
 		return true;
 	}
 
-	rdgi.decompileShPath = root.get(JSON_decompileShPath, "").asString();
+	rdgi.decompilerPyPath = root.get(JSON_decompilerPyPath, "").asString();
 
 	return false;
 }
@@ -106,16 +106,16 @@ void saveConfigTofile(RdGlobalInfo& rdgi)
 {
 	Json::Value root;
 
-	if (getConfigRootFromFile(rdgi.pluginConfigFile, root))
+	if (getConfigRootFromFile(rdgi.pluginConfigFile.getPath(), root))
 	{
 		// Problem when reading config -- does not matter, we use empty root.
 	}
 
-	root[JSON_decompileShPath] = rdgi.decompileShPath;
+	root[JSON_decompilerPyPath] = rdgi.decompilerPyPath;
 
 	Json::StreamWriterBuilder writer;
 	writer.settings_["commentStyle"] = "All";
-	std::ofstream jsonFile(rdgi.pluginConfigFile.c_str());
+	std::ofstream jsonFile(rdgi.pluginConfigFile.getPath().c_str());
 	jsonFile << Json::writeString(writer, root);
 }
 
@@ -128,16 +128,16 @@ bool askUserToConfigurePlugin(RdGlobalInfo& rdgi)
 {
 	char cDecompileSh[QMAXPATH];
 
-	if (rdgi.decompileShPath.empty())
+	if (rdgi.decompilerPyPath.empty())
 	{
-		std::string pattern = "retdec-decompiler.sh";
+		std::string pattern = "retdec-decompiler.py";
 		std::copy(pattern.begin(), pattern.begin() + QMAXPATH, cDecompileSh);
 	}
 	else
 	{
 		std::copy(
-				rdgi.decompileShPath.begin(),
-				rdgi.decompileShPath.begin() + QMAXPATH,
+				rdgi.decompilerPyPath.begin(),
+				rdgi.decompilerPyPath.begin() + QMAXPATH,
 				cDecompileSh);
 	}
 
@@ -147,7 +147,7 @@ bool askUserToConfigurePlugin(RdGlobalInfo& rdgi)
 		"\n"
 		"Settings will be permanently stored and you will not have to fill them each time you run decompilation.\n"
 		"\n"
-		"Path to retdec-decompiler.sh (unnecessary if it is in the system PATH):\n"
+		"Path to retdec-decompiler.py (unnecessary if it is in the system PATH):\n"
 		"<RetDec file:f1::60:::>\n"
 		"\n";
 
@@ -163,7 +163,7 @@ bool askUserToConfigurePlugin(RdGlobalInfo& rdgi)
 	}
 	else
 	{
-		rdgi.decompileShPath = cDecompileSh;
+		rdgi.decompilerPyPath = cDecompileSh;
 	}
 	return false;
 }

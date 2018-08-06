@@ -188,13 +188,8 @@ void decompileInput(RdGlobalInfo &decompInfo)
 
 	// Construct decompiler call command.
 	//
-	decompInfo.decCmd = "";
-#ifdef OS_WINDOWS
-	// On Windows, shell scripts have to be run through 'sh'; otherwise, they
-	// are not run through Bash, which causes us problems.
-	decompInfo.decCmd += "sh ";
-#endif
-	decompInfo.decCmd += "'" + decompInfo.decompilationShCmd + "' '" + decompInfo.inputPath;
+	decompInfo.decCmd = "python ";
+	decompInfo.decCmd += "'" + decompInfo.decompilationCmd + "' '" + decompInfo.inputPath;
 	decompInfo.decCmd += "' --config='" + decompInfo.dbFile + "'";
 
 	if (!decompInfo.mode.empty())

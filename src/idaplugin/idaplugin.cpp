@@ -299,18 +299,16 @@ bool setInputPath()
 		return false;
 	}
 
-#ifdef OS_WINDOWS
-	workDir += "\\";
-#else // Linux
-	workDir += "/";
-#endif
-
 	if (!retdec::utils::fileExists(inPath))
 	{
 		INFO_MSG("Input \"%s\" does not exist, trying to recover ...\n",
 				inPath.c_str());
 
-		inPath = workDir + inName;
+		retdec::utils::FilesystemPath fsWork(workDir);
+		fsWork.append(inName);
+		workDir = fsWork.getPath();
+
+		inPath = workDir;
 		if (!retdec::utils::fileExists(inPath))
 		{
 			INFO_MSG("Input \"%s\" does not exist, asking user to specify the "

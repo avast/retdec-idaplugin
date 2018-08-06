@@ -35,6 +35,7 @@
 //
 #include "retdec/config/config.h"
 #include "retdec/utils/address.h"
+#include "retdec/utils/filesystem_path.h"
 #include "retdec/utils/os.h"
 #include "retdec/utils/time.h"
 
@@ -101,13 +102,6 @@ class RdGlobalInfo
 		std::string pluginVersion          = "0.5";
 		std::string pluginHotkey           = "Ctrl-d";
 		std::string pluginBuildDate        = retdec::utils::getCurrentDate();
-#if defined(OS_WINDOWS)
-		std::string pluginBuildSystem      = "Windows";
-#elif defined(OS_MACOS)
-		std::string pluginBuildSystem      = "macOS";
-#else
-		std::string pluginBuildSystem      = "Linux";
-#endif
 		addon_info_t pluginInfo; ///< Plugin (addon) information showed in the About box.
 		int pluginRegNumber         = -1;
 
@@ -157,8 +151,7 @@ class RdGlobalInfo
 	// Plugin configuration information.
 	//
 	public:
-		bool isDecompileShInSystemPath() const;
-		bool isDecompileShInSpecifiedPath() const;
+		bool isDecompilerInSpecifiedPath() const;
 
 		bool configureDecompilation();
 
@@ -167,11 +160,11 @@ class RdGlobalInfo
 
 	public:
 		const std::string pluginConfigFileName = "retdec-config.json";
-		std::string pluginConfigFile;
-		/// Path to the decompilation script set by used in configuration menu.
-		std::string decompileShPath;
+		retdec::utils::FilesystemPath pluginConfigFile;
+		/// Path to the decompilation script set by user in configuration menu.
+		std::string decompilerPyPath;
 		/// Path to the decompilation script which will be used in local decompilation.
-		std::string decompilationShCmd;
+		std::string decompilationCmd;
 
 	private:
 		/// Only for debugging during development.

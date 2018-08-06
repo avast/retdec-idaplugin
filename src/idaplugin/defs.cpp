@@ -9,7 +9,8 @@
 
 namespace idaplugin {
 
-RdGlobalInfo::RdGlobalInfo()
+RdGlobalInfo::RdGlobalInfo() :
+		pluginConfigFile(get_user_idadir())
 {
 	pluginInfo.id = pluginID.data();
 	pluginInfo.name = pluginName.data();
@@ -20,12 +21,7 @@ RdGlobalInfo::RdGlobalInfo()
 
 	navigationActual = navigationList.end();
 
-	pluginConfigFile = get_user_idadir();
-#ifdef OS_WINDOWS
-	pluginConfigFile += "\\" + pluginConfigFileName;
-#else // Linux
-	pluginConfigFile += "/" + pluginConfigFileName;
-#endif
+	pluginConfigFile.append(pluginConfigFileName);
 }
 
 bool RdGlobalInfo::isAllDecompilation()
@@ -38,21 +34,9 @@ bool RdGlobalInfo::isSelectiveDecompilation()
 	return !isAllDecompilation();
 }
 
-bool RdGlobalInfo::isDecompileShInSystemPath() const
+bool RdGlobalInfo::isDecompilerInSpecifiedPath() const
 {
-#ifdef OS_WINDOWS
-	return std::system("sh retdec-decompiler.sh --help") == 0;
-#else
-	return std::system("retdec-decompiler.sh --help") == 0;
-#endif
-}
-
-bool RdGlobalInfo::isDecompileShInSpecifiedPath() const
-{
-	std::string cmd = "'" + decompileShPath + "'" + " --help";
-#ifdef OS_WINDOWS
-	cmd = "sh " + cmd;
-#endif
+	std::string cmd = "python '" + decompilerPyPath + "'" + " --help";
 	return std::system(cmd.c_str()) == 0;
 }
 
@@ -71,23 +55,17 @@ void RdGlobalInfo::setIsUseThreads(bool f)
  */
 bool RdGlobalInfo::configureDecompilation()
 {
-	if (isDecompileShInSystemPath())
+	if (isDecompilerInSpecifiedPath())
 	{
-		INFO_MSG("retdec-decompiler.sh in system PATH -> using local decompilation\n");
-		decompilationShCmd = "retdec-decompiler.sh";
-		return false;
-	}
-	else if (isDecompileShInSpecifiedPath())
-	{
-		INFO_MSG("retdec-decompiler.sh at %s -> using local decompilation\n", decompileShPath.c_str());
-		decompilationShCmd = decompileShPath;
+		INFO_MSG("Found retdec-decompiler.py at %s -> plugin is properly configured.\n",
+				decompilerPyPath.c_str());
+		decompilationCmd = decompilerPyPath;
 		return false;
 	}
 	else
 	{
 		warning("Decompilation is not properly configured.\n"
-				"Either retdec-decompiler.sh must be in system PATH,\n"
-				"or path to retdec-decompiler.sh must be provided in configuration menu.");
+				"The path to retdec-decompiler.py must be provided in the configuration menu.");
 		auto canceled = pluginConfigurationMenu(*this);
 		if (canceled)
 		{
