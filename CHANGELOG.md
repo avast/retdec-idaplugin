@@ -2,6 +2,8 @@
 
 ## dev
 
+* Update plugin in order to work with the new Python implementation of RetDec scripts.
+
 ## v0.5 (June 7, 2018)
 
 * Added support for IDA 7.x ([#2](https://github.com/avast-tl/retdec-idaplugin/issues/2)). Dropped support for IDA 6.x.
