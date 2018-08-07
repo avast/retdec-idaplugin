@@ -152,6 +152,7 @@ class RdGlobalInfo
 	//
 	public:
 		bool isDecompilerInSpecifiedPath() const;
+		bool initPythonCommand();
 
 		bool configureDecompilation();
 
@@ -161,6 +162,8 @@ class RdGlobalInfo
 	public:
 		const std::string pluginConfigFileName = "retdec-config.json";
 		retdec::utils::FilesystemPath pluginConfigFile;
+		/// Command used to execute python interpreter.
+		std::string pythonCmd;
 		/// Path to the decompilation script set by user in configuration menu.
 		std::string decompilerPyPath;
 		/// Path to the decompilation script which will be used in local decompilation.

@@ -661,6 +661,13 @@ int idaapi init()
 		return PLUGIN_SKIP;
 	}
 
+	if (decompInfo.initPythonCommand())
+	{
+		warning("Unable to execute Python interpreter.\n"
+				"Make sure Python 3 is properly installed.");
+		return PLUGIN_SKIP;
+	}
+
 	INFO_MSG("%s version %s loaded OK\n",
 			decompInfo.pluginName.c_str(),
 			decompInfo.pluginVersion.c_str());

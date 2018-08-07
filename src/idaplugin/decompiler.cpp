@@ -188,7 +188,7 @@ void decompileInput(RdGlobalInfo &decompInfo)
 
 	// Construct decompiler call command.
 	//
-	decompInfo.decCmd = "python ";
+	decompInfo.decCmd = decompInfo.pythonCmd + " ";
 	decompInfo.decCmd += "'" + decompInfo.decompilationCmd + "' '" + decompInfo.inputPath;
 	decompInfo.decCmd += "' --config='" + decompInfo.dbFile + "'";
 

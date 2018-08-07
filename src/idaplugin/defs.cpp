@@ -34,9 +34,35 @@ bool RdGlobalInfo::isSelectiveDecompilation()
 	return !isAllDecompilation();
 }
 
+/**
+ * Find out how to (which command) execute the python interpreter.
+ * @return @c False if python command initialized successfully,
+ *         @c true otherwise.
+ */
+bool RdGlobalInfo::initPythonCommand()
+{
+	if (std::system("python3 --version") == 0)
+	{
+		pythonCmd = "python3";
+		return false;
+	}
+	else if (std::system("py -3 --version") == 0)
+	{
+		pythonCmd = "py -3";
+		return false;
+	}
+	else if (std::system("python --version") == 0)
+	{
+		pythonCmd = "python";
+		return false;
+	}
+
+	return true;
+}
+
 bool RdGlobalInfo::isDecompilerInSpecifiedPath() const
 {
-	std::string cmd = "python '" + decompilerPyPath + "'" + " --help";
+	std::string cmd = pythonCmd + " '" + decompilerPyPath + "' " + "--help";
 	return std::system(cmd.c_str()) == 0;
 }
 
