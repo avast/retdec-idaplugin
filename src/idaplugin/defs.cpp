@@ -62,7 +62,7 @@ bool RdGlobalInfo::initPythonCommand()
 
 bool RdGlobalInfo::isDecompilerInSpecifiedPath() const
 {
-	std::string cmd = pythonCmd + " '" + decompilerPyPath + "' " + "--help";
+	std::string cmd = pythonCmd + " \"" + decompilerPyPath + "\" " + "--help";
 	return std::system(cmd.c_str()) == 0;
 }
 

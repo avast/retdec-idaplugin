@@ -188,9 +188,10 @@ void decompileInput(RdGlobalInfo &decompInfo)
 
 	// Construct decompiler call command.
 	//
-	decompInfo.decCmd = decompInfo.pythonCmd + " ";
-	decompInfo.decCmd += "'" + decompInfo.decompilationCmd + "' '" + decompInfo.inputPath;
-	decompInfo.decCmd += "' --config='" + decompInfo.dbFile + "'";
+	decompInfo.decCmd = decompInfo.pythonCmd;
+	decompInfo.decCmd += " \"" + decompInfo.decompilationCmd + "\"";
+	decompInfo.decCmd += " \"" + decompInfo.inputPath + "\"";
+	decompInfo.decCmd += " --config=\"" + decompInfo.dbFile + "\"";
 
 	if (!decompInfo.mode.empty())
 	{
@@ -216,16 +217,16 @@ void decompileInput(RdGlobalInfo &decompInfo)
 	if (decompInfo.isSelectiveDecompilation())
 	{
 		decompInfo.decCmd += " --color-for-ida";
-		decompInfo.decCmd += " -o '" + decompInfo.inputPath + ".c'";
+		decompInfo.decCmd += " -o \"" + decompInfo.inputPath + ".c\"";
 	}
 	else
 	{
-		decompInfo.decCmd += " -o '" + decompInfo.outputFile + "'";
+		decompInfo.decCmd += " -o \"" + decompInfo.outputFile + "\"";
 	}
 
 	if ( !decompInfo.ranges.empty() )
 	{
-		decompInfo.decCmd += " --select-decode-only --select-ranges='" + decompInfo.ranges + "'";
+		decompInfo.decCmd += " --select-decode-only --select-ranges=\"" + decompInfo.ranges + "\"";
 	}
 
 	// Create decompilation thread.
