@@ -100,10 +100,10 @@ def main():
 
     # Select mode.
     if args.selected_addr:
-        cmd.append('-S' + script_selective + " '" + args.file + "' " + args.selected_addr)
+        cmd.append('-S' + script_selective + ' "' + args.file + '" ' + args.selected_addr)
     # Full mode.
     else:
-        cmd.append('-S' + script_full + " '" + args.file + "'")
+        cmd.append('-S' + script_full + ' "' + args.file + '"')
 
     cmd.append(args.file)
 
