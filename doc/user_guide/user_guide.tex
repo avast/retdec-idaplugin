@@ -57,7 +57,7 @@
 \\[5 mm]
 {\HUGE User Guide}
 \\[3 mm]
-{\large Version 0.5}
+{\large Version 0.6}
 
 \vfill
 
@@ -116,7 +116,19 @@ The plugin is created using IDA SDK version 7.0. The plugin is compatible with t
 
 \subsection{RetDec}
 \label{sec:installation:retdec}
-RetDec IDA plugin needs a standalone RetDec installation in order to perform decompilations. This particular RetDec IDA plugin release needs RetDec version 3.1. Follow \href{https://github.com/avast-tl/retdec/blob/3eaa0eaf9b27bee605786702784c4a1cecea3bc6/README.md#installation-and-use}{these instructions} to install it.
+RetDec IDA plugin needs a standalone RetDec installation in order to perform decompilations. This particular RetDec IDA plugin release needs RetDec version 3.2. Follow \href{https://github.com/avast-tl/retdec/blob/3eaa0eaf9b27bee605786702784c4a1cecea3bc6/README.md#installation-and-use}{these instructions} to install it.
+
+\subsection{Python}
+\label{sec:installation:python}
+RetDec needs Python 3 (at least version 3.4) in order to run. If you have not installed Python 3, as described in instructions referenced in Section~\ref{sec:installation:retdec}, do it now. RetDec IDA plugin also needs the \href{http://pygments.org/}{Pygments} library -- install it as well.
+
+RetDec IDA plugin tries to execute the main decompilation script using one of these commands (in this order):
+\begin{enumerate}
+    \item \texttt{python3}
+    \item \texttt{py -3}
+    \item \texttt{python}
+\end{enumerate}
+Make sure at least one of these works, i.e. Python 3 is in \texttt{PATH}, and that it really is Python version 3 that gets executed (especially if the third option is used on your system).
 
 \subsection{RetDec IDA plugin}
 Finally, we need to install the RetDec IDA plugin itself.
@@ -128,7 +140,6 @@ Follow the next steps to install RetDec plugin in a Linux environment:
 \begin{verbatim}
 libc.so.6 libgcc_s.so.1 libm.so.6 libpthread.so.0 libstdc++.so.6
 \end{verbatim}
-	\item Install Python 3 and \href{http://pygments.org/}{Pygments}.
 	\item Download the Linux installation package (Table~\ref{table:installation-package-linux}) from the \href{https://github.com/avast-tl/retdec-idaplugin/releases}{project's release page}.
 	\item Copy \texttt{retdec.so} to the IDA's plugin directory (\texttt{<IDA\_ROOT>/plugins}).
 \end{enumerate}
@@ -154,7 +165,6 @@ The Windows version of the plugin requires Windows 7 or later, with the MSVC 201
 
 Follow the next steps to install RetDec plugin in a Windows environment:
 \begin{enumerate}
-	\item Install Python 3 and \href{http://pygments.org/}{Pygments}.
 	\item Download the Windows installation package (Table~\ref{table:installation-package-windows}) from the \href{https://github.com/avast-tl/retdec-idaplugin/releases}{project's release page}.
 	\item Copy \texttt{retdec.dll} to the IDA's plugin directory (\texttt{<IDA\_ROOT>/plugins}).
 \end{enumerate}
