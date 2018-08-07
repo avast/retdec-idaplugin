@@ -152,6 +152,7 @@ class RdGlobalInfo
 	//
 	public:
 		bool isDecompilerInSpecifiedPath() const;
+		bool isDecompilerInSystemPath();
 		bool initPythonCommand();
 
 		bool configureDecompilation();
@@ -160,6 +161,7 @@ class RdGlobalInfo
 		void setIsUseThreads(bool f);
 
 	public:
+		const std::string decompilerPyName = "retdec-decompiler.py";
 		const std::string pluginConfigFileName = "retdec-config.json";
 		retdec::utils::FilesystemPath pluginConfigFile;
 		/// Command used to execute python interpreter.

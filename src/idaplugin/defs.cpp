@@ -66,6 +66,22 @@ bool RdGlobalInfo::isDecompilerInSpecifiedPath() const
 	return std::system(cmd.c_str()) == 0;
 }
 
+bool RdGlobalInfo::isDecompilerInSystemPath()
+{
+	char buff[MAXSTR];
+	if (search_path(buff, sizeof(buff), decompilerPyName.c_str(), false))
+	{
+		std::string cmd = pythonCmd + " \"" + std::string(buff) + "\" " + "--help";
+		if (std::system(cmd.c_str()) == 0)
+		{
+			decompilerPyPath = buff;
+			return true;
+		}
+	}
+
+	return false;
+}
+
 bool RdGlobalInfo::isUseThreads() const
 {
 	return useThreads;
@@ -83,7 +99,16 @@ bool RdGlobalInfo::configureDecompilation()
 {
 	if (isDecompilerInSpecifiedPath())
 	{
-		INFO_MSG("Found retdec-decompiler.py at %s -> plugin is properly configured.\n",
+		INFO_MSG("Found %s at %s -> plugin is properly configured.\n",
+				decompilerPyName.c_str(),
+				decompilerPyPath.c_str());
+		decompilationCmd = decompilerPyPath;
+		return false;
+	}
+	else if (isDecompilerInSystemPath())
+	{
+		INFO_MSG("Found %s at system PATH %s -> plugin is properly configured.\n",
+				decompilerPyName.c_str(),
 				decompilerPyPath.c_str());
 		decompilationCmd = decompilerPyPath;
 		return false;
@@ -91,7 +116,8 @@ bool RdGlobalInfo::configureDecompilation()
 	else
 	{
 		warning("Decompilation is not properly configured.\n"
-				"The path to retdec-decompiler.py must be provided in the configuration menu.");
+				"The path to %s must be provided in the configuration menu.",
+				decompilerPyName.c_str());
 		auto canceled = pluginConfigurationMenu(*this);
 		if (canceled)
 		{

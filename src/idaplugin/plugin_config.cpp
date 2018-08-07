@@ -130,7 +130,7 @@ bool askUserToConfigurePlugin(RdGlobalInfo& rdgi)
 
 	if (rdgi.decompilerPyPath.empty())
 	{
-		std::string pattern = "retdec-decompiler.py";
+		std::string pattern = rdgi.decompilerPyName;
 		std::copy(pattern.begin(), pattern.begin() + QMAXPATH, cDecompileSh);
 	}
 	else
@@ -147,11 +147,12 @@ bool askUserToConfigurePlugin(RdGlobalInfo& rdgi)
 		"\n"
 		"Settings will be permanently stored and you will not have to fill them each time you run decompilation.\n"
 		"\n"
-		"Path to retdec-decompiler.py (unnecessary if it is in the system PATH):\n"
+		"Path to %A (unnecessary if it is in the system PATH):\n"
 		"<RetDec file:f1::60:::>\n"
 		"\n";
 
 	int ok = ask_form(formRetDecPluginSettings.c_str(),
+		rdgi.decompilerPyName.c_str(),
 		cDecompileSh,
 		&cDecompileSh
 		);
