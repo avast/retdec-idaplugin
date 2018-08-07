@@ -9,6 +9,51 @@
 
 namespace idaplugin {
 
+/**
+ * Run command using IDA SDK API.
+ */
+int runCommand(
+		const std::string& cmd,
+		const std::string& args,
+		bool showWarnings)
+{
+	launch_process_params_t procInf;
+	procInf.path = cmd.c_str();
+	procInf.args = args.c_str();
+	procInf.flags = LP_HIDE_WINDOW;
+
+	qstring errbuf;
+	void* pid = launch_process(procInf, &errbuf);
+
+	int rc;
+	if (check_process_exit(pid, &rc, 1) != 0)
+	{
+		if (showWarnings)
+		{
+			warning("Error in check_process_exit() while executing: %s %s\n",
+					procInf.path,
+					procInf.args);
+		}
+
+		return 1;
+	}
+
+	if (rc != 0)
+	{
+		if (showWarnings)
+		{
+			warning("launch_process(%s %s) failed with error code %d\n",
+					procInf.path,
+					procInf.args,
+					rc);
+		}
+
+		return 1;
+	}
+
+	return 0;
+}
+
 RdGlobalInfo::RdGlobalInfo() :
 		pluginConfigFile(get_user_idadir())
 {
@@ -41,17 +86,17 @@ bool RdGlobalInfo::isSelectiveDecompilation()
  */
 bool RdGlobalInfo::initPythonCommand()
 {
-	if (std::system("python3 --version") == 0)
+	if (runCommand("python3", "--version") == 0)
 	{
 		pythonCmd = "python3";
 		return false;
 	}
-	else if (std::system("py -3 --version") == 0)
+	else if (runCommand("py", "-3 --version") == 0)
 	{
 		pythonCmd = "py -3";
 		return false;
 	}
-	else if (std::system("python --version") == 0)
+	else if (runCommand("python", "--version") == 0)
 	{
 		pythonCmd = "python";
 		return false;
@@ -62,8 +107,7 @@ bool RdGlobalInfo::initPythonCommand()
 
 bool RdGlobalInfo::isDecompilerInSpecifiedPath() const
 {
-	std::string cmd = pythonCmd + " \"" + decompilerPyPath + "\" " + "--help";
-	return std::system(cmd.c_str()) == 0;
+	return runCommand(pythonCmd, "\"" + decompilerPyPath + "\" --help") == 0;
 }
 
 bool RdGlobalInfo::isDecompilerInSystemPath()
@@ -71,8 +115,7 @@ bool RdGlobalInfo::isDecompilerInSystemPath()
 	char buff[MAXSTR];
 	if (search_path(buff, sizeof(buff), decompilerPyName.c_str(), false))
 	{
-		std::string cmd = pythonCmd + " \"" + std::string(buff) + "\" " + "--help";
-		if (std::system(cmd.c_str()) == 0)
+		if (runCommand(pythonCmd, "\"" + std::string(buff) + "\" --help") == 0)
 		{
 			decompilerPyPath = buff;
 			return true;

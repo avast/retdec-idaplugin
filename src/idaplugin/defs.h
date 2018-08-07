@@ -81,6 +81,13 @@ class FunctionInfo
 		strvec_t idaCode;
 };
 
+// Helper functions.
+//
+int runCommand(
+		const std::string& cmd,
+		const std::string& args,
+		bool showWarnings = false);
+
 /**
  * General information used by this plugin.
  */
