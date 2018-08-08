@@ -7,6 +7,12 @@
 #include <fstream>
 #include <iostream>
 
+#if defined(OS_WINDOWS)
+	// nothing
+#else // Linux || macOS
+	#include <signal.h>
+#endif
+
 #include "retdec/utils/file_io.h"
 #include "retdec/utils/filesystem_path.h"
 #include "code_viewer.h"
@@ -35,6 +41,18 @@ void killDecompilation()
 		qthread_kill(decompInfo.decompThread);
 		qthread_join(decompInfo.decompThread);
 		qthread_free(decompInfo.decompThread);
+
+		if (decompInfo.decompPid)
+		{
+#if defined(OS_WINDOWS)
+			// nothing
+#else // Linux || macOS
+			kill(reinterpret_cast<intptr_t>(decompInfo.decompPid), SIGTERM);
+#endif
+
+			decompInfo.decompPid = nullptr;
+		}
+
 		decompInfo.decompRunning = false;
 	}
 }

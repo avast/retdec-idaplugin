@@ -32,17 +32,7 @@ static void idaapi localDecompilation(RdGlobalInfo *di)
 	INFO_MSG("Decompilation command: %s\n", tmp.c_str());
 	INFO_MSG("Running the decompilation command ...\n");
 
-	// Do NOT use call_system() because it prevents us to kill the run program
-	// by killing IDA. This is needed in, e.g., regression tests (timeout
-	// handling). Instead, use std::system(), which works as expected.
-	int decRet = std::system(di->decCmd.c_str());
-	if (decRet != 0)
-	{
-		warning("std::system(%s) failed with error code %d\n",
-				di->decCmd.c_str(),
-				decRet);
-		return;
-	}
+	runCommand(di->pythonCmd, di->decCmd, &di->decompPid, true);
 
 	// Get decompiled and colored file content.
 	//
@@ -188,8 +178,7 @@ void decompileInput(RdGlobalInfo &decompInfo)
 
 	// Construct decompiler call command.
 	//
-	decompInfo.decCmd = decompInfo.pythonCmd;
-	decompInfo.decCmd += " \"" + decompInfo.decompilationCmd + "\"";
+	decompInfo.decCmd = "\"" + decompInfo.decompilationCmd + "\"";
 	decompInfo.decCmd += " \"" + decompInfo.inputPath + "\"";
 	decompInfo.decCmd += " --config=\"" + decompInfo.dbFile + "\"";
 
