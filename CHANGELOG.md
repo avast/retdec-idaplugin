@@ -4,6 +4,7 @@
 
 * Update plugin in order to work with the new Python implementation of RetDec scripts.
 * Fix: Terminate spawned decompilation process when IDA is closed or a new decompilation is triggered ([#20](https://github.com/avast-tl/retdec-idaplugin/issues/20)).
+* Fix: Decode and decompile only the selected function ([#6](https://github.com/avast-tl/retdec-idaplugin/issues/6)).
 
 ## v0.5 (June 7, 2018)
 
