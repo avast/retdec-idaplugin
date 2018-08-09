@@ -7,6 +7,10 @@
 #include "defs.h"
 #include "plugin_config.h"
 
+#if defined(OS_WINDOWS)
+	#include <windows.h>
+#endif
+
 namespace idaplugin {
 
 /**
@@ -22,6 +26,10 @@ int runCommand(
 	procInf.path = cmd.c_str();
 	procInf.args = args.c_str();
 	procInf.flags = LP_HIDE_WINDOW;
+#if defined(OS_WINDOWS)
+	PROCESS_INFORMATION pi{};
+	procInf.info = &pi;
+#endif
 
 	qstring errbuf;
 
@@ -36,7 +44,11 @@ int runCommand(
 	}
 	if (pid)
 	{
-		*pid = reinterpret_cast<intptr_t>(p);
+#if defined(OS_WINDOWS)
+	*pid = pi.dwProcessId;
+#else // Linux || macOS
+	*pid = reinterpret_cast<intptr_t>(p);
+#endif
 	}
 
 	int rc;

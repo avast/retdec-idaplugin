@@ -7,9 +7,7 @@
 #include <fstream>
 #include <iostream>
 
-#if defined(OS_WINDOWS)
-	// nothing
-#else // Linux || macOS
+#if !defined(OS_WINDOWS) // Linux || macOS
 	#include <signal.h>
 #endif
 
@@ -43,7 +41,8 @@ void killDecompilation()
 		if (decompInfo.decompPid)
 		{
 #if defined(OS_WINDOWS)
-			// nothing
+			std::string cmd = "taskkill /F /T /PID " + std::to_string(decompInfo.decompPid);
+			std::system(cmd.c_str());
 #else // Linux || macOS
 			kill(decompInfo.decompPid, SIGTERM);
 #endif
