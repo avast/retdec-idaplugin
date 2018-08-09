@@ -30,8 +30,6 @@ RdGlobalInfo decompInfo;
 
 /**
  * Kill old thread if still running.
- * TODO: Killing is not good enough, thread dies but process created by 'call_system()' lives.
- * This might be solved by usage of Petr's API library, so no need to fix it now.
  */
 void killDecompilation()
 {
@@ -47,10 +45,9 @@ void killDecompilation()
 #if defined(OS_WINDOWS)
 			// nothing
 #else // Linux || macOS
-			kill(reinterpret_cast<intptr_t>(decompInfo.decompPid), SIGTERM);
+			kill(decompInfo.decompPid, SIGTERM);
 #endif
-
-			decompInfo.decompPid = nullptr;
+			decompInfo.decompPid = 0;
 		}
 
 		decompInfo.decompRunning = false;

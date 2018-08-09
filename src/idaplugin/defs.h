@@ -86,7 +86,7 @@ class FunctionInfo
 int runCommand(
 		const std::string& cmd,
 		const std::string& args,
-		void** pid = nullptr,
+		intptr_t* pid = nullptr,
 		bool showWarnings = false);
 
 /**
@@ -156,7 +156,7 @@ class RdGlobalInfo
 		qthread_t decompThread      = nullptr;
 		func_t *decompiledFunction  = nullptr;
 		// PID/Handle of launched decompilation process.
-		void* decompPid = nullptr;
+		intptr_t decompPid = 0;
 
 	// Plugin configuration information.
 	//

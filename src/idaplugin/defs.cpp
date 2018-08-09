@@ -15,7 +15,7 @@ namespace idaplugin {
 int runCommand(
 		const std::string& cmd,
 		const std::string& args,
-		void** pid,
+		intptr_t* pid,
 		bool showWarnings)
 {
 	launch_process_params_t procInf;
@@ -25,10 +25,7 @@ int runCommand(
 
 	qstring errbuf;
 
-	void* localPid = nullptr;
-	void*& p = pid ? *pid : localPid;
-	p = launch_process(procInf, &errbuf);
-
+	void* p = launch_process(procInf, &errbuf);
 	if (p == nullptr)
 	{
 		warning("launch_process(%s %s) failed to launch %S\n",
@@ -37,9 +34,18 @@ int runCommand(
 				errbuf.c_str());
 		return 1;
 	}
+	if (pid)
+	{
+		*pid = reinterpret_cast<intptr_t>(p);
+	}
 
 	int rc;
-	if (check_process_exit(p, &rc, 1) != 0)
+	auto cpe = check_process_exit(p, &rc, 1);
+	if (pid)
+	{
+		*pid = 0;
+	}
+	if (cpe != 0)
 	{
 		if (showWarnings)
 		{
@@ -47,11 +53,8 @@ int runCommand(
 					procInf.path,
 					procInf.args);
 		}
-
-		p = nullptr;
 		return 1;
 	}
-	p = nullptr;
 
 	if (rc != 0)
 	{
