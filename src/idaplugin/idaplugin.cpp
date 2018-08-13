@@ -7,6 +7,10 @@
 #include <fstream>
 #include <iostream>
 
+#if !defined(OS_WINDOWS) // Linux || macOS
+	#include <signal.h>
+#endif
+
 #include "retdec/utils/file_io.h"
 #include "retdec/utils/filesystem_path.h"
 #include "code_viewer.h"
@@ -24,8 +28,6 @@ RdGlobalInfo decompInfo;
 
 /**
  * Kill old thread if still running.
- * TODO: Killing is not good enough, thread dies but process created by 'call_system()' lives.
- * This might be solved by usage of Petr's API library, so no need to fix it now.
  */
 void killDecompilation()
 {
@@ -35,6 +37,18 @@ void killDecompilation()
 		qthread_kill(decompInfo.decompThread);
 		qthread_join(decompInfo.decompThread);
 		qthread_free(decompInfo.decompThread);
+
+		if (decompInfo.decompPid)
+		{
+#if defined(OS_WINDOWS)
+			std::string cmd = "taskkill /F /T /PID " + std::to_string(decompInfo.decompPid);
+			std::system(cmd.c_str());
+#else // Linux || macOS
+			kill(decompInfo.decompPid, SIGTERM);
+#endif
+			decompInfo.decompPid = 0;
+		}
+
 		decompInfo.decompRunning = false;
 	}
 }
@@ -299,18 +313,16 @@ bool setInputPath()
 		return false;
 	}
 
-#ifdef OS_WINDOWS
-	workDir += "\\";
-#else // Linux
-	workDir += "/";
-#endif
-
 	if (!retdec::utils::fileExists(inPath))
 	{
 		INFO_MSG("Input \"%s\" does not exist, trying to recover ...\n",
 				inPath.c_str());
 
-		inPath = workDir + inName;
+		retdec::utils::FilesystemPath fsWork(workDir);
+		fsWork.append(inName);
+		workDir = fsWork.getPath();
+
+		inPath = workDir;
 		if (!retdec::utils::fileExists(inPath))
 		{
 			INFO_MSG("Input \"%s\" does not exist, asking user to specify the "
@@ -660,6 +672,13 @@ int idaapi init()
 
 	if (is_idaq() && addConfigurationMenuOption(decompInfo))
 	{
+		return PLUGIN_SKIP;
+	}
+
+	if (decompInfo.initPythonCommand())
+	{
+		warning("Unable to execute Python interpreter.\n"
+				"Make sure Python 3 is properly installed.");
 		return PLUGIN_SKIP;
 	}
 

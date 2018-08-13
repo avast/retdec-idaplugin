@@ -35,6 +35,7 @@
 //
 #include "retdec/config/config.h"
 #include "retdec/utils/address.h"
+#include "retdec/utils/filesystem_path.h"
 #include "retdec/utils/os.h"
 #include "retdec/utils/time.h"
 
@@ -80,6 +81,14 @@ class FunctionInfo
 		strvec_t idaCode;
 };
 
+// Helper functions.
+//
+int runCommand(
+		const std::string& cmd,
+		const std::string& args,
+		intptr_t* pid = nullptr,
+		bool showWarnings = false);
+
 /**
  * General information used by this plugin.
  */
@@ -98,16 +107,9 @@ class RdGlobalInfo
 		std::string pluginEmail            = "support@retdec.com";
 		std::string pluginURL              = "https://retdec.com/";
 		std::string pluginContact          = pluginURL + "\nEMAIL: " + pluginEmail;
-		std::string pluginVersion          = "0.5";
+		std::string pluginVersion          = "0.6";
 		std::string pluginHotkey           = "Ctrl-d";
 		std::string pluginBuildDate        = retdec::utils::getCurrentDate();
-#if defined(OS_WINDOWS)
-		std::string pluginBuildSystem      = "Windows";
-#elif defined(OS_MACOS)
-		std::string pluginBuildSystem      = "macOS";
-#else
-		std::string pluginBuildSystem      = "Linux";
-#endif
 		addon_info_t pluginInfo; ///< Plugin (addon) information showed in the About box.
 		int pluginRegNumber         = -1;
 
@@ -153,12 +155,15 @@ class RdGlobalInfo
 		bool decompiledAll          = false;
 		qthread_t decompThread      = nullptr;
 		func_t *decompiledFunction  = nullptr;
+		// PID/Handle of launched decompilation process.
+		intptr_t decompPid = 0;
 
 	// Plugin configuration information.
 	//
 	public:
-		bool isDecompileShInSystemPath() const;
-		bool isDecompileShInSpecifiedPath() const;
+		bool isDecompilerInSpecifiedPath() const;
+		bool isDecompilerInSystemPath();
+		bool initPythonCommand();
 
 		bool configureDecompilation();
 
@@ -166,12 +171,15 @@ class RdGlobalInfo
 		void setIsUseThreads(bool f);
 
 	public:
+		const std::string decompilerPyName = "retdec-decompiler.py";
 		const std::string pluginConfigFileName = "retdec-config.json";
-		std::string pluginConfigFile;
-		/// Path to the decompilation script set by used in configuration menu.
-		std::string decompileShPath;
+		retdec::utils::FilesystemPath pluginConfigFile;
+		/// Command used to execute python interpreter.
+		std::string pythonCmd;
+		/// Path to the decompilation script set by user in configuration menu.
+		std::string decompilerPyPath;
 		/// Path to the decompilation script which will be used in local decompilation.
-		std::string decompilationShCmd;
+		std::string decompilationCmd;
 
 	private:
 		/// Only for debugging during development.

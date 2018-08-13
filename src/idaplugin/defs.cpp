@@ -7,9 +7,85 @@
 #include "defs.h"
 #include "plugin_config.h"
 
+#if defined(OS_WINDOWS)
+	#include <windows.h>
+#endif
+
 namespace idaplugin {
 
-RdGlobalInfo::RdGlobalInfo()
+/**
+ * Run command using IDA SDK API.
+ */
+int runCommand(
+		const std::string& cmd,
+		const std::string& args,
+		intptr_t* pid,
+		bool showWarnings)
+{
+	launch_process_params_t procInf;
+	procInf.path = cmd.c_str();
+	procInf.args = args.c_str();
+	procInf.flags = LP_HIDE_WINDOW;
+#if defined(OS_WINDOWS)
+	PROCESS_INFORMATION pi{};
+	procInf.info = &pi;
+#endif
+
+	qstring errbuf;
+
+	void* p = launch_process(procInf, &errbuf);
+	if (p == nullptr)
+	{
+		warning("launch_process(%s %s) failed to launch %S\n",
+				procInf.path,
+				procInf.args,
+				errbuf.c_str());
+		return 1;
+	}
+	if (pid)
+	{
+#if defined(OS_WINDOWS)
+	*pid = pi.dwProcessId;
+#else // Linux || macOS
+	*pid = reinterpret_cast<intptr_t>(p);
+#endif
+	}
+
+	int rc;
+	auto cpe = check_process_exit(p, &rc, 1);
+	if (pid)
+	{
+		*pid = 0;
+	}
+	if (cpe != 0)
+	{
+		if (showWarnings)
+		{
+			warning("Error in check_process_exit() while executing: %s %s\n",
+					procInf.path,
+					procInf.args);
+		}
+		return 1;
+	}
+
+	if (rc != 0)
+	{
+		if (showWarnings)
+		{
+			warning("launch_process(%s %s) failed with error code %d\n",
+					procInf.path,
+					procInf.args,
+					rc);
+		}
+
+		return 1;
+	}
+
+	return 0;
+}
+
+RdGlobalInfo::RdGlobalInfo() :
+		pluginConfigFile(get_user_idadir())
 {
 	pluginInfo.id = pluginID.data();
 	pluginInfo.name = pluginName.data();
@@ -20,12 +96,7 @@ RdGlobalInfo::RdGlobalInfo()
 
 	navigationActual = navigationList.end();
 
-	pluginConfigFile = get_user_idadir();
-#ifdef OS_WINDOWS
-	pluginConfigFile += "\\" + pluginConfigFileName;
-#else // Linux
-	pluginConfigFile += "/" + pluginConfigFileName;
-#endif
+	pluginConfigFile.append(pluginConfigFileName);
 }
 
 bool RdGlobalInfo::isAllDecompilation()
@@ -38,22 +109,50 @@ bool RdGlobalInfo::isSelectiveDecompilation()
 	return !isAllDecompilation();
 }
 
-bool RdGlobalInfo::isDecompileShInSystemPath() const
+/**
+ * Find out how to (which command) execute the python interpreter.
+ * @return @c False if python command initialized successfully,
+ *         @c true otherwise.
+ */
+bool RdGlobalInfo::initPythonCommand()
 {
-#ifdef OS_WINDOWS
-	return std::system("sh retdec-decompiler.sh --help") == 0;
-#else
-	return std::system("retdec-decompiler.sh --help") == 0;
-#endif
+	if (runCommand("python3", "--version") == 0)
+	{
+		pythonCmd = "python3";
+		return false;
+	}
+	else if (runCommand("py", "-3 --version") == 0)
+	{
+		pythonCmd = "py -3";
+		return false;
+	}
+	else if (runCommand("python", "--version") == 0)
+	{
+		pythonCmd = "python";
+		return false;
+	}
+
+	return true;
 }
 
-bool RdGlobalInfo::isDecompileShInSpecifiedPath() const
+bool RdGlobalInfo::isDecompilerInSpecifiedPath() const
 {
-	std::string cmd = "'" + decompileShPath + "'" + " --help";
-#ifdef OS_WINDOWS
-	cmd = "sh " + cmd;
-#endif
-	return std::system(cmd.c_str()) == 0;
+	return runCommand(pythonCmd, "\"" + decompilerPyPath + "\" --help") == 0;
+}
+
+bool RdGlobalInfo::isDecompilerInSystemPath()
+{
+	char buff[MAXSTR];
+	if (search_path(buff, sizeof(buff), decompilerPyName.c_str(), false))
+	{
+		if (runCommand(pythonCmd, "\"" + std::string(buff) + "\" --help") == 0)
+		{
+			decompilerPyPath = buff;
+			return true;
+		}
+	}
+
+	return false;
 }
 
 bool RdGlobalInfo::isUseThreads() const
@@ -71,23 +170,27 @@ void RdGlobalInfo::setIsUseThreads(bool f)
  */
 bool RdGlobalInfo::configureDecompilation()
 {
-	if (isDecompileShInSystemPath())
+	if (isDecompilerInSpecifiedPath())
 	{
-		INFO_MSG("retdec-decompiler.sh in system PATH -> using local decompilation\n");
-		decompilationShCmd = "retdec-decompiler.sh";
+		INFO_MSG("Found %s at %s -> plugin is properly configured.\n",
+				decompilerPyName.c_str(),
+				decompilerPyPath.c_str());
+		decompilationCmd = decompilerPyPath;
 		return false;
 	}
-	else if (isDecompileShInSpecifiedPath())
+	else if (isDecompilerInSystemPath())
 	{
-		INFO_MSG("retdec-decompiler.sh at %s -> using local decompilation\n", decompileShPath.c_str());
-		decompilationShCmd = decompileShPath;
+		INFO_MSG("Found %s at system PATH %s -> plugin is properly configured.\n",
+				decompilerPyName.c_str(),
+				decompilerPyPath.c_str());
+		decompilationCmd = decompilerPyPath;
 		return false;
 	}
 	else
 	{
 		warning("Decompilation is not properly configured.\n"
-				"Either retdec-decompiler.sh must be in system PATH,\n"
-				"or path to retdec-decompiler.sh must be provided in configuration menu.");
+				"The path to %s must be provided in the configuration menu.",
+				decompilerPyName.c_str());
 		auto canceled = pluginConfigurationMenu(*this);
 		if (canceled)
 		{
