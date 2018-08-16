@@ -2,6 +2,8 @@
 
 ## dev
 
+## v0.6 (August 16, 2018)
+
 * Updated plugin in order to work with the new Python implementation of RetDec scripts.
 * Added support for macOS ([#27](https://github.com/avast-tl/retdec-idaplugin/pull/27)).
 * Fix: Upgrade to a new JsonCpp API ([#28](https://github.com/avast-tl/retdec-idaplugin/pull/28)).
