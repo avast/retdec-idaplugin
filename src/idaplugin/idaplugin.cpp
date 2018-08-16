@@ -313,7 +313,7 @@ bool setInputPath()
 		return false;
 	}
 
-	if (!retdec::utils::fileExists(inPath))
+	if (!retdec::utils::FilesystemPath(inPath).exists())
 	{
 		INFO_MSG("Input \"%s\" does not exist, trying to recover ...\n",
 				inPath.c_str());
@@ -323,7 +323,7 @@ bool setInputPath()
 		workDir = fsWork.getPath();
 
 		inPath = workDir;
-		if (!retdec::utils::fileExists(inPath))
+		if (!retdec::utils::FilesystemPath(inPath).exists())
 		{
 			INFO_MSG("Input \"%s\" does not exist, asking user to specify the "
 					"input file ...\n",
@@ -340,7 +340,7 @@ bool setInputPath()
 			{
 				return false;
 			}
-			else if (!retdec::utils::fileExists(std::string(tmp)))
+			else if (!retdec::utils::FilesystemPath(std::string(tmp)).exists())
 			{
 				warning("Cannot decompile this input file, there is no such "
 						"file: %s\n",
