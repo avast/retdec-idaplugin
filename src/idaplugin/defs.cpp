@@ -36,10 +36,13 @@ int runCommand(
 	void* p = launch_process(procInf, &errbuf);
 	if (p == nullptr)
 	{
-		warning("launch_process(%s %s) failed to launch %S\n",
-				procInf.path,
-				procInf.args,
-				errbuf.c_str());
+		if (showWarnings)
+		{
+			warning("launch_process(%s %s) failed to launch %s\n",
+					procInf.path,
+					procInf.args,
+					errbuf.c_str());
+		}
 		return 1;
 	}
 	if (pid)
@@ -119,16 +122,19 @@ bool RdGlobalInfo::initPythonCommand()
 	if (runCommand("python3", "--version") == 0)
 	{
 		pythonCmd = "python3";
+		pythonArg = "";
 		return false;
 	}
 	else if (runCommand("py", "-3 --version") == 0)
 	{
-		pythonCmd = "py -3";
+		pythonCmd = "py";
+		pythonArg = "-3 ";
 		return false;
 	}
 	else if (runCommand("python", "--version") == 0)
 	{
 		pythonCmd = "python";
+		pythonArg = "";
 		return false;
 	}
 
@@ -137,7 +143,7 @@ bool RdGlobalInfo::initPythonCommand()
 
 bool RdGlobalInfo::isDecompilerInSpecifiedPath() const
 {
-	return runCommand(pythonCmd, "\"" + decompilerPyPath + "\" --help") == 0;
+	return runCommand(pythonCmd, pythonArg + "\"" + decompilerPyPath + "\" --help") == 0;
 }
 
 bool RdGlobalInfo::isDecompilerInSystemPath()
@@ -145,7 +151,7 @@ bool RdGlobalInfo::isDecompilerInSystemPath()
 	char buff[MAXSTR];
 	if (search_path(buff, sizeof(buff), decompilerPyName.c_str(), false))
 	{
-		if (runCommand(pythonCmd, "\"" + std::string(buff) + "\" --help") == 0)
+		if (runCommand(pythonCmd, pythonArg + "\"" + std::string(buff) + "\" --help") == 0)
 		{
 			decompilerPyPath = buff;
 			return true;

@@ -176,6 +176,8 @@ class RdGlobalInfo
 		retdec::utils::FilesystemPath pluginConfigFile;
 		/// Command used to execute python interpreter.
 		std::string pythonCmd;
+		/// Argument used to execute python interpreter.
+		std::string pythonArg;
 		/// Path to the decompilation script set by user in configuration menu.
 		std::string decompilerPyPath;
 		/// Path to the decompilation script which will be used in local decompilation.

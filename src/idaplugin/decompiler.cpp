@@ -32,7 +32,7 @@ static void idaapi localDecompilation(RdGlobalInfo *di)
 	INFO_MSG("Decompilation command: %s\n", tmp.c_str());
 	INFO_MSG("Running the decompilation command ...\n");
 
-	runCommand(di->pythonCmd, di->decCmd, &di->decompPid, true);
+	runCommand(di->pythonCmd, di->pythonArg + di->decCmd, &di->decompPid, true);
 
 	// Get decompiled and colored file content.
 	//
