@@ -16,6 +16,7 @@
 namespace {
 
 const std::string JSON_decompilerPyPath = "decompilerPyPath";
+const std::string JSON_pythonInterpreterPath = "pythonInterpreterPath";
 
 } // anonymous namespace
 
@@ -93,6 +94,7 @@ bool readConfigFile(RdGlobalInfo& rdgi)
 	}
 
 	rdgi.decompilerPyPath = root.get(JSON_decompilerPyPath, "").asString();
+	rdgi.pythonInterpreter = root.get(JSON_pythonInterpreterPath, "").asString();
 
 	return false;
 }
@@ -112,6 +114,7 @@ void saveConfigTofile(RdGlobalInfo& rdgi)
 	}
 
 	root[JSON_decompilerPyPath] = rdgi.decompilerPyPath;
+	root[JSON_pythonInterpreterPath] = rdgi.pythonInterpreter;
 
 	Json::StreamWriterBuilder writer;
 	writer.settings_["commentStyle"] = "All";
@@ -126,19 +129,36 @@ void saveConfigTofile(RdGlobalInfo& rdgi)
  */
 bool askUserToConfigurePlugin(RdGlobalInfo& rdgi)
 {
-	char cDecompileSh[QMAXPATH];
+	char cDecompilerPy[QMAXPATH];
+	char cPythonInterpreter[QMAXPATH];
 
 	if (rdgi.decompilerPyPath.empty())
 	{
 		std::string pattern = rdgi.decompilerPyName;
-		std::copy(pattern.begin(), pattern.begin() + QMAXPATH, cDecompileSh);
+		std::copy(pattern.begin(), pattern.begin() + QMAXPATH, cDecompilerPy);
 	}
 	else
 	{
 		std::copy(
 				rdgi.decompilerPyPath.begin(),
 				rdgi.decompilerPyPath.begin() + QMAXPATH,
-				cDecompileSh);
+				cDecompilerPy);
+	}
+
+	if (rdgi.pythonInterpreter.empty())
+	{
+		std::string tmp = "python3";
+		std::copy(
+				tmp.begin(),
+				tmp.begin() + QMAXPATH,
+				cPythonInterpreter);
+	}
+	else
+	{
+		std::copy(
+				rdgi.pythonInterpreter.begin(),
+				rdgi.pythonInterpreter.begin() + QMAXPATH,
+				cPythonInterpreter);
 	}
 
 	qstring formRetDecPluginSettings =
@@ -148,13 +168,18 @@ bool askUserToConfigurePlugin(RdGlobalInfo& rdgi)
 		"Settings will be permanently stored and you will not have to fill them each time you run decompilation.\n"
 		"\n"
 		"Path to %A (unnecessary if it is in the system PATH):\n"
-		"<RetDec file:f1::60:::>\n"
+		"<RetDec script:f1::60:::>\n"
+		"\n"
+		"Path to Python interpreter version >= 3.4 (unnecessary if it is in the system PATH):\n"
+		"<Python interpreter:f2::60:::>\n"
 		"\n";
 
 	int ok = ask_form(formRetDecPluginSettings.c_str(),
 		rdgi.decompilerPyName.c_str(),
-		cDecompileSh,
-		&cDecompileSh
+		cDecompilerPy,
+		cPythonInterpreter,
+		&cDecompilerPy,
+		&cPythonInterpreter
 		);
 
 	if (ok == 0)
@@ -164,7 +189,8 @@ bool askUserToConfigurePlugin(RdGlobalInfo& rdgi)
 	}
 	else
 	{
-		rdgi.decompilerPyPath = cDecompileSh;
+		rdgi.decompilerPyPath = cDecompilerPy;
+		rdgi.pythonInterpreter = cPythonInterpreter;
 	}
 	return false;
 }

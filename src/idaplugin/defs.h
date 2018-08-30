@@ -176,7 +176,7 @@ class RdGlobalInfo
 		const std::string pluginConfigFileName = "retdec-config.json";
 		retdec::utils::FilesystemPath pluginConfigFile;
 		/// Command used to execute python interpreter.
-		std::string pythonCmd;
+		std::string pythonInterpreter;
 		/// Path to the decompilation script set by user in configuration menu.
 		std::string decompilerPyPath;
 		/// Path to the decompilation script which will be used in local decompilation.

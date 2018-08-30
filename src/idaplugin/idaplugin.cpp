@@ -675,24 +675,6 @@ int idaapi init()
 		return PLUGIN_SKIP;
 	}
 
-	if (decompInfo.initPythonCommand())
-	{
-		warning("Unable to execute Python interpreter.\n"
-				"Make sure Python version >= 3.4 is properly installed.");
-		return PLUGIN_SKIP;
-	}
-
-	if (decompInfo.checkPythonCommand())
-	{
-		qstring path;
-		qgetenv("PATH", &path);
-
-		warning("Found Python interpreter of incompatible version.\n"
-				"The RetDec IDA plugin requires Python version >= 3.4.\n"
-				"Used PATH: \"%s\"", path.c_str());
-		return PLUGIN_SKIP;
-	}
-
 	INFO_MSG("%s version %s loaded OK\n",
 			decompInfo.pluginName.c_str(),
 			decompInfo.pluginVersion.c_str());

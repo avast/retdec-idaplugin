@@ -116,19 +116,27 @@ bool RdGlobalInfo::isSelectiveDecompilation()
  */
 bool RdGlobalInfo::initPythonCommand()
 {
+	if (!pythonInterpreter.empty())
+	{
+		// Python interpreter was already initialized. Do not rewrite it here
+		// even if it does not work - it could have been read from config, or
+		// set by user.
+		return false;
+	}
+
 	if (runCommand("python3", "--version") == 0)
 	{
-		pythonCmd = "python3";
+		pythonInterpreter = "python3";
 		return false;
 	}
 	else if (runCommand("py", "-3 --version") == 0)
 	{
-		pythonCmd = "py -3";
+		pythonInterpreter = "py -3";
 		return false;
 	}
 	else if (runCommand("python", "--version") == 0)
 	{
-		pythonCmd = "python";
+		pythonInterpreter = "python";
 		return false;
 	}
 
@@ -144,13 +152,13 @@ bool RdGlobalInfo::initPythonCommand()
 bool RdGlobalInfo::checkPythonCommand()
 {
 	return runCommand(
-			pythonCmd,
+			pythonInterpreter,
 			"-c \"import sys; sys.exit(0 if sys.version_info >= (3,4) else 1)\"");
 }
 
 bool RdGlobalInfo::isDecompilerInSpecifiedPath() const
 {
-	return runCommand(pythonCmd, "\"" + decompilerPyPath + "\" --help") == 0;
+	return runCommand(pythonInterpreter, "\"" + decompilerPyPath + "\" --help") == 0;
 }
 
 bool RdGlobalInfo::isDecompilerInSystemPath()
@@ -158,7 +166,7 @@ bool RdGlobalInfo::isDecompilerInSystemPath()
 	char buff[MAXSTR];
 	if (search_path(buff, sizeof(buff), decompilerPyName.c_str(), false))
 	{
-		if (runCommand(pythonCmd, "\"" + std::string(buff) + "\" --help") == 0)
+		if (runCommand(pythonInterpreter, "\"" + std::string(buff) + "\" --help") == 0)
 		{
 			decompilerPyPath = buff;
 			return true;
@@ -183,6 +191,44 @@ void RdGlobalInfo::setIsUseThreads(bool f)
  */
 bool RdGlobalInfo::configureDecompilation()
 {
+	if (initPythonCommand())
+	{
+		warning("Unable to execute Python interpreter.\n"
+				"Make sure Python version >= 3.4 is properly installed.");
+
+		auto canceled = pluginConfigurationMenu(*this);
+		if (canceled)
+		{
+			return canceled;
+		}
+		else
+		{
+			return configureDecompilation();
+		}
+	}
+
+	if (checkPythonCommand())
+	{
+		qstring path;
+		qgetenv("PATH", &path);
+
+		warning("Found Python interpreter of incompatible version: \"%s\".\n"
+				"The RetDec IDA plugin requires Python version >= 3.4.\n"
+				"Used PATH: \"%s\"",
+				pythonInterpreter.c_str(),
+				path.c_str());
+
+		auto canceled = pluginConfigurationMenu(*this);
+		if (canceled)
+		{
+			return canceled;
+		}
+		else
+		{
+			return configureDecompilation();
+		}
+	}
+
 	if (isDecompilerInSpecifiedPath())
 	{
 		INFO_MSG("Found %s at %s -> plugin is properly configured.\n",
