@@ -135,6 +135,19 @@ bool RdGlobalInfo::initPythonCommand()
 	return true;
 }
 
+/**
+ * Check that the selected Python command is in fact running an expected
+ * Python version.
+ * @return @c False if python command ok,
+ *         @c true otherwise.
+ */
+bool RdGlobalInfo::checkPythonCommand()
+{
+	return runCommand(
+			pythonCmd,
+			"-c \"import sys; sys.exit(0 if sys.version_info >= (3,4) else 1)\"");
+}
+
 bool RdGlobalInfo::isDecompilerInSpecifiedPath() const
 {
 	return runCommand(pythonCmd, "\"" + decompilerPyPath + "\" --help") == 0;

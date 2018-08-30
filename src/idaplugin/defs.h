@@ -164,6 +164,7 @@ class RdGlobalInfo
 		bool isDecompilerInSpecifiedPath() const;
 		bool isDecompilerInSystemPath();
 		bool initPythonCommand();
+		bool checkPythonCommand();
 
 		bool configureDecompilation();
 
