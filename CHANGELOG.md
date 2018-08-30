@@ -2,6 +2,8 @@
 
 ## dev
 
+* Fix: Add Python interpreter checks and make it possible to configure path to the Python interpreter to use ([#29](https://github.com/avast-tl/retdec-idaplugin/issues/29#issuecomment-417363723)).
+
 ## v0.6 (August 16, 2018)
 
 * Updated plugin in order to work with the new Python implementation of RetDec scripts.
