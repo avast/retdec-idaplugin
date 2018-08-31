@@ -36,10 +36,13 @@ int runCommand(
 	void* p = launch_process(procInf, &errbuf);
 	if (p == nullptr)
 	{
-		warning("launch_process(%s %s) failed to launch %S\n",
-				procInf.path,
-				procInf.args,
-				errbuf.c_str());
+		if (showWarnings)
+		{
+			warning("launch_process(%s %s) failed to launch %s\n",
+					procInf.path,
+					procInf.args,
+					errbuf.c_str());
+		}
 		return 1;
 	}
 	if (pid)
