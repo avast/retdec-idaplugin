@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.6)
 
 project(retdec-idaplugin CXX)
+set(RELEASE_VERSION "0.6")
 
 # Set the default build type to 'Release'
 if(NOT CMAKE_BUILD_TYPE)
@@ -51,7 +52,34 @@ endif()
 # Defines.
 add_definitions(-D__IDP__ -D__PLUGIN__ -DNO_OBSOLETE_FUNCS)
 add_definitions(-D__X64__)
+add_definitions(-DRELEASE_VERSION="${RELEASE_VERSION}")
 
+# Subdirectories.
 add_subdirectory(deps)
+if(RETDEC_IDAPLUGIN_DOC)
+	add_subdirectory(doc)
+endif()
 add_subdirectory(scripts)
 add_subdirectory(src)
+
+# Create release.
+if(RETDEC_IDAPLUGIN_DOC)
+	set(RELEASE_DIR_NAME "retdec-idaplugin")
+	set(RELEASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/${RELEASE_DIR_NAME}")
+	set(RELEASE_LICENSE_DIR "${RELEASE_DIR}/license")
+	if(MSVC) # Windows
+		set(RELEASE_OS_NAME "windows")
+	else()
+		set(RELEASE_OS_NAME "linux")
+	endif()
+	add_custom_target(release
+		DEPENDS user-guide idaplugin
+		COMMAND ${CMAKE_COMMAND} -E make_directory "${RELEASE_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E make_directory "${RELEASE_LICENSE_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/LICENSE" "${RELEASE_LICENSE_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/LICENSE-THIRD-PARTY" "${RELEASE_LICENSE_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/doc/user_guide/user_guide.pdf" "${RELEASE_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:idaplugin>" "${RELEASE_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E tar "cvf" "${CMAKE_CURRENT_BINARY_DIR}/${RELEASE_DIR_NAME}-v${RELEASE_VERSION}-${RELEASE_OS_NAME}.zip" --format=zip "${RELEASE_DIR}"
+	)
+endif()

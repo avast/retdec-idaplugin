@@ -62,15 +62,18 @@ You must pass the following parameters to `cmake`:
 
 You can pass the following additional parameters to `cmake`:
 * `-DIDA_PATH=</path/to/ida>` to tell `cmake` where to install the plugin. If specified, installation will copy plugin binary into `IDA_PATH/plugins`, and content of `scripts/idc` directory into `IDA_PATH/idc`. If not set, installation step does nothing.
+* `-DRETDEC_IDAPLUGIN_DOC=ON` to enable the `user-guide` target which generates the user guide document (disabled by default, the target needs to be explicitly invoked).
 
 ## User Guide
 
 The [User Guide](https://github.com/avast-tl/retdec-idaplugin/blob/master/doc/user_guide/user_guide.pdf) in a PDF form is located in `doc/user_guide/user_guide.pdf`.
 
-You can build your own guide by running `make` in `doc/user_guide` directory:
-* Requires [GNU make](https://www.gnu.org/software/make/).
+You can build your own guide by enabling and invoking the `user-guide` target:
+* `cmake .. -DRETDEC_IDAPLUGIN_DOC=ON`
+* Linux: `make user-guide`
+* Windows: `cmake --build . --config Release --target user-guide`
 * Requires [LaTeX](https://www.latex-project.org/), LaTeX packages, and related tools.
-* The resulting PDF will overwrite the original `user_guide.pdf`.
+* The resulting PDF will overwrite the original `user_guide.pdf` in `doc/user_guide`.
 
 ## License
 
