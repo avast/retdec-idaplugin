@@ -128,7 +128,7 @@ RetDec IDA plugin tries to execute the main decompilation script using one of th
     \item \texttt{py -3}
     \item \texttt{python}
 \end{enumerate}
-Make sure at least one of these works, i.e. Python 3 is in \texttt{PATH}, and that it really is Python version 3 that gets executed (especially if the third option is used on your system).
+Make sure at least one of these works, i.e. Python 3 is in \texttt{PATH}, and that it really is Python version 3 that gets executed (especially if the third option is used on your system). Alternatively, you can explicitly set the path to the Python 3 interpreter in plugin's configuration dialog (see Section~\ref{sec:config:decompilation}).
 
 \subsection{RetDec IDA plugin}
 Finally, we need to install the RetDec IDA plugin itself.
@@ -219,7 +219,12 @@ These lines tell IDA which hotkeys invoke the plugin and what argument is passed
 \end{table}
 
 \subsection{Decompilation Configuration}
-Each time a decompilation is triggered, plugin checks that it is properly configured. If it is not, warning is displayed, then the configuration dialog appears. Here, you have to make sure plugin finds the \texttt{retdec-decompiler.py} script from the standalone RetDec installation (Section~\ref{sec:installation:retdec}). Either set path to \texttt{retdec-decompiler.py} in the configuration dialog, or add the decompiler's \texttt{bin} directory to the system \texttt{PATH}.
+\label{sec:config:decompilation}
+Each time a decompilation is triggered, plugin checks that it is properly configured. If it is not, warning is displayed, then the configuration dialog appears. Here, you have to make sure of the following:
+\begin{itemize}
+    \item Plugin finds the \texttt{retdec-decompiler.py} script from the standalone RetDec installation (Section~\ref{sec:installation:retdec}). Either set path to \texttt{retdec-decompiler.py} in the configuration dialog, or add the decompiler's \texttt{bin} directory to the system \texttt{PATH}.
+    \item Plugin can execute a Python 3 interpreter. Either set path to the Python 3 interpreter in the configuration dialog, or make sure one of the commands in Section~\ref{sec:installation:python} works.
+\end{itemize}
 
 The settings will be saved and if you want to change them later, you need to manually invoke the plugin's configuration from IDA (see Section~\ref{sec:config:from-ida}).
 
