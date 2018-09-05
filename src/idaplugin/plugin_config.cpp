@@ -17,6 +17,7 @@ namespace {
 
 const std::string JSON_decompilerPyPath = "decompilerPyPath";
 const std::string JSON_pythonInterpreterPath = "pythonInterpreterPath";
+const std::string JSON_pythonInterpreterArgs = "pythonInterpreterArgs";
 
 } // anonymous namespace
 
@@ -95,6 +96,7 @@ bool readConfigFile(RdGlobalInfo& rdgi)
 
 	rdgi.decompilerPyPath = root.get(JSON_decompilerPyPath, "").asString();
 	rdgi.pythonInterpreter = root.get(JSON_pythonInterpreterPath, "").asString();
+	rdgi.pythonInterpreterArgs = root.get(JSON_pythonInterpreterArgs, "").asString();
 
 	return false;
 }
@@ -115,6 +117,7 @@ void saveConfigTofile(RdGlobalInfo& rdgi)
 
 	root[JSON_decompilerPyPath] = rdgi.decompilerPyPath;
 	root[JSON_pythonInterpreterPath] = rdgi.pythonInterpreter;
+	root[JSON_pythonInterpreterArgs] = rdgi.pythonInterpreterArgs;
 
 	Json::StreamWriterBuilder writer;
 	writer.settings_["commentStyle"] = "All";
@@ -191,6 +194,7 @@ bool askUserToConfigurePlugin(RdGlobalInfo& rdgi)
 	{
 		rdgi.decompilerPyPath = cDecompilerPy;
 		rdgi.pythonInterpreter = cPythonInterpreter;
+		rdgi.pythonInterpreterArgs = "";
 	}
 	return false;
 }

@@ -130,16 +130,19 @@ bool RdGlobalInfo::initPythonCommand()
 	if (runCommand("python3", "--version") == 0)
 	{
 		pythonInterpreter = "python3";
+		pythonInterpreterArgs = "";
 		return false;
 	}
 	else if (runCommand("py", "-3 --version") == 0)
 	{
-		pythonInterpreter = "py -3";
+		pythonInterpreter = "py";
+		pythonInterpreterArgs = "-3 ";
 		return false;
 	}
 	else if (runCommand("python", "--version") == 0)
 	{
 		pythonInterpreter = "python";
+		pythonInterpreterArgs = "";
 		return false;
 	}
 
@@ -156,12 +159,14 @@ bool RdGlobalInfo::checkPythonCommand()
 {
 	return runCommand(
 			pythonInterpreter,
-			"-c \"import sys; sys.exit(0 if sys.version_info >= (3,4) else 1)\"");
+			pythonInterpreterArgs + "-c \"import sys; sys.exit(0 if sys.version_info >= (3,4) else 1)\"");
 }
 
 bool RdGlobalInfo::isDecompilerInSpecifiedPath() const
 {
-	return runCommand(pythonInterpreter, "\"" + decompilerPyPath + "\" --help") == 0;
+	return runCommand(
+			pythonInterpreter,
+			pythonInterpreterArgs + "\"" + decompilerPyPath + "\" --help") == 0;
 }
 
 bool RdGlobalInfo::isDecompilerInSystemPath()
@@ -169,7 +174,9 @@ bool RdGlobalInfo::isDecompilerInSystemPath()
 	char buff[MAXSTR];
 	if (search_path(buff, sizeof(buff), decompilerPyName.c_str(), false))
 	{
-		if (runCommand(pythonInterpreter, "\"" + std::string(buff) + "\" --help") == 0)
+		if (runCommand(
+				pythonInterpreter,
+				pythonInterpreterArgs + "\"" + std::string(buff) + "\" --help") == 0)
 		{
 			decompilerPyPath = buff;
 			return true;
