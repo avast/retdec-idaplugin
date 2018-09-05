@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.6)
 
 project(retdec-idaplugin CXX)
-set(RELEASE_VERSION "0.6")
+set(RELEASE_VERSION "0.7")
 
 # Set the default build type to 'Release'
 if(NOT CMAKE_BUILD_TYPE)
