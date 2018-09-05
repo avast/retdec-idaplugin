@@ -9,10 +9,8 @@ set(FINAL_PLUGIN_NAME "retdec")
 # Windows.
 if(MSVC)
 	add_definitions(-D__NT__) #-DWIN32
-	if(MSVC)
-		set(IDASDK_LIBRARIES "${IDA_SDK_DIR}/lib/x64_win_vc_32/ida.lib")
-	endif()
-elseif (APPLE)
+	set(IDASDK_LIBRARIES "${IDA_SDK_DIR}/lib/x64_win_vc_32/ida.lib")
+elseif(APPLE)
 	ADD_DEFINITIONS (-D__MAC__)
 	set(IDASDK_LIBRARIES "${IDA_SDK_DIR}/lib/x64_mac_gcc_32/libida.dylib")
 # Linux.

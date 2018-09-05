@@ -34,7 +34,7 @@ if(MSVC) # Windows
 	# std::numeric_limits<...>::max()
 	# (http://stackoverflow.com/questions/1904635/warning-c4003-and-errors-c2589-and-c2059-on-x-stdnumeric-limitsintmax).
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DNOMINMAX")
-else() # Linux
+else() # Linux or macOS
 	# Common options.
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")
@@ -69,7 +69,9 @@ if(RETDEC_IDAPLUGIN_DOC)
 	set(RELEASE_LICENSE_DIR "${RELEASE_DIR}/license")
 	if(MSVC) # Windows
 		set(RELEASE_OS_NAME "windows")
-	else()
+	elseif(APPLE) # macOS
+		set(RELEASE_OS_NAME "macOS")
+	else() # Linux
 		set(RELEASE_OS_NAME "linux")
 	endif()
 	add_custom_target(release
