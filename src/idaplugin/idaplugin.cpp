@@ -33,7 +33,7 @@ void killDecompilation()
 {
 	if (decompInfo.decompRunning)
 	{
-		INFO_MSG("Unfinished decompilation was KILLED !!!\n");
+		INFO_MSG("Unfinished decompilation was KILLED !!! Only one decompiltion can run at a time.\n");
 		qthread_kill(decompInfo.decompThread);
 		qthread_join(decompInfo.decompThread);
 		qthread_free(decompInfo.decompThread);
