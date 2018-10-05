@@ -305,8 +305,12 @@ RetDec plugin's primary decompilation mode is selective decompilation. It decomp
 
 Once the decompilation is finished, the decompiled source code is displayed in a new IDA viewer window. Here, you can invoke new decompilations by double-clicking on function calls.
 
+At the moment, the RetDec plugin supports only one simultaneous decompilation. If you trigger a decompilation before the last one is finished, the unfinished decompilation gets killed and the new one takes its place.
+
 \subsection{Full Decompilation}
 If you configured a hotkey for full decompilation in Section~\ref{sec:config:plugin-cfg}, you can use it to decompile an entire binary that is being analyzed. The result of this decompilation is stored into an output file, whose location is communicated to you through IDA's output window. The result cannot be displayed in the IDA's viewer window.
+
+Same as with selective decompilation (Section~\ref{sec:selective-decompilation}), only one decompilation can run at a time - unfinished decompilation is terminated when a new one is triggered.
 
 %-----------------------------------------------------------------------------
 %  User Interactions
