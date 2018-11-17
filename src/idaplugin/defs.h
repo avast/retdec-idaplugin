@@ -11,6 +11,8 @@
 #include <list>
 #include <map>
 
+#include <inttypes.h>
+
 // IDA SDK includes.
 //
 #include <ida.hpp> // this must be included before other idasdk headers
@@ -46,6 +48,14 @@ namespace idaplugin {
 //
 #ifndef idaapi
 	#define idaapi
+#endif
+
+// define default UInt type for both 32 and 64 bit.
+//
+#if defined ( EA64 )
+	#define RetDecUInt	PRIu64
+#else
+	#define RetDecUInt	"u"
 #endif
 
 // General print msg macros.
