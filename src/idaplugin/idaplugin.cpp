@@ -7,6 +7,10 @@
 #include <fstream>
 #include <iostream>
 
+#if !defined(OS_WINDOWS) // Linux || macOS
+	#include <signal.h>
+#endif
+
 #include "retdec/utils/file_io.h"
 #include "retdec/utils/filesystem_path.h"
 #include "code_viewer.h"
@@ -24,17 +28,27 @@ RdGlobalInfo decompInfo;
 
 /**
  * Kill old thread if still running.
- * TODO: Killing is not good enough, thread dies but process created by 'call_system()' lives.
- * This might be solved by usage of Petr's API library, so no need to fix it now.
  */
 void killDecompilation()
 {
 	if (decompInfo.decompRunning)
 	{
-		INFO_MSG("Unfinished decompilation was KILLED !!!\n");
+		INFO_MSG("Unfinished decompilation was KILLED !!! Only one decompiltion can run at a time.\n");
 		qthread_kill(decompInfo.decompThread);
 		qthread_join(decompInfo.decompThread);
 		qthread_free(decompInfo.decompThread);
+
+		if (decompInfo.decompPid)
+		{
+#if defined(OS_WINDOWS)
+			std::string cmd = "taskkill /F /T /PID " + std::to_string(decompInfo.decompPid);
+			std::system(cmd.c_str());
+#else // Linux || macOS
+			kill(decompInfo.decompPid, SIGTERM);
+#endif
+			decompInfo.decompPid = 0;
+		}
+
 		decompInfo.decompRunning = false;
 	}
 }
@@ -303,19 +317,17 @@ bool setInputPath()
 		return false;
 	}
 
-#ifdef OS_WINDOWS
-	workDir += "\\";
-#else // Linux a macOS
-	workDir += "/";
-#endif
-
-	if (!retdec::utils::fileExists(inPath))
+	if (!retdec::utils::FilesystemPath(inPath).exists())
 	{
 		INFO_MSG("Input \"%s\" does not exist, trying to recover ...\n",
 				inPath.c_str());
 
-		inPath = workDir + inName;
-		if (!retdec::utils::fileExists(inPath))
+		retdec::utils::FilesystemPath fsWork(workDir);
+		fsWork.append(inName);
+		workDir = fsWork.getPath();
+
+		inPath = workDir;
+		if (!retdec::utils::FilesystemPath(inPath).exists())
 		{
 			INFO_MSG("Input \"%s\" does not exist, asking user to specify the "
 					"input file ...\n",
@@ -331,7 +343,7 @@ bool setInputPath()
 			{
 				return false;
 			}
-			else if (!retdec::utils::fileExists(std::string(tmp)))
+			else if (!retdec::utils::FilesystemPath(std::string(tmp)).exists())
 			{
 				warning("Cannot decompile this input file, there is no such "
 						"file: %s\n",

@@ -14,7 +14,7 @@ Currently, we support only Windows and Linux.
 
 1. Either download and unpack a pre-built package from the following list, or build and install the RetDec IDA plugin by yourself (the process is described below):
 
-    * [Windows - for 64-bit IDA](https://github.com/avast-tl/retdec-idaplugin/releases/download/v0.5/retdec-idaplugin-v0.5-win.zip) (v0.5)
+    * [Windows - for 64-bit IDA](https://github.com/avast-tl/retdec-idaplugin/releases/download/v0.7/retdec-idaplugin-v0.7-windows.zip) (v0.7)
 
 2. Follow the user guide (`user_guide.pdf`) that is part of the downloaded package, or use the [current version](https://github.com/avast-tl/retdec-idaplugin/blob/master/doc/user_guide/user_guide.pdf) from this repository.
 
@@ -22,7 +22,7 @@ Currently, we support only Windows and Linux.
 
 1. Either download and unpack a pre-built package from the following list, or build and install the RetDec IDA plugin by yourself (the process is described below):
 
-    * [Linux - for 64-bit IDA](https://github.com/avast-tl/retdec-idaplugin/releases/download/v0.5/retdec-idaplugin-v0.5-linux.zip) (v0.5)
+    * [Linux - for 64-bit IDA](https://github.com/avast-tl/retdec-idaplugin/releases/download/v0.7/retdec-idaplugin-v0.7-linux.zip) (v0.7)
 
 2. Follow the user guide (`user_guide.pdf`) that is part of the downloaded package, or use the [current version](https://github.com/avast-tl/retdec-idaplugin/blob/master/doc/user_guide/user_guide.pdf) from this repository.
 
@@ -62,15 +62,18 @@ You must pass the following parameters to `cmake`:
 
 You can pass the following additional parameters to `cmake`:
 * `-DIDA_PATH=</path/to/ida>` to tell `cmake` where to install the plugin. If specified, installation will copy plugin binary into `IDA_PATH/plugins`, and content of `scripts/idc` directory into `IDA_PATH/idc`. If not set, installation step does nothing.
+* `-DRETDEC_IDAPLUGIN_DOC=ON` to enable the `user-guide` target which generates the user guide document (disabled by default, the target needs to be explicitly invoked).
 
 ## User Guide
 
 The [User Guide](https://github.com/avast-tl/retdec-idaplugin/blob/master/doc/user_guide/user_guide.pdf) in a PDF form is located in `doc/user_guide/user_guide.pdf`.
 
-You can build your own guide by running `make` in `doc/user_guide` directory:
-* Requires [GNU make](https://www.gnu.org/software/make/).
+You can build your own guide by enabling and invoking the `user-guide` target:
+* `cmake .. -DRETDEC_IDAPLUGIN_DOC=ON`
+* Linux: `make user-guide`
+* Windows: `cmake --build . --config Release --target user-guide`
 * Requires [LaTeX](https://www.latex-project.org/), LaTeX packages, and related tools.
-* The resulting PDF will overwrite the original `user_guide.pdf`.
+* The resulting PDF will overwrite the original `user_guide.pdf` in `doc/user_guide`.
 
 ## License
 

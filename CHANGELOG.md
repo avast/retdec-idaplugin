@@ -2,8 +2,18 @@
 
 ## dev
 
+## v0.7 (September 5, 2018)
+
+* Fix: Fix Python interpreter execution via `py -3` command ([#33](https://github.com/avast-tl/retdec-idaplugin/pull/33)).
+* Fix: Add Python interpreter checks and make it possible to configure path to the Python interpreter to use ([#29](https://github.com/avast-tl/retdec-idaplugin/issues/29#issuecomment-417363723)).
+
+## v0.6 (August 16, 2018)
+
+* Updated plugin in order to work with the new Python implementation of RetDec scripts.
 * Added support for macOS ([#27](https://github.com/avast-tl/retdec-idaplugin/pull/27)).
 * Fix: Upgrade to a new JsonCpp API ([#28](https://github.com/avast-tl/retdec-idaplugin/pull/28)).
+* Fix: Terminate spawned decompilation process when IDA is closed or a new decompilation is triggered ([#20](https://github.com/avast-tl/retdec-idaplugin/issues/20)).
+* Fix: Decode and decompile only the selected function ([#6](https://github.com/avast-tl/retdec-idaplugin/issues/6)).
 
 ## v0.5 (June 7, 2018)
 

@@ -32,17 +32,11 @@ static void idaapi localDecompilation(RdGlobalInfo *di)
 	INFO_MSG("Decompilation command: %s\n", tmp.c_str());
 	INFO_MSG("Running the decompilation command ...\n");
 
-	// Do NOT use call_system() because it prevents us to kill the run program
-	// by killing IDA. This is needed in, e.g., regression tests (timeout
-	// handling). Instead, use std::system(), which works as expected.
-	int decRet = std::system(di->decCmd.c_str());
-	if (decRet != 0)
-	{
-		warning("std::system(%s) failed with error code %d\n",
-				di->decCmd.c_str(),
-				decRet);
-		return;
-	}
+	runCommand(
+			di->pythonInterpreter,
+			di->pythonInterpreterArgs + di->decCmd,
+			&di->decompPid,
+			true);
 
 	// Get decompiled and colored file content.
 	//
@@ -104,75 +98,13 @@ static int idaapi threadFunc(void* ud)
 
 /**
  * Create ranges to decompile from the provided function.
- * All functions called and all function calling the selected function
- * are added to selected ranges -> all of them are decoded and decompiled.
  * @param[out] decompInfo Plugin's global information.
  * @param      fnc        Function selected for decompilation.
  */
 void createRangesFromSelectedFunction(RdGlobalInfo& decompInfo, func_t* fnc)
 {
-	std::set<ea_t> selectedFncs;
 	std::stringstream ss;
-
 	ss << "0x" << std::hex << fnc->start_ea << "-" << "0x" << std::hex << (fnc->end_ea-1);
-	selectedFncs.insert(fnc->start_ea);
-
-	// Experimental -- decompile all functions called from this one.
-	//
-	func_item_iterator_t fii;
-	for (bool ok=fii.set(fnc); ok; ok=fii.next_code())
-	{
-		ea_t ea = fii.current();
-
-		xrefblk_t xb;
-		for ( bool ok=xb.first_from(ea, XREF_ALL); ok; ok=xb.next_from() )
-		{
-			if (xb.iscode == 0) // first data reference
-				break;
-
-			if (xb.type == fl_CF || xb.type == fl_CN)
-			{
-				func_t *called = get_func(xb.to);
-				if (called && selectedFncs.find(called->start_ea) == selectedFncs.end())
-				{
-					selectedFncs.insert(called->start_ea);
-					ss << ",0x" << std::hex << called->start_ea << "-"
-							<< "0x" << std::hex << (called->end_ea-1);
-				}
-			}
-		}
-	}
-
-	// Experimental -- decompile all functions calling this one.
-	//
-	for (unsigned i = 0; i < get_func_qty(); ++i)
-	{
-		func_t *caller = getn_func(i);
-
-		func_item_iterator_t fii;
-		for ( bool ok=fii.set(caller); ok; ok=fii.next_code() )
-		{
-			ea_t ea = fii.current();
-
-			xrefblk_t xb;
-			for ( bool ok=xb.first_from(ea, XREF_ALL); ok; ok=xb.next_from() )
-			{
-				if (xb.iscode == 0) // first data reference
-					break;
-
-				if (xb.type == fl_CF || xb.type == fl_CN)
-				{
-					func_t *called = get_func(xb.to);
-					if (called == fnc && selectedFncs.find(caller->start_ea) == selectedFncs.end())
-					{
-						selectedFncs.insert(caller->start_ea);
-						ss << ",0x" << std::hex << caller->start_ea << "-"
-								<< "0x" << std::hex << (caller->end_ea-1);
-					}
-				}
-			}
-		}
-	}
 
 	decompInfo.ranges = ss.str();
 	decompInfo.decompiledFunction = fnc;
@@ -188,14 +120,9 @@ void decompileInput(RdGlobalInfo &decompInfo)
 
 	// Construct decompiler call command.
 	//
-	decompInfo.decCmd = "";
-#ifdef OS_WINDOWS
-	// On Windows, shell scripts have to be run through 'sh'; otherwise, they
-	// are not run through Bash, which causes us problems.
-	decompInfo.decCmd += "sh ";
-#endif
-	decompInfo.decCmd += "'" + decompInfo.decompilationShCmd + "' '" + decompInfo.inputPath;
-	decompInfo.decCmd += "' --config='" + decompInfo.dbFile + "'";
+	decompInfo.decCmd = "\"" + decompInfo.decompilationCmd + "\"";
+	decompInfo.decCmd += " \"" + decompInfo.inputPath + "\"";
+	decompInfo.decCmd += " --config=\"" + decompInfo.dbFile + "\"";
 
 	if (!decompInfo.mode.empty())
 	{
@@ -221,16 +148,16 @@ void decompileInput(RdGlobalInfo &decompInfo)
 	if (decompInfo.isSelectiveDecompilation())
 	{
 		decompInfo.decCmd += " --color-for-ida";
-		decompInfo.decCmd += " -o '" + decompInfo.inputPath + ".c'";
+		decompInfo.decCmd += " -o \"" + decompInfo.inputPath + ".c\"";
 	}
 	else
 	{
-		decompInfo.decCmd += " -o '" + decompInfo.outputFile + "'";
+		decompInfo.decCmd += " -o \"" + decompInfo.outputFile + "\"";
 	}
 
 	if ( !decompInfo.ranges.empty() )
 	{
-		decompInfo.decCmd += " --select-decode-only --select-ranges='" + decompInfo.ranges + "'";
+		decompInfo.decCmd += " --select-decode-only --select-ranges=\"" + decompInfo.ranges + "\"";
 	}
 
 	// Create decompilation thread.

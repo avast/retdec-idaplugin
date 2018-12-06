@@ -356,20 +356,14 @@ void ConfigGenerator::generateSegmentsAndGlobals()
 			//
 			tinfo_t getType;
 			get_tinfo(&getType, head);
-			if (getType.empty() || !getType.present())
-			{
-				// Guess type from first instruction address.
-				//
-				const auto guess = guess_tinfo(&getType, head);
-				if(guess != GUESS_FUNC_OK)
-				{
-					// TODO: problem
-					getType.clear();
-				}
-			}
 
 			if (!getType.empty() && getType.present() && getType.is_func())
 			{
+				if (config.functions.getFunctionByStartAddress(head) != nullptr)
+				{
+					continue;
+				}
+
 				std::string fncName = buff.c_str();
 				std::replace(fncName.begin(), fncName.end(), '.', '_');
 

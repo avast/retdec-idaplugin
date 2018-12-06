@@ -15,7 +15,9 @@
 
 namespace {
 
-const std::string JSON_decompileShPath = "decompileShPath";
+const std::string JSON_decompilerPyPath = "decompilerPyPath";
+const std::string JSON_pythonInterpreterPath = "pythonInterpreterPath";
+const std::string JSON_pythonInterpreterArgs = "pythonInterpreterArgs";
 
 } // anonymous namespace
 
@@ -87,12 +89,14 @@ bool readConfigFile(RdGlobalInfo& rdgi)
 {
 	Json::Value root;
 
-	if (getConfigRootFromFile(rdgi.pluginConfigFile, root))
+	if (getConfigRootFromFile(rdgi.pluginConfigFile.getPath(), root))
 	{
 		return true;
 	}
 
-	rdgi.decompileShPath = root.get(JSON_decompileShPath, "").asString();
+	rdgi.decompilerPyPath = root.get(JSON_decompilerPyPath, "").asString();
+	rdgi.pythonInterpreter = root.get(JSON_pythonInterpreterPath, "").asString();
+	rdgi.pythonInterpreterArgs = root.get(JSON_pythonInterpreterArgs, "").asString();
 
 	return false;
 }
@@ -106,16 +110,18 @@ void saveConfigTofile(RdGlobalInfo& rdgi)
 {
 	Json::Value root;
 
-	if (getConfigRootFromFile(rdgi.pluginConfigFile, root))
+	if (getConfigRootFromFile(rdgi.pluginConfigFile.getPath(), root))
 	{
 		// Problem when reading config -- does not matter, we use empty root.
 	}
 
-	root[JSON_decompileShPath] = rdgi.decompileShPath;
+	root[JSON_decompilerPyPath] = rdgi.decompilerPyPath;
+	root[JSON_pythonInterpreterPath] = rdgi.pythonInterpreter;
+	root[JSON_pythonInterpreterArgs] = rdgi.pythonInterpreterArgs;
 
 	Json::StreamWriterBuilder writer;
 	writer.settings_["commentStyle"] = "All";
-	std::ofstream jsonFile(rdgi.pluginConfigFile.c_str());
+	std::ofstream jsonFile(rdgi.pluginConfigFile.getPath().c_str());
 	jsonFile << Json::writeString(writer, root);
 }
 
@@ -126,19 +132,36 @@ void saveConfigTofile(RdGlobalInfo& rdgi)
  */
 bool askUserToConfigurePlugin(RdGlobalInfo& rdgi)
 {
-	char cDecompileSh[QMAXPATH];
+	char cDecompilerPy[QMAXPATH];
+	char cPythonInterpreter[QMAXPATH];
 
-	if (rdgi.decompileShPath.empty())
+	if (rdgi.decompilerPyPath.empty())
 	{
-		std::string pattern = "retdec-decompiler.sh";
-		std::copy(pattern.begin(), pattern.begin() + QMAXPATH, cDecompileSh);
+		std::string pattern = rdgi.decompilerPyName;
+		std::copy(pattern.begin(), pattern.begin() + QMAXPATH, cDecompilerPy);
 	}
 	else
 	{
 		std::copy(
-				rdgi.decompileShPath.begin(),
-				rdgi.decompileShPath.begin() + QMAXPATH,
-				cDecompileSh);
+				rdgi.decompilerPyPath.begin(),
+				rdgi.decompilerPyPath.begin() + QMAXPATH,
+				cDecompilerPy);
+	}
+
+	if (rdgi.pythonInterpreter.empty())
+	{
+		std::string tmp = "python3";
+		std::copy(
+				tmp.begin(),
+				tmp.begin() + QMAXPATH,
+				cPythonInterpreter);
+	}
+	else
+	{
+		std::copy(
+				rdgi.pythonInterpreter.begin(),
+				rdgi.pythonInterpreter.begin() + QMAXPATH,
+				cPythonInterpreter);
 	}
 
 	qstring formRetDecPluginSettings =
@@ -147,13 +170,19 @@ bool askUserToConfigurePlugin(RdGlobalInfo& rdgi)
 		"\n"
 		"Settings will be permanently stored and you will not have to fill them each time you run decompilation.\n"
 		"\n"
-		"Path to retdec-decompiler.sh (unnecessary if it is in the system PATH):\n"
-		"<RetDec file:f1::60:::>\n"
+		"Path to %A (unnecessary if it is in the system PATH):\n"
+		"<RetDec script:f1::60:::>\n"
+		"\n"
+		"Path to Python interpreter version >= 3.4 (unnecessary if it is in the system PATH):\n"
+		"<Python interpreter:f2::60:::>\n"
 		"\n";
 
 	int ok = ask_form(formRetDecPluginSettings.c_str(),
-		cDecompileSh,
-		&cDecompileSh
+		rdgi.decompilerPyName.c_str(),
+		cDecompilerPy,
+		cPythonInterpreter,
+		&cDecompilerPy,
+		&cPythonInterpreter
 		);
 
 	if (ok == 0)
@@ -163,7 +192,9 @@ bool askUserToConfigurePlugin(RdGlobalInfo& rdgi)
 	}
 	else
 	{
-		rdgi.decompileShPath = cDecompileSh;
+		rdgi.decompilerPyPath = cDecompilerPy;
+		rdgi.pythonInterpreter = cPythonInterpreter;
+		rdgi.pythonInterpreterArgs = "";
 	}
 	return false;
 }
