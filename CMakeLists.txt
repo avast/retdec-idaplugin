@@ -56,6 +56,7 @@ else() # Linux & macOS
 endif()
 
 # Defines.
+add_definitions(-DRELEASE_VERSION="${RELEASE_VERSION}")
 add_definitions(-D__X64__ -D__IDP__ -D__PLUGIN__ -DNO_OBSOLETE_FUNCS)
 
 # Subdirectories.
