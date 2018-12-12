@@ -38,10 +38,9 @@ int runCommand(
 	{
 		if (showWarnings)
 		{
-			warning("launch_process(%s %s) failed to launch %s\n",
-					procInf.path,
-					procInf.args,
-					errbuf.c_str());
+			WARNING_GUI("launch_process(" << procInf.path << " "
+					<< procInf.args << ") failed to launch " << errbuf.c_str()
+					<< "\n");
 		}
 		return 1;
 	}
@@ -64,9 +63,8 @@ int runCommand(
 	{
 		if (showWarnings)
 		{
-			warning("Error in check_process_exit() while executing: %s %s\n",
-					procInf.path,
-					procInf.args);
+			WARNING_GUI("Error in check_process_exit() while executing: "
+					<< procInf.path << " " << procInf.args << "\n");
 		}
 		return 1;
 	}
@@ -75,10 +73,8 @@ int runCommand(
 	{
 		if (showWarnings)
 		{
-			warning("launch_process(%s %s) failed with error code %d\n",
-					procInf.path,
-					procInf.args,
-					rc);
+			WARNING_GUI("launch_process(" << procInf.path << " " << procInf.args
+					<< ") failed with error code " << rc << "\n");
 		}
 
 		return 1;
@@ -207,7 +203,7 @@ bool RdGlobalInfo::configureDecompilation()
 {
 	if (initPythonCommand())
 	{
-		warning("Unable to execute Python interpreter.\n"
+		WARNING_GUI("Unable to execute Python interpreter.\n"
 				"Make sure Python version >= 3.4 is properly installed.");
 
 		auto canceled = pluginConfigurationMenu(*this);
@@ -226,11 +222,10 @@ bool RdGlobalInfo::configureDecompilation()
 		qstring path;
 		qgetenv("PATH", &path);
 
-		warning("Found Python interpreter of incompatible version: \"%s\".\n"
+		WARNING_GUI("Found Python interpreter of incompatible version: \""
+				<< pythonInterpreter << "\".\n"
 				"The RetDec IDA plugin requires Python version >= 3.4.\n"
-				"Used PATH: \"%s\"",
-				pythonInterpreter.c_str(),
-				path.c_str());
+				"Used PATH: \"" << path.c_str() << "\"");
 
 		auto canceled = pluginConfigurationMenu(*this);
 		if (canceled)
@@ -245,25 +240,22 @@ bool RdGlobalInfo::configureDecompilation()
 
 	if (isDecompilerInSpecifiedPath())
 	{
-		INFO_MSG("Found %s at %s -> plugin is properly configured.\n",
-				decompilerPyName.c_str(),
-				decompilerPyPath.c_str());
+		INFO_MSG("Found " << decompilerPyName << " at " << decompilerPyPath
+				<< " -> plugin is properly configured.\n");
 		decompilationCmd = decompilerPyPath;
 		return false;
 	}
 	else if (isDecompilerInSystemPath())
 	{
-		INFO_MSG("Found %s at system PATH %s -> plugin is properly configured.\n",
-				decompilerPyName.c_str(),
-				decompilerPyPath.c_str());
+		INFO_MSG("Found " << decompilerPyName << " at system PATH "
+				<< decompilerPyPath << " -> plugin is properly configured.\n");
 		decompilationCmd = decompilerPyPath;
 		return false;
 	}
 	else
 	{
-		warning("Decompilation is not properly configured.\n"
-				"The path to %s must be provided in the configuration menu.",
-				decompilerPyName.c_str());
+		WARNING_GUI("Decompilation is not properly configured.\n"
+				"The path to " << decompilerPyName << " must be provided in the configuration menu.");
 		auto canceled = pluginConfigurationMenu(*this);
 		if (canceled)
 		{

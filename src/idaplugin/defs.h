@@ -10,8 +10,7 @@
 #include <iostream>
 #include <list>
 #include <map>
-
-#include <inttypes.h>
+#include <sstream>
 
 // IDA SDK includes.
 //
@@ -50,39 +49,23 @@ namespace idaplugin {
 	#define idaapi
 #endif
 
-// define default UInt type for both 32 and 64 bit.
-//
-#if defined ( EA64 )
-	#define RetDecUInt	PRIu64
-#else
-	#define RetDecUInt	"u"
-#endif
-
 // General print msg macros.
 //
-#define PRINT_DEBUG   false
-#define PRINT_ERROR   false
+#define PRINT_DEBUG   true
+#define PRINT_ERROR   true
 #define PRINT_WARNING true
 #define PRINT_INFO    true
 
-#define DBG_MSG( ... )     if (PRINT_DEBUG)   msg( __VA_ARGS__ )
-#define ERROR_MSG( ... )   if (PRINT_ERROR)   msg("[RetDec error]  :\t" __VA_ARGS__ ) ///< use this only for non-critical error messages.
-#define WARNING_MSG( ... ) if (PRINT_WARNING) msg("[RetDec warning]:\t" __VA_ARGS__ ) ///< use this only for user info warnings.
-#define INFO_MSG( ... )    if (PRINT_INFO)    msg("[RetDec info]   :\t" __VA_ARGS__ ) ///< use this to inform user.
+#define DBG_MSG(body)     if (PRINT_DEBUG)   { std::stringstream ss; ss << std::showbase << body; msg(ss.str().c_str()); }
+/// Use this only for non-critical error messages.
+#define ERROR_MSG(body)   if (PRINT_ERROR)   { std::stringstream ss; ss << std::showbase << "[RetDec error]  :\t" << body; msg(ss.str().c_str()); }
+/// Use this only for user info warnings.
+#define WARNING_MSG(body) if (PRINT_WARNING) { std::stringstream ss; ss << std::showbase << "[RetDec warning]:\t" << body; msg(ss.str().c_str()); }
+/// Use this to inform user.
+#define INFO_MSG(body)    if (PRINT_INFO)    { std::stringstream ss; ss << std::showbase << "[RetDec info]   :\t" << body; msg(ss.str().c_str()); }
 
-// Msg macros for events.
-//
-extern int eventCntr;
-
-#define PRINT_IDP_EVENTS false
-#define PRINT_IDB_EVENTS false
-#define PRINT_UI_EVENTS  false
-
-#define IDP_MSG( ... )   if (PRINT_IDP_EVENTS) { msg("IDP [%d] :  ", eventCntr++); msg( __VA_ARGS__ ); }
-#define IDB_MSG( ... )   if (PRINT_IDB_EVENTS) { msg("IDB [%d] :  ", eventCntr++); msg( __VA_ARGS__ ); }
-#define UI_MSG( ... )    if (PRINT_UI_EVENTS)  { msg("UI  [%d] :  ", eventCntr++); msg( __VA_ARGS__ ); }
-
-#define NO_MSG( ... )    ;
+/// Use instead of IDA SDK's warning() function.
+#define WARNING_GUI(body) { std::stringstream ss; ss << std::showbase << body; warning(ss.str().c_str()); }
 
 class FunctionInfo
 {

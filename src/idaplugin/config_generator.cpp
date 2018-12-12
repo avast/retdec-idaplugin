@@ -230,10 +230,8 @@ void ConfigGenerator::generateFunctions()
 		std::string fncName = qFncName.c_str();
 		std::replace(fncName.begin(), fncName.end(), '.', '_');
 
-		DBG_MSG("\t%s @ %" RetDecUInt ", #args = %d\n",
-				fncName.c_str(),
-				fnc->start_ea,
-				fnc->regargqty);
+		DBG_MSG("\t" << fncName << " @ " << std::hex << fnc->start_ea
+				<< ", #args = " << std::dec << fnc->regargqty << "\n");
 
 		retdec::config::Function ccFnc(fncName);
 		ccFnc.setStart(fnc->start_ea);

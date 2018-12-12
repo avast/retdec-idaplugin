@@ -83,7 +83,7 @@ void saveIdaDatabase(bool inSitu = false, const std::string &suffix = ".dec-back
 
 	save_database(workIdb.c_str(), DBFL_COMP);
 
-	INFO_MSG("IDA database saved into :  %s\n", workIdb.c_str());
+	INFO_MSG("IDA database saved into :  " << workIdb << "\n");
 }
 
 /**
@@ -146,11 +146,10 @@ void runSelectiveDecompilation(func_t *fnc2decomp = nullptr, bool force = false)
 {
 	if (isRelocatable() && inf.min_ea != 0)
 	{
-		warning("%s version %s can selectively decompile only relocatable objects loaded at 0x0.\n"
-				"Rebase the program to 0x0 or use full decompilation or our web interface at: %s",
-				decompInfo.pluginName.c_str(),
-				decompInfo.pluginVersion.c_str(),
-				decompInfo.pluginURL.c_str());
+		WARNING_GUI(decompInfo.pluginName << " version " << decompInfo.pluginVersion
+				<< " can selectively decompile only relocatable objects loaded at 0x0.\n"
+				"Rebase the program to 0x0 or use full decompilation or our web interface at: "
+				<< decompInfo.pluginURL);
 		return;
 	}
 
@@ -174,9 +173,8 @@ void runSelectiveDecompilation(func_t *fnc2decomp = nullptr, bool force = false)
 
 			qstring fncName;
 			get_func_name(&fncName, fnc2decomp->start_ea);
-			INFO_MSG("Show already decompiled function: %s @ %" RetDecUInt "\n",
-					fncName.c_str(),
-					fnc2decomp->start_ea);
+			INFO_MSG("Show already decompiled function: " << fncName.c_str()
+					<< " @ " << std::hex << fnc2decomp->start_ea << "\n");
 
 			qthread_create(showDecompiledCode, static_cast<void*>(&decompInfo));
 
@@ -239,7 +237,7 @@ void runSelectiveDecompilation(func_t *fnc2decomp = nullptr, bool force = false)
 		//
 		else
 		{
-			warning("Function must be selected by the cursor.\n");
+			WARNING_GUI("Function must be selected by the cursor.\n");
 			return;
 		}
 	}
@@ -274,7 +272,7 @@ void runAllDecompilation()
 	decompInfo.ranges.clear();
 	decompInfo.decompiledFunction = nullptr;
 
-	INFO_MSG("Selected file: %s\n", decompInfo.outputFile.c_str());
+	INFO_MSG("Selected file: " << decompInfo.outputFile << "\n");
 
 	killDecompilation();
 	saveIdaDatabase();
@@ -313,7 +311,7 @@ bool setInputPath()
 	}
 	if (workIdb.empty() || workDir.empty())
 	{
-		warning("Cannot decompile this input file, IDB and ID0 are not set.\n");
+		WARNING_GUI("Cannot decompile this input file, IDB and ID0 are not set.\n");
 		return false;
 	}
 
@@ -325,8 +323,7 @@ bool setInputPath()
 
 	if (!retdec::utils::FilesystemPath(inPath).exists())
 	{
-		INFO_MSG("Input \"%s\" does not exist, trying to recover ...\n",
-				inPath.c_str());
+		INFO_MSG("Input \"" << inPath << "\" does not exist, trying to recover ...\n");
 
 		retdec::utils::FilesystemPath fsWork(workDir);
 		fsWork.append(inName);
@@ -335,9 +332,8 @@ bool setInputPath()
 		inPath = workDir;
 		if (!retdec::utils::FilesystemPath(inPath).exists())
 		{
-			INFO_MSG("Input \"%s\" does not exist, asking user to specify the "
-					"input file ...\n",
-					inPath.c_str());
+			INFO_MSG("Input \"" << inPath << "\" does not exist, asking user to "
+					"specify the input file ...\n");
 
 			char *tmp = ask_file(                     ///< Returns: file name
 					false,                            ///< bool for_saving
@@ -351,27 +347,24 @@ bool setInputPath()
 			}
 			else if (!retdec::utils::FilesystemPath(std::string(tmp)).exists())
 			{
-				warning("Cannot decompile this input file, there is no such "
-						"file: %s\n",
-						tmp);
+				WARNING_GUI("Cannot decompile this input file, there is no such "
+						"file: " << tmp << "\n");
 				return false;
 			}
 
 			inPath = tmp;
 
 			INFO_MSG("Successfully recovered, using user selected "
-					"file \"%s\".\n",
-					inPath.c_str());
+					"file \"" << inPath << "\".\n");
 		}
 		else
 		{
-			INFO_MSG("Successfully recovered, using input file \"%s\".\n",
-					inPath.c_str());
+			INFO_MSG("Successfully recovered, using input file \"" << inPath << "\".\n");
 		}
 	}
 	else
 	{
-		INFO_MSG("Working on input file \"%s\".\n", inPath.c_str());
+		INFO_MSG("Working on input file \"" << inPath << "\".\n");
 	}
 
 	decompInfo.inputName = inName;
@@ -379,10 +372,10 @@ bool setInputPath()
 	decompInfo.workDir = workDir;
 	decompInfo.workIdb = workIdb;
 
-	DBG_MSG("Input Path : %s\n", decompInfo.inputPath.c_str());
-	DBG_MSG("Input Name : %s\n", decompInfo.inputName.c_str());
-	DBG_MSG("Work dir   : %s\n", decompInfo.workDir.c_str());
-	DBG_MSG("Work IDB   : %s\n", decompInfo.workIdb.c_str());
+	DBG_MSG("Input Path : " << decompInfo.inputPath << "\n");
+	DBG_MSG("Input Name : " << decompInfo.inputName << "\n");
+	DBG_MSG("Work dir   : " << decompInfo.workDir << "\n");
+	DBG_MSG("Work IDB   : " << decompInfo.workIdb << "\n");
 
 	return true;
 }
@@ -396,9 +389,8 @@ bool canDecompileInput()
 {
 	if (!inf.is_32bit())
 	{
-		warning("%s version %s can decompile only 32-bit input files.\n",
-				decompInfo.pluginName.c_str(),
-				decompInfo.pluginVersion.c_str());
+		WARNING_GUI(decompInfo.pluginName << " version " << decompInfo.pluginVersion
+				<< " can decompile only 32-bit input files.\n");
 		return false;
 	}
 
@@ -411,7 +403,7 @@ bool canDecompileInput()
 	{
 		if (inf.filetype == f_LOADER)
 		{
-			warning("Custom IDA loader plugin was used.\n"
+			WARNING_GUI("Custom IDA loader plugin was used.\n"
 					"Decompilation will be attempted, but:\n"
 					"1. RetDec idaplugin can not check if the input can be "
 					"decompiled. Decompilation may fail.\n"
@@ -420,11 +412,9 @@ bool canDecompileInput()
 		}
 		else
 		{
-			warning("%s version %s cannot decompile this input file "
-					"(file type = %d).\n",
-					decompInfo.pluginName.c_str(),
-					decompInfo.pluginVersion.c_str(),
-					inf.filetype);
+			WARNING_GUI(decompInfo.pluginName << " version " << decompInfo.pluginVersion
+					<< " cannot decompile this input file (file type = "
+					<< inf.filetype << ").\n");
 			return false;
 		}
 	}
@@ -459,10 +449,9 @@ bool canDecompileInput()
 		}
 		else
 		{
-			warning("Intel HEX input file can be decompiled only for one of "
+			WARNING_GUI("Intel HEX input file can be decompiled only for one of "
 					"these {mipsr, mipsb, mipsrl, mipsl, psp} processors, "
-					"not \"%s\".\n",
-					procName.c_str());
+					"not \"" << procName << "\".\n");
 			return false;
 		}
 	}
@@ -538,10 +527,10 @@ bool canDecompileInput()
 		}
 		else
 		{
-			warning("Binary input file can be decompiled only for one of these "
+			WARNING_GUI("Binary input file can be decompiled only for one of these "
 					"{mipsr, mipsb, mipsrl, mipsl, psp, ARM, ARMB, PPCL, PPC, 80386p, "
 					"80386r, 80486p, 80486r, 80586p, 80586r, 80686p, p2, p3, p4} "
-					"processors, not \"%s\".\n", procName.c_str());
+					"processors, not \"" << procName << "\".\n");
 			return false;
 		}
 	}
@@ -642,9 +631,8 @@ bool idaapi run(size_t arg)
 	}
 	else
 	{
-		warning("%s version %s cannot handle argument '%zu'.\n",
-				decompInfo.pluginName.c_str(),
-				decompInfo.pluginVersion.c_str(), arg);
+		WARNING_GUI(decompInfo.pluginName << " version " << decompInfo.pluginVersion
+				<< " cannot handle argument '" << arg << "'.\n");
 		return false;
 	}
 
@@ -666,16 +654,14 @@ int idaapi init()
 	decompInfo.pluginRegNumber = register_addon(&decompInfo.pluginInfo);
 	if (decompInfo.pluginRegNumber < 0)
 	{
-		warning("%s version %s failed to register.\n",
-				decompInfo.pluginName.c_str(),
-				decompInfo.pluginVersion.c_str());
+		WARNING_GUI(decompInfo.pluginName << " version " << decompInfo.pluginVersion
+				<< " failed to register.\n");
 		return PLUGIN_SKIP;
 	}
 	else
 	{
-		INFO_MSG("%s version %s registered OK\n",
-				decompInfo.pluginName.c_str(),
-				decompInfo.pluginVersion.c_str());
+		INFO_MSG(decompInfo.pluginName << " version "
+				<< decompInfo.pluginVersion << " registered OK\n");
 	}
 
 	readConfigFile(decompInfo);
@@ -685,9 +671,8 @@ int idaapi init()
 		return PLUGIN_SKIP;
 	}
 
-	INFO_MSG("%s version %s loaded OK\n",
-			decompInfo.pluginName.c_str(),
-			decompInfo.pluginVersion.c_str());
+	INFO_MSG(decompInfo.pluginName << " version " << decompInfo.pluginVersion
+			<< " loaded OK\n");
 
 	hook_to_notification_point(HT_UI, ui_callback, &decompInfo);
 	registerPermanentActions();

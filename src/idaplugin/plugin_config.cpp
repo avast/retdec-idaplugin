@@ -45,8 +45,7 @@ bool getConfigRootFromString(
 	{
 		if ((!silent) && (errors.size() != 0))
 		{
-			warning("Failed to parse JSON content.\n"
-					"%s\n", errors.c_str());
+			WARNING_GUI("Failed to parse JSON content.\n" << errors << "\n");
 		}
 		return true;
 	}
@@ -240,7 +239,7 @@ bool addConfigurationMenuOption(RdGlobalInfo& rdgi)
 					"-",
 					SETMENU_APP))
 	{
-		ERROR_MSG("Failed to register Options menu item for RetDec plugin!");
+		ERROR_MSG("Failed to register Options menu item for RetDec plugin!\n");
 		return true;
 	}
 

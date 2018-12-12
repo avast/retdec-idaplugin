@@ -29,7 +29,7 @@ static void idaapi localDecompilation(RdGlobalInfo *di)
 {
 	auto tmp = di->decCmd;
 	std::replace(tmp.begin(), tmp.end(), ' ', '\n');
-	INFO_MSG("Decompilation command: %s\n", tmp.c_str());
+	INFO_MSG("Decompilation command: " << tmp << "\n");
 	INFO_MSG("Running the decompilation command ...\n");
 
 	runCommand(
@@ -55,12 +55,12 @@ static void idaapi localDecompilation(RdGlobalInfo *di)
 
 	if (!decFile.is_open())
 	{
-		warning("Loading of output C file FAILED.\n");
+		WARNING_GUI("Loading of output C file FAILED.\n");
 		di->decompSuccess = false;
 		return;
 	}
 
-	INFO_MSG("Decompiled file: %s\n", decName.c_str());
+	INFO_MSG("Decompiled file: " << decName << "\n");
 
 	if (di->isSelectiveDecompilation())
 	{

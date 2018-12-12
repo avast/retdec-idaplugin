@@ -289,8 +289,7 @@ void decompileFunction(
 
 	if (!cfgFnc)
 	{
-		INFO_MSG("Unknown function to decompile \"%s\" -> do nothing.\n",
-				calledFnc.c_str());
+		INFO_MSG("Unknown function to decompile \"" << calledFnc << "\" -> do nothing.\n");
 		return;
 	}
 
@@ -330,14 +329,14 @@ void decompileFunction(
 
 bool idaapi moveToPrevious()
 {
-	DBG_MSG("\t ESC : [ ");
+	DBG_MSG("\t ESC : [");
 	for (auto& fnc : decompInfo.navigationList)
 	{
-		DBG_MSG("%" RetDecUInt " ", fnc->start_ea);
+		DBG_MSG(" " << std::hex << fnc->start_ea);
 	}
-	DBG_MSG("] (#%zx) : from %" RetDecUInt " => BACK\n",
-			decompInfo.navigationList.size(),
-			(*decompInfo.navigationActual)->start_ea);
+	DBG_MSG(" ] (# " << std::dec << decompInfo.navigationList.size()
+			<< ") : from " << std::hex << (*decompInfo.navigationActual)->start_ea
+			<< " => BACK\n");
 
 	if (decompInfo.navigationList.size() <= 1)
 	{
@@ -348,7 +347,8 @@ bool idaapi moveToPrevious()
 	{
 		decompInfo.navigationActual--;
 
-		DBG_MSG("\t\t=> %" RetDecUInt "\n", (*decompInfo.navigationActual)->start_ea);
+		DBG_MSG("\t\t=> " << std::hex
+				<< (*decompInfo.navigationActual)->start_ea << "\n");
 
 		auto fit = decompInfo.fnc2code.find(*decompInfo.navigationActual);
 		if (fit == decompInfo.fnc2code.end())
@@ -404,14 +404,14 @@ static const action_desc_t move_backward_ah_desc = ACTION_DESC_LITERAL(
 
 bool idaapi moveToNext()
 {
-	DBG_MSG("\t CTRL + F : [ ");
+	DBG_MSG("\t CTRL + F : [");
 	for (auto& fnc : decompInfo.navigationList)
 	{
-		DBG_MSG("%" RetDecUInt " ", fnc->start_ea);
+		DBG_MSG(" " << std::hex << fnc->start_ea);
 	}
-	DBG_MSG("] (#%zx) : from %" RetDecUInt " => FORWARD\n",
-			decompInfo.navigationList.size(),
-			(*decompInfo.navigationActual)->start_ea);
+	DBG_MSG(" ] (#" << std::dec << decompInfo.navigationList.size()
+			<< ") : from " << std::hex << (*decompInfo.navigationActual)->start_ea
+			<< " => FORWARD\n");
 
 	if (decompInfo.navigationList.size() <= 1)
 	{
@@ -424,7 +424,8 @@ bool idaapi moveToNext()
 	{
 		decompInfo.navigationActual++;
 
-		DBG_MSG("\t\t=> %" RetDecUInt "\n", (*decompInfo.navigationActual)->start_ea);
+		DBG_MSG("\t\t=> " << std::hex
+				<< (*decompInfo.navigationActual)->start_ea << "\n");
 
 		auto fit = decompInfo.fnc2code.find(*decompInfo.navigationActual);
 		if (fit != decompInfo.fnc2code.end())
@@ -595,7 +596,7 @@ bool idaapi changeFunctionGlobalName(TWidget* cv)
 			|| decompInfo.configDB.functions.hasFunction(newName)
 			|| std::regex_search(fit->second.code, e))
 	{
-		warning("Name \"%s\" is not unique\n", newName.c_str());
+		WARNING_GUI("Name \"" << newName << "\" is not unique\n");
 		return false;
 	}
 
@@ -819,12 +820,12 @@ bool idaapi changeTypeDeclaration(TWidget* cv)
 		}
 		else
 		{
-			WARNING_MSG("Cannot change declaration to: %s\n", qNewDeclr.c_str());
+			WARNING_MSG("Cannot change declaration to: " << qNewDeclr.c_str() << "\n");
 		}
 	}
 	else
 	{
-		WARNING_MSG("Cannot change declaration for: %s\n", cFnc->getName().c_str());
+		WARNING_MSG("Cannot change declaration for: " << cFnc->getName() << "\n");
 	}
 
 	return false;
@@ -1027,12 +1028,6 @@ bool idaapi ct_keyboard(TWidget* cv, int key, int shift, void* ud)
 			return false;
 		}
 		jumpToASM(addr);
-	}
-	// Anything else : ignored.
-	//
-	else
-	{
-		//msg("\tkey(%d) + shift(%d)\n", key, shift);
 	}
 
 	return false;
