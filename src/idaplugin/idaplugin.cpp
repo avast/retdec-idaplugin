@@ -74,7 +74,12 @@ void saveIdaDatabase(bool inSitu = false, const std::string &suffix = ".dec-back
 	{
 		workIdb += suffix;
 	}
+
+#ifdef EA64
+	workIdb += ".i64";
+#else
 	workIdb += ".idb";
+#endif
 
 	save_database(workIdb.c_str(), DBFL_COMP);
 
@@ -169,7 +174,7 @@ void runSelectiveDecompilation(func_t *fnc2decomp = nullptr, bool force = false)
 
 			qstring fncName;
 			get_func_name(&fncName, fnc2decomp->start_ea);
-			INFO_MSG("Show already decompiled function: %s @ %a\n",
+			INFO_MSG("Show already decompiled function: %s @ %" RetDecUInt "\n",
 					fncName.c_str(),
 					fnc2decomp->start_ea);
 
@@ -257,8 +262,7 @@ void runAllDecompilation()
 	char *tmp = ask_file(                ///< Returns: file name
 			true,                        ///< bool for_saving
 			defaultOut.data(),           ///< const char *default_answer
-			"Save decompiled file",      ///< const char *format
-			nullptr                      ///< va_list va
+			"%s", "Save decompiled file" ///< const char *format
 	);
 
 	if (tmp == nullptr) ///< canceled
@@ -313,6 +317,12 @@ bool setInputPath()
 		return false;
 	}
 
+#ifdef OS_WINDOWS
+	workDir += "\\";
+#else // Linux a macOS
+	workDir += "/";
+#endif
+
 	if (!retdec::utils::FilesystemPath(inPath).exists())
 	{
 		INFO_MSG("Input \"%s\" does not exist, trying to recover ...\n",
@@ -329,11 +339,10 @@ bool setInputPath()
 					"input file ...\n",
 					inPath.c_str());
 
-			char *tmp = ask_file(                ///< Returns: file name
-					false,                       ///< bool for_saving
-					nullptr,                     ///< const char *default_answer
-					"Input binary to decompile", ///< const char *format
-					nullptr                      ///< va_list va
+			char *tmp = ask_file(                     ///< Returns: file name
+					false,                            ///< bool for_saving
+					nullptr,                          ///< const char *default_answer
+					"%s", "Input binary to decompile" ///< const char *format
 			);
 
 			if (!tmp)
@@ -397,6 +406,7 @@ bool canDecompileInput()
 			|| inf.filetype == f_PE
 			|| inf.filetype == f_ELF
 			|| inf.filetype == f_COFF
+			|| inf.filetype == f_MACHO
 			|| inf.filetype == f_HEX))
 	{
 		if (inf.filetype == f_LOADER)
@@ -632,7 +642,7 @@ bool idaapi run(size_t arg)
 	}
 	else
 	{
-		warning("%s version %s cannot handle argument '%d'.\n",
+		warning("%s version %s cannot handle argument '%zu'.\n",
 				decompInfo.pluginName.c_str(),
 				decompInfo.pluginVersion.c_str(), arg);
 		return false;

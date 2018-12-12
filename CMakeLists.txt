@@ -22,6 +22,12 @@ endif()
 if(NOT EXISTS "${IDA_SDK_DIR}")
 	message(FATAL_ERROR "Specified IDA SDK path does not exist.")
 endif()
+if(NOT EA64)
+	message("We are building RetDec for ida pro 7 32bits address space, Use -DEA64=1. to Enable building for 64bits address space.")
+else()
+	message("Configuring RetDec build for ida pro 7 64bits address space.")
+	add_definitions ( -DEA64="ON" )
+endif()
 
 # Build parameters.
 if(MSVC) # Windows

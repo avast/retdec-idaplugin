@@ -333,9 +333,9 @@ bool idaapi moveToPrevious()
 	DBG_MSG("\t ESC : [ ");
 	for (auto& fnc : decompInfo.navigationList)
 	{
-		DBG_MSG("%a ", fnc->start_ea);
+		DBG_MSG("%" RetDecUInt " ", fnc->start_ea);
 	}
-	DBG_MSG("] (#%d) : from %a => BACK\n",
+	DBG_MSG("] (#%zx) : from %" RetDecUInt " => BACK\n",
 			decompInfo.navigationList.size(),
 			(*decompInfo.navigationActual)->start_ea);
 
@@ -348,7 +348,7 @@ bool idaapi moveToPrevious()
 	{
 		decompInfo.navigationActual--;
 
-		DBG_MSG("\t\t=> %a\n", (*decompInfo.navigationActual)->start_ea);
+		DBG_MSG("\t\t=> %" RetDecUInt "\n", (*decompInfo.navigationActual)->start_ea);
 
 		auto fit = decompInfo.fnc2code.find(*decompInfo.navigationActual);
 		if (fit == decompInfo.fnc2code.end())
@@ -407,9 +407,9 @@ bool idaapi moveToNext()
 	DBG_MSG("\t CTRL + F : [ ");
 	for (auto& fnc : decompInfo.navigationList)
 	{
-		DBG_MSG("%a ", fnc->start_ea);
+		DBG_MSG("%" RetDecUInt " ", fnc->start_ea);
 	}
-	DBG_MSG("] (#%d) : from %a => FORWARD\n",
+	DBG_MSG("] (#%zx) : from %" RetDecUInt " => FORWARD\n",
 			decompInfo.navigationList.size(),
 			(*decompInfo.navigationActual)->start_ea);
 
@@ -424,7 +424,7 @@ bool idaapi moveToNext()
 	{
 		decompInfo.navigationActual++;
 
-		DBG_MSG("\t\t=> %a\n", (*decompInfo.navigationActual)->start_ea);
+		DBG_MSG("\t\t=> %" RetDecUInt "\n", (*decompInfo.navigationActual)->start_ea);
 
 		auto fit = decompInfo.fnc2code.find(*decompInfo.navigationActual);
 		if (fit != decompInfo.fnc2code.end())
@@ -569,7 +569,7 @@ bool idaapi changeFunctionGlobalName(TWidget* cv)
 	}
 
 	qstring qNewName = word.c_str();
-	if (!ask_str(&qNewName, HIST_IDENT, askString.c_str())
+	if (!ask_str(&qNewName, HIST_IDENT, "%s", askString.c_str())
 			|| qNewName.empty())
 	{
 		return false;
@@ -807,7 +807,7 @@ bool idaapi changeTypeDeclaration(TWidget* cv)
 		std::string askString = "Please enter type declaration:";
 
 		qstring qNewDeclr = buf;
-		if (!ask_str(&qNewDeclr, HIST_IDENT, askString.c_str())
+		if (!ask_str(&qNewDeclr, HIST_IDENT, "%s", askString.c_str())
 				|| qNewDeclr.empty())
 		{
 			return false;
