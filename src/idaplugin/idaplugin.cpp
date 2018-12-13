@@ -75,11 +75,7 @@ void saveIdaDatabase(bool inSitu = false, const std::string &suffix = ".dec-back
 		workIdb += suffix;
 	}
 
-#ifdef EA64
-	workIdb += ".i64";
-#else
-	workIdb += ".idb";
-#endif
+	workIdb += std::string(".") + IDB_EXT;
 
 	save_database(workIdb.c_str(), DBFL_COMP);
 
