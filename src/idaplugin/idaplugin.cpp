@@ -312,12 +312,6 @@ bool setInputPath()
 		return false;
 	}
 
-#ifdef OS_WINDOWS
-	workDir += "\\";
-#else // Linux a macOS
-	workDir += "/";
-#endif
-
 	if (!retdec::utils::FilesystemPath(inPath).exists())
 	{
 		INFO_MSG("Input \"" << inPath << "\" does not exist, trying to recover ...\n");

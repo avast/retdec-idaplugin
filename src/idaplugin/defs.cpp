@@ -95,11 +95,7 @@ RdGlobalInfo::RdGlobalInfo() :
 
 	navigationActual = navigationList.end();
 
-#ifdef OS_WINDOWS
-	pluginConfigFile.append("\\" + pluginConfigFileName);
-#else // Linux & macOS
-	pluginConfigFile.append("/" + pluginConfigFileName);
-#endif
+	pluginConfigFile.append(pluginConfigFileName);
 }
 
 bool RdGlobalInfo::isAllDecompilation()
