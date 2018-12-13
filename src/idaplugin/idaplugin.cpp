@@ -260,7 +260,8 @@ void runAllDecompilation()
 	char *tmp = ask_file(                ///< Returns: file name
 			true,                        ///< bool for_saving
 			defaultOut.data(),           ///< const char *default_answer
-			"%s", "Save decompiled file" ///< const char *format
+			"%s",                        ///< const char *format
+			"Save decompiled file"
 	);
 
 	if (tmp == nullptr) ///< canceled
@@ -338,7 +339,8 @@ bool setInputPath()
 			char *tmp = ask_file(                     ///< Returns: file name
 					false,                            ///< bool for_saving
 					nullptr,                          ///< const char *default_answer
-					"%s", "Input binary to decompile" ///< const char *format
+					"%s",                             ///< const char *format
+					"Input binary to decompile"
 			);
 
 			if (!tmp)
