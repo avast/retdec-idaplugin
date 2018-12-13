@@ -51,8 +51,8 @@ namespace idaplugin {
 
 // General print msg macros.
 //
-#define PRINT_DEBUG   true
-#define PRINT_ERROR   true
+#define PRINT_DEBUG   false
+#define PRINT_ERROR   false
 #define PRINT_WARNING true
 #define PRINT_INFO    true
 
