@@ -56,6 +56,11 @@ def parse_args(args):
                         dest='selected_addr',
                         help='Decompile only the function selected by the given address (any address inside function). Examples: 0x1000, 4096.')
 
+    parser.add_argument('--ea64',
+                        dest='ea64',
+                        action='store_true',
+                        help='Use 64-bit address space plugin, i.e. retdec64 library and idat64 executable.')
+
     return parser.parse_args(args)
 
 
@@ -65,7 +70,11 @@ def check_args(args):
     if not os.path.isdir(args.ida_path):
         print_error_and_die('Specified path to IDA directory is not a directory:', args.ida_path)
 
-    args.idat_path = os.path.join(args.ida_path, 'idat.exe' if is_windows() else 'idat')
+    if args.ea64:
+        args.idat_path = os.path.join(args.ida_path, 'idat64.exe' if is_windows() else 'idat64')
+    else:
+        args.idat_path = os.path.join(args.ida_path, 'idat.exe' if is_windows() else 'idat')
+
     if not os.path.exists(args.idat_path):
         print_error_and_die('IDA console application does not exist:', args.idat_path)
 
