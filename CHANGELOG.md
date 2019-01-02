@@ -2,6 +2,8 @@
 
 ## dev
 
+* Added a 64-bit address space version of RetDec IDA plugin ([#21](https://github.com/avast-tl/retdec-idaplugin/issues/21)).
+
 ## v0.7 (September 5, 2018)
 
 * Fix: Fix Python interpreter execution via `py -3` command ([#33](https://github.com/avast-tl/retdec-idaplugin/pull/33)).
