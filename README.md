@@ -2,13 +2,14 @@
 
 RetDec plugin for IDA (Interactive Disassembler).
 
-The plugin is compatible with the following IDA versions: 7.x.
+The plugin is compatible with the IDA 7.x versions.
 The plugin does NOT work with IDA 6.x, or freeware version of IDA 7.0.
-The plugin binary itself is 64-bit, but at the moment, it supports only 32-bit address space. I.e. it works in `ida`, not `ida64`, and can decompile only 32-bit binaries.
+The plugin comes at both 32-bit and 64-bit address space variants (both are 64-bit binaries). I.e. it works in both `ida` and `ida64`.
+However, it can decompile only 32-bit binaries at the moment.
 
 ## Installation and Use
 
-Currently, we support only Windows and Linux.
+Currently, we officially support only Windows and Linux. It may be possible to build macOS version from the sources, but since we do not own a macOS version of IDA, we cannot create a pre-built package, or continually make sure the macOS build is not broken.
 
 ### Windows
 
@@ -61,7 +62,7 @@ You must pass the following parameters to `cmake`:
 * (Windows only) `-G<generator>` is `-G"Visual Studio 14 2015 Win64"` for 64-bit build using Visual Studio 2015. Later versions of Visual Studio may be used. Only 64-bit build is supported.
 
 You can pass the following additional parameters to `cmake`:
-* `-DIDA_PATH=</path/to/ida>` to tell `cmake` where to install the plugin. If specified, installation will copy plugin binary into `IDA_PATH/plugins`, and content of `scripts/idc` directory into `IDA_PATH/idc`. If not set, installation step does nothing.
+* `-DIDA_PATH=</path/to/ida>` to tell `cmake` where to install the plugin. If specified, installation will copy plugin binaries into `IDA_PATH/plugins`, and content of `scripts/idc` directory into `IDA_PATH/idc`. If not set, installation step does nothing.
 * `-DRETDEC_IDAPLUGIN_DOC=ON` to enable the `user-guide` target which generates the user guide document (disabled by default, the target needs to be explicitly invoked).
 
 ## User Guide
