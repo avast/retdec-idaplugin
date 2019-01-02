@@ -87,13 +87,14 @@ if(RETDEC_IDAPLUGIN_DOC)
 		set(RELEASE_OS_NAME "linux")
 	endif()
 	add_custom_target(release
-		DEPENDS user-guide idaplugin
+		DEPENDS user-guide idaplugin32 idaplugin64
 		COMMAND ${CMAKE_COMMAND} -E make_directory "${RELEASE_DIR}"
 		COMMAND ${CMAKE_COMMAND} -E make_directory "${RELEASE_LICENSE_DIR}"
 		COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/LICENSE" "${RELEASE_LICENSE_DIR}"
 		COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/LICENSE-THIRD-PARTY" "${RELEASE_LICENSE_DIR}"
 		COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/doc/user_guide/user_guide.pdf" "${RELEASE_DIR}"
-		COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:idaplugin>" "${RELEASE_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:idaplugin32>" "${RELEASE_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:idaplugin64>" "${RELEASE_DIR}"
 		COMMAND ${CMAKE_COMMAND} -E tar "cvf" "${CMAKE_CURRENT_BINARY_DIR}/${RELEASE_DIR_NAME}-v${RELEASE_VERSION}-${RELEASE_OS_NAME}.zip" --format=zip "${RELEASE_DIR}"
 	)
 endif()
