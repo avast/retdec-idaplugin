@@ -379,7 +379,9 @@ bool setInputPath()
  */
 bool canDecompileInput()
 {
-	if (!inf.is_32bit())
+	// 32-bit binary -> is_32bit() == 1 && is_64bit() == 0.
+	// 64-bit binary -> is_32bit() == 1 && is_64bit() == 1.
+	if (!inf.is_32bit() || inf.is_64bit())
 	{
 		WARNING_GUI(decompInfo.pluginName << " version " << decompInfo.pluginVersion
 				<< " can decompile only 32-bit input files.\n");
