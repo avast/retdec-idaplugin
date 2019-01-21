@@ -2,6 +2,8 @@
 
 ## dev
 
+## v0.8 (January 21, 2018)
+
 * Added a 64-bit address space version of RetDec IDA plugin ([#21](https://github.com/avast-tl/retdec-idaplugin/issues/21)).
 * Added support for decompilation of Mach-O binary files ([#11](https://github.com/avast-tl/retdec-idaplugin/issues/11)).
 
