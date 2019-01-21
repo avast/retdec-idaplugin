@@ -65,7 +65,7 @@ namespace idaplugin {
 #define INFO_MSG(body)    if (PRINT_INFO)    { std::stringstream ss; ss << std::showbase << "[RetDec info]   :\t" << body; msg("%s", ss.str().c_str()); }
 
 /// Use instead of IDA SDK's warning() function.
-#define WARNING_GUI(body) { std::stringstream ss; ss << std::showbase << body; warning(ss.str().c_str()); }
+#define WARNING_GUI(body) { std::stringstream ss; ss << std::showbase << body; warning("%s", ss.str().c_str()); }
 
 class FunctionInfo
 {
