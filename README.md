@@ -5,26 +5,15 @@ RetDec plugin for IDA (Interactive Disassembler).
 The plugin is compatible with the IDA 7.x versions.
 The plugin does NOT work with IDA 6.x, or freeware version of IDA 7.0.
 The plugin comes at both 32-bit and 64-bit address space variants (both are 64-bit binaries). I.e. it works in both `ida` and `ida64`.
-However, it can decompile only 32-bit binaries at the moment.
+At the moment, it can decompile the following architectures:
+* 32-bit: Intel x86, ARM, MIPS, PIC32, and PowerPC.
+* 64-bit: x86-64.
 
 ## Installation and Use
 
 Currently, we officially support only Windows and Linux. It may be possible to build macOS version from the sources, but since we do not own a macOS version of IDA, we cannot create a pre-built package, or continually make sure the macOS build is not broken.
 
-### Windows
-
-1. Either download and unpack a pre-built package from the following list, or build and install the RetDec IDA plugin by yourself (the process is described below):
-
-    * [Windows - for 64-bit IDA](https://github.com/avast-tl/retdec-idaplugin/releases/download/v0.8/retdec-idaplugin-v0.8-windows.zip) (v0.8)
-
-2. Follow the user guide (`user_guide.pdf`) that is part of the downloaded package, or use the [current version](https://github.com/avast-tl/retdec-idaplugin/blob/master/doc/user_guide/user_guide.pdf) from this repository.
-
-### Linux
-
-1. Either download and unpack a pre-built package from the following list, or build and install the RetDec IDA plugin by yourself (the process is described below):
-
-    * [Linux - for 64-bit IDA](https://github.com/avast-tl/retdec-idaplugin/releases/download/v0.8/retdec-idaplugin-v0.8-linux.zip) (v0.8)
-
+1. Either download and unpack a pre-built package from the [latest release](https://github.com/avast-tl/retdec-idaplugin/releases/latest), or build and install the RetDec IDA plugin by yourself (the process is described below).
 2. Follow the user guide (`user_guide.pdf`) that is part of the downloaded package, or use the [current version](https://github.com/avast-tl/retdec-idaplugin/blob/master/doc/user_guide/user_guide.pdf) from this repository.
 
 ## Build and Installation

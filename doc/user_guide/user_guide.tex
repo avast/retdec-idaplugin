@@ -112,11 +112,15 @@ This section describes prerequisites and the installation process of RetDec IDA 
 It is also possible to build and install the plugin directly from sources. To do so, follow the \href{https://github.com/avast-tl/retdec-idaplugin#build-and-installation}{Build and Installation} instructions instead of this section.
 
 \subsection{IDA}
-The plugin is created using IDA SDK version 7.0. The plugin is compatible with the following IDA versions: 7.0, 7.1. The plugin does NOT work with IDA 6.x, or freeware version of IDA 7.0. The plugin comes at both 32-bit and 64-bit address space variants (both are 64-bit binaries). I.e. it works in both \texttt{ida} and \texttt{ida64}. However, it can decompile only 32-bit binaries at the moment.
+The plugin is created using IDA SDK version 7.0. The plugin is compatible with the following IDA versions: 7.0, 7.1. The plugin does NOT work with IDA 6.x, or freeware version of IDA 7.0. The plugin comes at both 32-bit and 64-bit address space variants (both are 64-bit binaries). I.e. it works in both \texttt{ida} and \texttt{ida64}. At the moment, it can decompile the following architectures:
+\begin{itemize}
+    \item 32-bit: Intel x86, ARM, MIPS, PIC32, and PowerPC.
+    \item 64-bit: x86-64.
+\end{itemize}
 
 \subsection{RetDec}
 \label{sec:installation:retdec}
-RetDec IDA plugin needs a standalone RetDec installation in order to perform decompilations. This particular RetDec IDA plugin release needs RetDec version 3.2. Follow \href{https://github.com/avast-tl/retdec/blob/34a2640d71c96628d48864f14a32bd9cb237ed2b/README.md#installation-and-use}{these instructions} to install it.
+RetDec IDA plugin needs a standalone RetDec installation in order to perform decompilations. This particular RetDec IDA plugin release needs RetDec version 3.3. Follow \href{https://github.com/avast-tl/retdec/blob/v3.3/README.md#installation-and-use}{these instructions} to install it.
 
 \subsection{Python}
 \label{sec:installation:python}
