@@ -2,6 +2,10 @@
 
 ## dev
 
+## v0.9 (March 19, 2019)
+
+* Allow x86-64 decompilation.
+
 ## v0.8 (January 21, 2018)
 
 * Added a 64-bit address space version of RetDec IDA plugin ([#21](https://github.com/avast-tl/retdec-idaplugin/issues/21)).
