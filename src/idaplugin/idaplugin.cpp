@@ -372,6 +372,22 @@ bool setInputPath()
 	return true;
 }
 
+bool isX86()
+{
+	std::string procName = inf.procname;
+	return procName == "80386p"
+			|| procName == "80386r"
+			|| procName == "80486p"
+			|| procName == "80486r"
+			|| procName == "80586p"
+			|| procName == "80586r"
+			|| procName == "80686p"
+			|| procName == "p2"
+			|| procName == "p3"
+			|| procName == "p4"
+			|| procName == "metapc";
+}
+
 /**
  * Perform startup check that determines, if plugin can decompile IDA's input file.
  * @return True if plugin can decompile IDA's input, false otherwise.
@@ -381,10 +397,13 @@ bool canDecompileInput()
 {
 	// 32-bit binary -> is_32bit() == 1 && is_64bit() == 0.
 	// 64-bit binary -> is_32bit() == 1 && is_64bit() == 1.
-	if (!inf.is_32bit() || inf.is_64bit())
+	// Allow 64-bit x86.
+	if ((!inf.is_32bit() || inf.is_64bit()) && !isX86())
 	{
 		WARNING_GUI(decompInfo.pluginName << " version " << decompInfo.pluginVersion
-				<< " can decompile only 32-bit input files.\n");
+				<< " can decompile only 32-bit input files.\n"
+				<< "PROCNAME = " << inf.procname
+		);
 		return false;
 	}
 
@@ -504,19 +523,9 @@ bool canDecompileInput()
 			decompInfo.architecture = "powerpc";
 			decompInfo.endian = "big";
 		}
-		else if (procName == "80386p"
-				|| procName == "80386r"
-				|| procName == "80486p"
-				|| procName == "80486r"
-				|| procName == "80586p"
-				|| procName == "80586r"
-				|| procName == "80686p"
-				|| procName == "p2"
-				|| procName == "p3"
-				|| procName == "p4"
-				|| procName == "metapc")
+		else if (isX86())
 		{
-			decompInfo.architecture = "x86";
+			decompInfo.architecture = inf.is_64bit() ? "x86-64" : "x86";
 			decompInfo.endian = "little";
 		}
 		else
