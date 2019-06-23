@@ -6,7 +6,7 @@ please bring it to our attention by contacting the repository owner.
 
 RetDec idaplugin uses the following third-party libraries or other resources:
 1) JsonCpp: https://github.com/open-source-parsers/jsoncpp
-2) RetDec: https://github.com/avast-tl/retdec
+2) RetDec: https://github.com/avast/retdec
 
 These third-party libraries or other resources are licensed under the
 following licenses:

@@ -13,14 +13,14 @@ At the moment, it can decompile the following architectures:
 
 Currently, we officially support only Windows and Linux. It may be possible to build macOS version from the sources, but since we do not own a macOS version of IDA, we cannot create a pre-built package, or continually make sure the macOS build is not broken.
 
-1. Either download and unpack a pre-built package from the [latest release](https://github.com/avast-tl/retdec-idaplugin/releases/latest), or build and install the RetDec IDA plugin by yourself (the process is described below).
-2. Follow the user guide (`user_guide.pdf`) that is part of the downloaded package, or use the [current version](https://github.com/avast-tl/retdec-idaplugin/blob/master/doc/user_guide/user_guide.pdf) from this repository.
+1. Either download and unpack a pre-built package from the [latest release](https://github.com/avast/retdec-idaplugin/releases/latest), or build and install the RetDec IDA plugin by yourself (the process is described below).
+2. Follow the user guide (`user_guide.pdf`) that is part of the downloaded package, or use the [current version](https://github.com/avast/retdec-idaplugin/blob/master/doc/user_guide/user_guide.pdf) from this repository.
 
 ## Build and Installation
 
 ### Requirements
 
-**Note: These are requirements to build the RetDec IDA plugin, not to run it. See our [User Guide](https://github.com/avast-tl/retdec-idaplugin/blob/master/doc/user_guide/user_guide.pdf) for information on plugin installation, configuration, and use.**
+**Note: These are requirements to build the RetDec IDA plugin, not to run it. See our [User Guide](https://github.com/avast/retdec-idaplugin/blob/master/doc/user_guide/user_guide.pdf) for information on plugin installation, configuration, and use.**
 
 * A compiler supporting C++14
   * On Windows, only Microsoft Visual C++ is supported (version >= Visual Studio 2015).
@@ -30,7 +30,7 @@ Currently, we officially support only Windows and Linux. It may be possible to b
 ### Process
 
 * Clone the repository:
-  * `git clone https://github.com/avast-tl/retdec-idaplugin.git`
+  * `git clone https://github.com/avast/retdec-idaplugin.git`
 * Linux:
   * `cd retdec-idaplugin`
   * `mkdir build && cd build`
@@ -38,7 +38,7 @@ Currently, we officially support only Windows and Linux. It may be possible to b
   * `make`
   * `make install` (if `IDA_PATH` was set, see below)
 * Windows:
-  * Open a command prompt (e.g. `C:\msys64\msys2_shell.cmd` from [MSYS2](https://github.com/avast-tl/retdec/wiki/Windows-Environment))
+  * Open a command prompt (e.g. `C:\msys64\msys2_shell.cmd` from [MSYS2](https://github.com/avast/retdec/wiki/Windows-Environment))
   * `cd retdec-idaplugin`
   * `mkdir build && cd build`
   * `cmake .. -DIDA_SDK_DIR=<path> -G<generator>`
@@ -56,7 +56,7 @@ You can pass the following additional parameters to `cmake`:
 
 ## User Guide
 
-The [User Guide](https://github.com/avast-tl/retdec-idaplugin/blob/master/doc/user_guide/user_guide.pdf) in a PDF form is located in `doc/user_guide/user_guide.pdf`.
+The [User Guide](https://github.com/avast/retdec-idaplugin/blob/master/doc/user_guide/user_guide.pdf) in a PDF form is located in `doc/user_guide/user_guide.pdf`.
 
 You can build your own guide by enabling and invoking the `user-guide` target:
 * `cmake .. -DRETDEC_IDAPLUGIN_DOC=ON`
@@ -73,4 +73,4 @@ RetDec IDA plugin uses third-party libraries or other resources listed, along wi
 
 ## Contributing
 
-See [RetDec contribution guidelines](https://github.com/avast-tl/retdec/wiki/Contribution-Guidelines).
+See [RetDec contribution guidelines](https://github.com/avast/retdec/wiki/Contribution-Guidelines).

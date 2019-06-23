@@ -8,32 +8,32 @@
 
 ## v0.8 (January 21, 2018)
 
-* Added a 64-bit address space version of RetDec IDA plugin ([#21](https://github.com/avast-tl/retdec-idaplugin/issues/21)).
-* Added support for decompilation of Mach-O binary files ([#11](https://github.com/avast-tl/retdec-idaplugin/issues/11)).
+* Added a 64-bit address space version of RetDec IDA plugin ([#21](https://github.com/avast/retdec-idaplugin/issues/21)).
+* Added support for decompilation of Mach-O binary files ([#11](https://github.com/avast/retdec-idaplugin/issues/11)).
 
 ## v0.7 (September 5, 2018)
 
-* Fix: Fix Python interpreter execution via `py -3` command ([#33](https://github.com/avast-tl/retdec-idaplugin/pull/33)).
-* Fix: Add Python interpreter checks and make it possible to configure path to the Python interpreter to use ([#29](https://github.com/avast-tl/retdec-idaplugin/issues/29#issuecomment-417363723)).
+* Fix: Fix Python interpreter execution via `py -3` command ([#33](https://github.com/avast/retdec-idaplugin/pull/33)).
+* Fix: Add Python interpreter checks and make it possible to configure path to the Python interpreter to use ([#29](https://github.com/avast/retdec-idaplugin/issues/29#issuecomment-417363723)).
 
 ## v0.6 (August 16, 2018)
 
 * Updated plugin in order to work with the new Python implementation of RetDec scripts.
-* Added support for macOS ([#27](https://github.com/avast-tl/retdec-idaplugin/pull/27)).
-* Fix: Upgrade to a new JsonCpp API ([#28](https://github.com/avast-tl/retdec-idaplugin/pull/28)).
-* Fix: Terminate spawned decompilation process when IDA is closed or a new decompilation is triggered ([#20](https://github.com/avast-tl/retdec-idaplugin/issues/20)).
-* Fix: Decode and decompile only the selected function ([#6](https://github.com/avast-tl/retdec-idaplugin/issues/6)).
+* Added support for macOS ([#27](https://github.com/avast/retdec-idaplugin/pull/27)).
+* Fix: Upgrade to a new JsonCpp API ([#28](https://github.com/avast/retdec-idaplugin/pull/28)).
+* Fix: Terminate spawned decompilation process when IDA is closed or a new decompilation is triggered ([#20](https://github.com/avast/retdec-idaplugin/issues/20)).
+* Fix: Decode and decompile only the selected function ([#6](https://github.com/avast/retdec-idaplugin/issues/6)).
 
 ## v0.5 (June 7, 2018)
 
-* Added support for IDA 7.x ([#2](https://github.com/avast-tl/retdec-idaplugin/issues/2)). Dropped support for IDA 6.x.
-* Removed remote decompilation through RetDec's API ([#9](https://github.com/avast-tl/retdec-idaplugin/issues/9), [#13](https://github.com/avast-tl/retdec-idaplugin/issues/13)).
-* Fix: `#!/usr/bin/env bash` is now used instead of `#!/bin/bash` to run the scripts ([avast-tl/retdec #258](https://github.com/avast-tl/retdec/issues/258)).
-* Fix: Allow decompilation of input files with `f_LOADER` file type ([#3](https://github.com/avast-tl/retdec-idaplugin/issues/3)).
+* Added support for IDA 7.x ([#2](https://github.com/avast/retdec-idaplugin/issues/2)). Dropped support for IDA 6.x.
+* Removed remote decompilation through RetDec's API ([#9](https://github.com/avast/retdec-idaplugin/issues/9), [#13](https://github.com/avast/retdec-idaplugin/issues/13)).
+* Fix: `#!/usr/bin/env bash` is now used instead of `#!/bin/bash` to run the scripts ([avast/retdec #258](https://github.com/avast/retdec/issues/258)).
+* Fix: Allow decompilation of input files with `f_LOADER` file type ([#3](https://github.com/avast/retdec-idaplugin/issues/3)).
 
 ## v0.4 (December 14, 2017)
 
-* Added support for local decompilations. Requires locally installed [RetDec](https://github.com/avast-tl/retdec).
+* Added support for local decompilations. Requires locally installed [RetDec](https://github.com/avast/retdec).
 
 ## v0.3.1 (September 7, 2016)
 

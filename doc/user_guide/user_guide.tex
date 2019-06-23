@@ -62,7 +62,7 @@
 \vfill
 
 {\LARGE
-\href{https://github.com/avast-tl/retdec-idaplugin}{https://github.com/avast-tl/retdec-idaplugin} \\[2 mm]
+\href{https://github.com/avast/retdec-idaplugin}{https://github.com/avast/retdec-idaplugin} \\[2 mm]
 \href{https://retdec.com}{https://retdec.com} \\[2 mm]
 \href{mailto:support@retdec.com}{support@retdec.com} \\[4 mm]
 \today}
@@ -90,7 +90,7 @@ Retargetable Decompiler (RetDec) is a reverse-engineering tool independent of an
 
 RetDec can be used in the following ways:
 \begin{enumerate}
-	\item Standalone RetDec: either compiling \href{https://github.com/avast-tl/retdec}{RetDec repository} on your own, or downloading and installing \href{https://github.com/avast-tl/retdec/releases}{RetDec binary release}.
+	\item Standalone RetDec: either compiling \href{https://github.com/avast/retdec}{RetDec repository} on your own, or downloading and installing \href{https://github.com/avast/retdec/releases}{RetDec binary release}.
 	\item \href{https://retdec.com/idaplugin/}{RetDec IDA plugin} (this guide's topic): requires the standalone version of RetDec to be installed.
 \end{enumerate}
 
@@ -109,7 +109,7 @@ RetDec can be used in the following ways:
 \label{sec:installation}
 This section describes prerequisites and the installation process of RetDec IDA plugin binary release.
 
-It is also possible to build and install the plugin directly from sources. To do so, follow the \href{https://github.com/avast-tl/retdec-idaplugin#build-and-installation}{Build and Installation} instructions instead of this section.
+It is also possible to build and install the plugin directly from sources. To do so, follow the \href{https://github.com/avast/retdec-idaplugin#build-and-installation}{Build and Installation} instructions instead of this section.
 
 \subsection{IDA}
 The plugin is created using IDA SDK version 7.0. The plugin is compatible with the following IDA versions: 7.0, 7.1, 7.2. The plugin does NOT work with IDA 6.x, or freeware version of IDA 7.0. The plugin comes at both 32-bit and 64-bit address space variants (both are 64-bit binaries). I.e. it works in both \texttt{ida} and \texttt{ida64}. At the moment, it can decompile the following architectures:
@@ -120,7 +120,7 @@ The plugin is created using IDA SDK version 7.0. The plugin is compatible with t
 
 \subsection{RetDec}
 \label{sec:installation:retdec}
-RetDec IDA plugin needs a standalone RetDec installation in order to perform decompilations. This particular RetDec IDA plugin release needs RetDec version 3.3. Follow \href{https://github.com/avast-tl/retdec/blob/v3.3/README.md#installation-and-use}{these instructions} to install it.
+RetDec IDA plugin needs a standalone RetDec installation in order to perform decompilations. This particular RetDec IDA plugin release needs RetDec version 3.3. Follow \href{https://github.com/avast/retdec/blob/v3.3/README.md#installation-and-use}{these instructions} to install it.
 
 \subsection{Python}
 \label{sec:installation:python}
@@ -144,7 +144,7 @@ Follow the next steps to install RetDec plugin in a Linux environment:
 \begin{verbatim}
 libc.so.6 libgcc_s.so.1 libm.so.6 libpthread.so.0 libstdc++.so.6
 \end{verbatim}
-	\item Download the Linux installation package (Table~\ref{table:installation-package-linux}) from the \href{https://github.com/avast-tl/retdec-idaplugin/releases}{project's release page}.
+	\item Download the Linux installation package (Table~\ref{table:installation-package-linux}) from the \href{https://github.com/avast/retdec-idaplugin/releases}{project's release page}.
 	\item Copy \texttt{retdec.so} and \texttt{retdec64.so} to the IDA's plugin directory (\texttt{<IDA\_ROOT>/plugins}).
 \end{enumerate}
 
@@ -170,7 +170,7 @@ The Windows version of the plugin requires Windows 7 or later, with the MSVC 201
 
 Follow the next steps to install RetDec plugin in a Windows environment:
 \begin{enumerate}
-	\item Download the Windows installation package (Table~\ref{table:installation-package-windows}) from the \href{https://github.com/avast-tl/retdec-idaplugin/releases}{project's release page}.
+	\item Download the Windows installation package (Table~\ref{table:installation-package-windows}) from the \href{https://github.com/avast/retdec-idaplugin/releases}{project's release page}.
 	\item Copy \texttt{retdec.dll} and \texttt{retdec64.dll} to the IDA's plugin directory (\texttt{<IDA\_ROOT>/plugins}).
 \end{enumerate}
 
@@ -459,7 +459,7 @@ RetDec plugin is still in an experimental beta version. If you have any feedback
 \begin{center}
 {
 \LARGE
-\href{https://github.com/avast-tl/retdec-idaplugin}{https://github.com/avast-tl/retdec-idaplugin} \\[5 mm]
+\href{https://github.com/avast/retdec-idaplugin}{https://github.com/avast/retdec-idaplugin} \\[5 mm]
 \href{https://retdec.com}{https://retdec.com} \\[5 mm]
 \href{mailto:support@retdec.com}{support@retdec.com}
 }
