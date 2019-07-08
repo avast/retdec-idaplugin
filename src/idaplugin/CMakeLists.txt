@@ -17,8 +17,8 @@ else()
 endif()
 
 # Includes.
-include_directories("..") # Make our includes work. 
-include_directories(SYSTEM 
+include_directories("..") # Make our includes work.
+include_directories(SYSTEM
 	"${IDA_SDK_DIR}/include" # Make IDA SDK includes work.
 )
 
