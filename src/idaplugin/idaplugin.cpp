@@ -40,12 +40,13 @@ void killDecompilation()
 
 		if (decompInfo.decompPid)
 		{
-#if defined(OS_WINDOWS)
+			term_process(decompInfo.hDecomp);
+/*#if defined(OS_WINDOWS)
 			std::string cmd = "taskkill /F /T /PID " + std::to_string(decompInfo.decompPid);
 			std::system(cmd.c_str());
 #else // Linux || macOS
 			kill(decompInfo.decompPid, SIGTERM);
-#endif
+#endif*/
 			decompInfo.decompPid = 0;
 		}
 
