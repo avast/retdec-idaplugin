@@ -40,7 +40,9 @@ void killDecompilation()
 
 		if (decompInfo.decompPid)
 		{
-			term_process(decompInfo.hDecomp);
+			int rc = 0;
+			if (check_process_exit(decompInfo.hDecomp, &rc, 0) != 0)
+				term_process(decompInfo.hDecomp);
 /*#if defined(OS_WINDOWS)
 			std::string cmd = "taskkill /F /T /PID " + std::to_string(decompInfo.decompPid);
 			std::system(cmd.c_str());
