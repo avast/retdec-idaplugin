@@ -45,8 +45,8 @@ int runCommand(
 		}
 		return 1;
 	}
+	*hdl = p;
 #if defined(OS_WINDOWS)
-	*hdl = pi.hProcess;
 	if (pi.hThread != INVALID_HANDLE_VALUE) CloseHandle(pi.hThread);
 #endif
 	if (pid)
