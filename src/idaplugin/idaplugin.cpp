@@ -178,7 +178,8 @@ void runSelectiveDecompilation(func_t *fnc2decomp = nullptr, bool force = false)
 			INFO_MSG("Show already decompiled function: " << fncName.c_str()
 					<< " @ " << std::hex << fnc2decomp->start_ea << "\n");
 
-			qthread_create(showDecompiledCode, static_cast<void*>(&decompInfo));
+			ShowOutput show(&decompInfo);
+			show.execute();
 
 			return;
 		}
