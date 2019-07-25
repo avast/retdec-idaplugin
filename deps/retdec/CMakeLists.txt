@@ -57,4 +57,3 @@ add_library(retdec ${RETDEC_UTILS_SOURCES} ${RETDEC_CONFIG_SOURCES})
 add_dependencies(retdec retdec-project)
 target_include_directories(retdec PUBLIC ${source_dir}/include)
 target_link_libraries(retdec jsoncpp)
-
