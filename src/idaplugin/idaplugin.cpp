@@ -56,6 +56,7 @@ void killDecompilation()
 	} else if (decompInfo.decompPid) {
 		qthread_join(decompInfo.decompThread);
 		qthread_free(decompInfo.decompThread);
+		decompInfo.decompPid = 0;
 	}
 }
 
