@@ -80,7 +80,8 @@ int runCommand(
 		const std::string& cmd,
 		const std::string& args,
 		intptr_t* pid = nullptr,
-		bool showWarnings = false);
+		bool showWarnings = false,
+		void** hdl = nullptr);
 
 /**
  * General information used by this plugin.
