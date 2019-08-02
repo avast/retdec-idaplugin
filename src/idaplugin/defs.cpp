@@ -45,7 +45,7 @@ int runCommand(
 		}
 		return 1;
 	}
-	*hdl = p;
+	if (hdl) *hdl = p;
 #if defined(OS_WINDOWS)
 	if (pi.hThread != INVALID_HANDLE_VALUE) CloseHandle(pi.hThread);
 #endif
