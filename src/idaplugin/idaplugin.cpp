@@ -34,22 +34,27 @@ void killDecompilation()
 	if (decompInfo.decompRunning)
 	{
 		INFO_MSG("Unfinished decompilation was KILLED !!! Only one decompiltion can run at a time.\n");
-		qthread_kill(decompInfo.decompThread);
-		qthread_join(decompInfo.decompThread);
-		qthread_free(decompInfo.decompThread);
-
 		if (decompInfo.decompPid)
 		{
+			//the following is not used because entire process tree must be terminated
+			//int rc = 0;
+			//if (check_process_exit(decompInfo.hDecomp, &rc, 0) != 0)
+			//	term_process(decompInfo.hDecomp);
 #if defined(OS_WINDOWS)
 			std::string cmd = "taskkill /F /T /PID " + std::to_string(decompInfo.decompPid);
 			std::system(cmd.c_str());
 #else // Linux || macOS
 			kill(decompInfo.decompPid, SIGTERM);
 #endif
-			decompInfo.decompPid = 0;
 		}
-
-		decompInfo.decompRunning = false;
+		//this is probably too risky without user knowing IDA could be unstable
+		//the process kill being successful above, this should be unnecessary
+		//qthread_kill(decompInfo.decompThread);
+	}
+	if (decompInfo.decompPid) {
+		qthread_join(decompInfo.decompThread);
+		qthread_free(decompInfo.decompThread);
+		decompInfo.decompPid = 0;
 	}
 }
 
@@ -172,7 +177,8 @@ void runSelectiveDecompilation(func_t *fnc2decomp = nullptr, bool force = false)
 			INFO_MSG("Show already decompiled function: " << fncName.c_str()
 					<< " @ " << std::hex << fnc2decomp->start_ea << "\n");
 
-			qthread_create(showDecompiledCode, static_cast<void*>(&decompInfo));
+			ShowOutput show(&decompInfo);
+			show.execute();
 
 			return;
 		}

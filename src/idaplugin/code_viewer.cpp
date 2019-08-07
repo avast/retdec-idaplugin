@@ -357,7 +357,8 @@ bool idaapi moveToPrevious()
 		}
 
 		decompInfo.decompiledFunction = fit->first;
-		qthread_create(showDecompiledCode, static_cast<void*>(&decompInfo));
+		ShowOutput show(&decompInfo);
+		show.execute();
 	}
 	else
 	{
@@ -431,7 +432,8 @@ bool idaapi moveToNext()
 		if (fit != decompInfo.fnc2code.end())
 		{
 			decompInfo.decompiledFunction = fit->first;
-			qthread_create(showDecompiledCode, static_cast<void*>(&decompInfo));
+			ShowOutput show(&decompInfo);
+			show.execute();
 
 			return false;
 		}
@@ -500,7 +502,8 @@ bool idaapi insertCurrentFunctionComment()
 	{
 		set_func_cmt(fnc, buff.c_str(), false);
 		decompInfo.decompiledFunction = fnc;
-		qthread_create(showDecompiledCode, static_cast<void*>(&decompInfo));
+		ShowOutput show(&decompInfo);
+		show.execute();
 	}
 
 	return false;
@@ -634,7 +637,8 @@ bool idaapi changeFunctionGlobalName(TWidget* cv)
 	decompInfo.dbFile = jg.generate();
 
 	decompInfo.decompiledFunction = fit->first;
-	qthread_create(showDecompiledCode, static_cast<void*>(&decompInfo));
+	ShowOutput show(&decompInfo);
+	show.execute();
 
 	return false;
 }

@@ -36,7 +36,8 @@ static void idaapi localDecompilation(RdGlobalInfo *di)
 			di->pythonInterpreter,
 			di->pythonInterpreterArgs + di->decCmd,
 			&di->decompPid,
-			true);
+			true,
+			&di->hDecomp);
 
 	// Get decompiled and colored file content.
 	//

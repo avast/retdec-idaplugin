@@ -20,7 +20,8 @@ int runCommand(
 		const std::string& cmd,
 		const std::string& args,
 		intptr_t* pid,
-		bool showWarnings)
+		bool showWarnings,
+		void** hdl)
 {
 	launch_process_params_t procInf;
 	procInf.path = cmd.c_str();
@@ -44,6 +45,10 @@ int runCommand(
 		}
 		return 1;
 	}
+	if (hdl) *hdl = p;
+#if defined(OS_WINDOWS)
+	if (pi.hThread != INVALID_HANDLE_VALUE) CloseHandle(pi.hThread);
+#endif
 	if (pid)
 	{
 #if defined(OS_WINDOWS)
