@@ -45,16 +45,22 @@ int runCommand(
 		}
 		return 1;
 	}
-	if (hdl) *hdl = p;
+	if (hdl)
+	{
+		*hdl = p;
+	}
 #if defined(OS_WINDOWS)
-	if (pi.hThread != INVALID_HANDLE_VALUE) CloseHandle(pi.hThread);
+	if (pi.hThread != INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(pi.hThread);
+	}
 #endif
 	if (pid)
 	{
 #if defined(OS_WINDOWS)
-	*pid = pi.dwProcessId;
+		*pid = pi.dwProcessId;
 #else // Linux || macOS
-	*pid = reinterpret_cast<intptr_t>(p);
+		*pid = reinterpret_cast<intptr_t>(p);
 #endif
 	}
 

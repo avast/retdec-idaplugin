@@ -36,7 +36,7 @@ void killDecompilation()
 		INFO_MSG("Unfinished decompilation was KILLED !!! Only one decompiltion can run at a time.\n");
 		if (decompInfo.decompPid)
 		{
-			//the following is not used because entire process tree must be terminated
+			// The following is not used because entire process tree must be terminated.
 			//int rc = 0;
 			//if (check_process_exit(decompInfo.hDecomp, &rc, 0) != 0)
 			//	term_process(decompInfo.hDecomp);
@@ -47,8 +47,8 @@ void killDecompilation()
 			kill(decompInfo.decompPid, SIGTERM);
 #endif
 		}
-		//this is probably too risky without user knowing IDA could be unstable
-		//the process kill being successful above, this should be unnecessary
+		// This is probably too risky without user knowing. IDA could be unstable.
+		// The process kill being successful above, this should be unnecessary.
 		//qthread_kill(decompInfo.decompThread);
 	}
 	if (decompInfo.decompPid) {

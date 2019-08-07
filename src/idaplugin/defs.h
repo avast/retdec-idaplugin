@@ -150,8 +150,8 @@ class RdGlobalInfo
 		qthread_t decompThread      = nullptr;
 		func_t *decompiledFunction  = nullptr;
 		// PID/Handle of launched decompilation process.
-		intptr_t decompPid = 0;
-		void* hDecomp;
+		intptr_t decompPid          = 0;
+		void* hDecomp               = nullptr;
 
 	// Plugin configuration information.
 	//
