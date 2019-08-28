@@ -699,11 +699,11 @@ void idaapi term()
 	killDecompilation();
 	if (decompInfo.custViewer) {
 		close_widget(decompInfo.custViewer, 0);
-		decompInfo->custViewer = nullptr;
+		decompInfo.custViewer = nullptr;
 	}
 	if (decompInfo.codeViewer) {
 		close_widget(decompInfo.codeViewer, 0);
-		decompInfo->codeViewer = nullptr;
+		decompInfo.codeViewer = nullptr;
 	}
 	unregister_action("retdec:ActionJumpToAsm");
 	unregister_action("retdec:ActionChangeFncGlobName");
