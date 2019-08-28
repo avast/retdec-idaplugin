@@ -697,6 +697,26 @@ int idaapi init()
 void idaapi term()
 {
 	killDecompilation();
+	if (decompInfo.custViewer) {
+		close_widget(decompInfo.custViewer, 0);
+		decompInfo.custViewer = nullptr;
+	}
+	if (decompInfo.codeViewer) {
+		close_widget(decompInfo.codeViewer, 0);
+		decompInfo.codeViewer = nullptr;
+	}
+	unregister_action("retdec:ActionJumpToAsm");
+	unregister_action("retdec:ActionChangeFncGlobName");
+	unregister_action("retdec:ActionOpenXrefs");
+	unregister_action("retdec:ActionOpenCalls");
+	unregister_action("retdec:ActionChangeFncType");
+	unregister_action("retdec:ActionChangeFncComment");
+	unregister_action("retdec:ActionMoveForward");
+	unregister_action("retdec:ActionMoveBackward");
+	if (is_idaq) {
+		const char optionsActionName[] = "retdec:ShowOptions";
+		unregister_action(optionsActionName);
+	}
 	unhook_from_notification_point(HT_UI, ui_callback);
 }
 

@@ -1169,8 +1169,11 @@ void idaapi ct_close(TWidget* cv, void* ud)
 {
 	RdGlobalInfo* di = static_cast<RdGlobalInfo*>(ud);
 
-	di->custViewer = nullptr;
-	di->codeViewer = nullptr;
+	di->custViewer = nullptr; //==cv
+	if (di->codeViewer) {
+		close_widget(di->codeViewer, 0);
+		di->codeViewer = nullptr;
+	}
 }
 
 //
