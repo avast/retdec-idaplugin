@@ -148,8 +148,8 @@ void decompileInput(RdGlobalInfo &decompInfo)
 
 	if (decompInfo.isSelectiveDecompilation())
 	{
-		decompInfo.decCmd += " --color-for-ida";
-		decompInfo.decCmd += " -o \"" + decompInfo.inputPath + ".c\"";
+		decompInfo.decCmd += " -o \"" + decompInfo.inputPath + ".json\"";
+		decompInfo.decCmd += " -f json";
 	}
 	else
 	{
