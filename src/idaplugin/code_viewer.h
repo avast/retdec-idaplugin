@@ -110,6 +110,15 @@ struct ShowOutput : public exec_request_t
 
 		set_code_viewer_is_source(di->codeViewer);
 
+		// This is useful for two reasons:
+		// 1. Sync disasm IDA view to the function which is about to be
+		//    displayed.
+		// 2. Make sure there is a disasm IDA view next to which the decomp
+		//    view can be displayed.
+		//    - If focus was changed, it is restored to disasm IDA view.
+		//    - If disasm IDA view was closed, it is opened again.
+		jumpto(fnc->start_ea, -1, UIJMP_ACTIVATE | UIJMP_IDAVIEW);
+
 		display_widget(
 				di->codeViewer,
 				WOPN_TAB |

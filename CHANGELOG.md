@@ -2,6 +2,8 @@
 
 ## dev
 
+* Fix: Show the decompilation windows always next to a disassembly IDA view window ([#12](https://github.com/avast/retdec-idaplugin/issues/12)).
+
 ## v0.9 (March 19, 2019)
 
 * Allow x86-64 decompilation.
