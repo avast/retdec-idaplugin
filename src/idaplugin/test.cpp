@@ -16,6 +16,15 @@ static int test_place_id = -1;
 
 //==============================================================================
 
+struct Entry
+{
+	std::string body;
+	ea_t addr;
+};
+
+using Line = std::vector<Entry>;
+using Function = std::vector<Line>;
+
 std::vector<std::string> text_ack =
 {
 	"int __cdecl ack(int a1, int a2)",
@@ -29,6 +38,21 @@ std::vector<std::string> text_ack =
 	"  v3 = ack(a1, a2 - 1);",
 	"  return ack(a1 - 1, v3);",
 	"}",
+};
+
+Function fnc_ack =
+{
+	{ {"int int __cdecl ack(int a1, int a2)", 0x804851C} },
+	{ {"{", 0x804851C} },
+	{ {"  int v3; // eax", 0x804851C} },
+	{ {"", 0x804851C} },
+	{ {"  if ( !a1 )", 0x8048526} },
+	{ {"    return a2 + 1;", 0x804852B} },
+	{ {"  if ( !a2 )", 0x8048534} },
+	{ {"    return ack(", 0x8048547}, {"a1 - ", 0x8048544}, {"1, ", 0x8048539}, {"1);", 0x804853C} },
+	{ {"  v3 = ack(", 0x804855E}, {"a1, ", 0x804855B}, {"a2 - ", 0x8048554}, {"1);", 0x8048551} },
+	{ {"  return ", 0x8048575}, {"ack", 0x8048570}, {"a1 - , ", 0x804856D}, {"1, ", 0x8048566}, {"v3);", 0x8048569} },
+	{ {"}", 0x8048575} },
 };
 
 std::vector<std::string> text_main =
@@ -220,8 +244,8 @@ class test_place_t : public place_t
 		virtual int idaapi compare(const place_t *t2) const override
 		{
 			test_place_t *s = (test_place_t*) t2;
-			if (line < s->line) return -1;
-			else if (line > s->line) return 1;
+			if (pos < s->pos) return -1;
+			else if (pos > s->pos) return 1;
 			else return 0;
 		}
 
@@ -377,7 +401,8 @@ class test_place_t : public place_t
 		virtual ea_t idaapi toea() const
 		{
 			// TODO
-			return BADADDR;
+			// return BADADDR;
+			return 0x8048577 + pos;
 		}
 
 		/// Rebase the place instance
@@ -454,6 +479,17 @@ void idaapi ct_adjust_place(TWidget *v, lochist_entry_t *loc, void *ud)
 	msg("ct_adjust_place() %d:%d = %d # %d\n", y, x, pos, cntr++);
 
 	place->pos = pos;
+	place->adjust(ud);
+}
+
+// custom_viewer_get_place_xcoord_t
+int idaapi ct_get_place_xcoord(
+		TWidget *v,
+		const place_t *pline,
+		const place_t *pitem,
+		void *ud)
+{
+	return 0;
 }
 
 //==============================================================================
@@ -468,7 +504,7 @@ static const custom_viewer_handlers_t handlers(
 		nullptr,     // close
 		nullptr,     // help
 		ct_adjust_place,     // adjust_place
-		nullptr,     // get_place_xcoord
+		ct_get_place_xcoord,     // get_place_xcoord
 		nullptr,     // location_changed
 		nullptr      // can_navigate
 );
