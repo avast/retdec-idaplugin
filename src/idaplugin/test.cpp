@@ -176,6 +176,7 @@ class test_place_t : public place_t
 
 			std::string str = "shit @ "
 					+ std::to_string(line)
+					+ " (vs " + std::to_string(lnnum) + ")"
 					+ " : " + std::to_string(pos)
 					+ " # " + std::to_string(cntr++);
 			*out_buf = str.c_str();
@@ -401,8 +402,8 @@ class test_place_t : public place_t
 		virtual ea_t idaapi toea() const
 		{
 			// TODO
-			// return BADADDR;
-			return 0x8048577 + pos;
+			return BADADDR;
+			// return 0x8048577 + pos;
 		}
 
 		/// Rebase the place instance
@@ -479,7 +480,6 @@ void idaapi ct_adjust_place(TWidget *v, lochist_entry_t *loc, void *ud)
 	msg("ct_adjust_place() %d:%d = %d # %d\n", y, x, pos, cntr++);
 
 	place->pos = pos;
-	place->adjust(ud);
 }
 
 // custom_viewer_get_place_xcoord_t
@@ -489,6 +489,7 @@ int idaapi ct_get_place_xcoord(
 		const place_t *pitem,
 		void *ud)
 {
+	msg("ct_get_place_xcoord()\n");
 	return 0;
 }
 
@@ -513,12 +514,8 @@ static const custom_viewer_handlers_t handlers(
 
 bool idaapi run(size_t)
 {
-	msg("hello world\n");
-
-	// register test place
 	test_place_id = register_place_class(&_template, 0, &PLUGIN);
 
-	//
 	static const char title[] = "Places testview";
 	TWidget *widget = find_widget(title);
 	if (widget != nullptr)
@@ -531,8 +528,6 @@ bool idaapi run(size_t)
 	test_data_t data(text_main);
 
 	test_info_t* si = new test_info_t(data);
-
-	msg("data pointer = %a\n", uint64_t(&si->data));
 
 	test_place_t s1(&si->data);
 	test_place_t s2(&si->data, si->data.size() - 1);
