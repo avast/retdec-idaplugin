@@ -24,12 +24,17 @@ include_directories(SYSTEM
 
 # RetDec idaplugin sources.
 set(IDAPLUGIN_SOURCES
-	code_viewer.cpp
-	config_generator.cpp
-	decompiler.cpp
-	defs.cpp
-	idaplugin.cpp
-	plugin_config.cpp
+#	code_viewer.cpp
+#	config_generator.cpp
+#	decompiler.cpp
+#	defs.cpp
+#	idaplugin.cpp
+#	plugin_config.cpp
+
+#	hexplace.cpp
+#	hexview.cpp
+
+	test.cpp
 )
 
 # RetDec idaplugin libs.
