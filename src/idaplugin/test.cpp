@@ -1,6 +1,7 @@
 
 #include <cstdint>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -16,15 +17,6 @@ static int test_place_id = -1;
 
 //==============================================================================
 
-struct Entry
-{
-	std::string body;
-	ea_t addr;
-};
-
-using Line = std::vector<Entry>;
-using Function = std::vector<Line>;
-
 std::vector<std::string> text_ack =
 {
 	"int __cdecl ack(int a1, int a2)",
@@ -38,21 +30,6 @@ std::vector<std::string> text_ack =
 	"  v3 = ack(a1, a2 - 1);",
 	"  return ack(a1 - 1, v3);",
 	"}",
-};
-
-Function fnc_ack =
-{
-	{ {"int int __cdecl ack(int a1, int a2)", 0x804851C} },
-	{ {"{", 0x804851C} },
-	{ {"  int v3; // eax", 0x804851C} },
-	{ {"", 0x804851C} },
-	{ {"  if ( !a1 )", 0x8048526} },
-	{ {"    return a2 + 1;", 0x804852B} },
-	{ {"  if ( !a2 )", 0x8048534} },
-	{ {"    return ack(", 0x8048547}, {"a1 - ", 0x8048544}, {"1, ", 0x8048539}, {"1);", 0x804853C} },
-	{ {"  v3 = ack(", 0x804855E}, {"a1, ", 0x804855B}, {"a2 - ", 0x8048554}, {"1);", 0x8048551} },
-	{ {"  return ", 0x8048575}, {"ack", 0x8048570}, {"a1 - , ", 0x804856D}, {"1, ", 0x8048566}, {"v3);", 0x8048569} },
-	{ {"}", 0x8048575} },
 };
 
 std::vector<std::string> text_main =
@@ -75,93 +52,207 @@ std::vector<std::string> text_main =
 
 //==============================================================================
 
+struct Entry
+{
+	std::string body;
+	ea_t addr;
+	std::size_t x = 0;
+};
+
+using Line = std::vector<Entry>;
+using Function = std::vector<Line>;
+
+Function fnc_ack =
+{
+	{ {"int int __cdecl ack(int a1, int a2)", 0x804851C, 0} },
+	{ {"{", 0x804851C, 0} },
+	{ {"  int v3; // eax", 0x804851C, 0} },
+	{ {"", 0x804851C, 0} },
+	{ {"  if ( !a1 )", 0x8048526, 0} },
+	{ {"    return a2 + 1;", 0x804852B, 0} },
+	{ {"  if ( !a2 )", 0x8048534, 0} },
+	{ {"    return ack(", 0x8048547, 0}, {"a1 - ", 0x8048544, 0}, {"1, ", 0x8048539, 0}, {"1);", 0x804853C, 0} },
+	{ {"  v3 = ack(", 0x804855E, 0}, {"a1, ", 0x804855B, 0}, {"a2 - ", 0x8048554, 0}, {"1);", 0x8048551, 0} },
+	{ {"  return ", 0x8048575, 0}, {"ack", 0x8048570, 0}, {"a1 - , ", 0x804856D, 0}, {"1, ", 0x8048566, 0}, {"v3);", 0x8048569, 0} },
+	{ {"}", 0x8048575, 0} },
+};
+
+//==============================================================================
+
 class test_data_t
 {
 	friend class test_place_t;
 
+	private:
+		Function& _data;
+		std::map<ea_t, std::pair<std::size_t, std::size_t>> _addrs;
+
 	public:
-		test_data_t(std::vector<std::string>& data) :
-				_data(data)
+		test_data_t(Function& f) :
+				_data(f)
 		{
-			unsigned cntr = 0;
+			std::size_t y = 0;
+			for (auto& l : f)
+			{
+				std::size_t x = 0;
+
+				for (auto& e : l)
+				{
+					if (_addrs.count(e.addr) == 0)
+					{
+						_addrs[e.addr] = {x, y};
+					}
+					e.x = x;
+					x += e.body.size();
+				}
+
+				++y;
+			}
+		}
+
+	public:
+		uval_t min_line() const
+		{
+			return 1;
+		}
+		uval_t max_line() const
+		{
+			return _data.size();
+		}
+
+		ea_t min_ea() const
+		{
+			return _addrs.empty() ? BADADDR : _addrs.begin()->first;
+		}
+
+		ea_t max_ea() const
+		{
+			return _addrs.empty() ? BADADDR : _addrs.rbegin()->first;
+		}
+
+		ea_t xy_to_ea(uint64_t x, uint64_t y) const
+		{
+			if (y >= _data.size())
+			{
+				return BADADDR;
+			}
+
+			for (auto& e : _data[y])
+			{
+				if (e.x <= x && x < (e.x + e.body.size()))
+				{
+					return e.addr;
+				}
+			}
+
+			return BADADDR;
+		}
+
+		ea_t y_to_ea(uint64_t y) const
+		{
+			return xy_to_ea(0, y);
+		}
+
+		ea_t prev_ea(ea_t ea) const
+		{
+			if (ea > max_ea())
+			{
+				return max_ea();
+			}
+
+			auto it = _addrs.lower_bound(ea);
+			--it;
+			return it == _addrs.end() ? BADADDR : it->first;
+		}
+
+		ea_t adjust_ea(ea_t ea) const
+		{
+			if (_addrs.count(ea))
+			{
+				return ea;
+			}
+			if (ea <= min_ea())
+			{
+				return min_ea();
+			}
+			return prev_ea(ea);
+		}
+
+		ea_t next_ea(ea_t ea) const
+		{
+			auto it = _addrs.upper_bound(ea);
+			return it == _addrs.end() ? BADADDR : it->first;
+		}
+
+		std::pair<uint64_t, uint64_t> ea_to_xy(ea_t ea) const
+		{
+			ea = adjust_ea(ea);
+			auto it = _addrs.find(ea);
+			return it == _addrs.end()
+					? std::make_pair<uint64_t, uint64_t>(0, 0)
+					: it->second;
+		}
+		uint64_t ea_to_x(ea_t ea) const
+		{
+			return ea_to_xy(ea).first;
+		}
+		uint64_t ea_to_y(ea_t ea) const
+		{
+			return ea_to_xy(ea).second;
+		}
+
+		std::vector<std::string> ea_to_lines(ea_t ea)
+		{
+			std::vector<std::string> ret;
+
 			for (auto& l : _data)
 			{
-				_pos2line[sz] = cntr++;
-				sz += l.size();
-			}
-		}
-
-	public:
-		uval_t maxline() const
-		{
-			return _data.size() - 1;
-		}
-
-		uint64_t size() const
-		{
-			return sz;
-		}
-
-		uval_t pos_to_line(uint64_t pos)
-		{
-			auto next = _pos2line.upper_bound(pos);
-			if (next == _pos2line.begin())
-			{
-				return 0;
-			}
-
-			--next;
-			return next->second;
-		}
-
-		uint64_t x_y_to_pos(unsigned x, unsigned y)
-		{
-			uint64_t pos = 0;
-			for (std::size_t i = 0; i < y && i < _data.size(); ++i)
-			{
-				pos += _data[i].size();
-			}
-			if (y < _data.size())
-			{
-				if (x < _data[y].size())
+				if (!l.empty() && l.front().addr == ea)
 				{
-					pos += x;
-				}
-				else
-				{
-					pos += _data[y].size();
+					std::string lineStr;
+					for (auto& e : l)
+					{
+						lineStr += e.body;
+					}
+					ret.push_back(lineStr);
 				}
 			}
-			return pos;
-		}
 
-		std::string hello()
-		{
-			return "hello world";
+			return ret;
 		}
-
-	public:
-		std::vector<std::string>& _data;
-		std::map<uint64_t, unsigned> _pos2line;
-		uint64_t sz = 0;
 };
+
+test_data_t* global_data = nullptr;
 
 //==============================================================================
 
 class test_place_t : public place_t
 {
+	private:
+		test_data_t* _data = nullptr;
+		ea_t _ea = 0;
+
 	public:
-		test_place_t()
-		{
-
-		}
-
-		test_place_t(test_data_t* d, uint64_t p = 0) :
-				data(d),
-				pos(p),
-				line(data->pos_to_line(pos))
+		test_place_t(test_data_t* d, ea_t ea) :
+				_data(d),
+				_ea(ea)
 		{
 			lnnum = 0;
+		}
+
+	public:
+		uint64_t x() const
+		{
+			return _data->ea_to_x(_ea);
+		}
+		uint64_t y() const
+		{
+			return _data->ea_to_y(_ea);
+		}
+
+		ea_t ea() const
+		{
+			return _ea;
 		}
 
 	public:
@@ -174,11 +265,13 @@ class test_place_t : public place_t
 		{
 			static unsigned cntr = 0;
 
-			std::string str = "shit @ "
-					+ std::to_string(line)
-					+ " (vs " + std::to_string(lnnum) + ")"
-					+ " : " + std::to_string(pos)
-					+ " # " + std::to_string(cntr++);
+			qstring ea_str;
+			ea2str(&ea_str, ea());
+
+			std::string str = std::string("hello @ ")
+					+ ea_str.c_str()
+					+ " @ "
+					+ std::to_string(y()) + ":" + std::to_string(x());
 			*out_buf = str.c_str();
 		}
 
@@ -188,7 +281,7 @@ class test_place_t : public place_t
 		/// Is supplied by ::linearray_t
 		virtual uval_t idaapi touval(void *ud) const override
 		{
-			return line;
+			return y();
 		}
 
 		/// Clone the location.
@@ -203,10 +296,9 @@ class test_place_t : public place_t
 		virtual void idaapi copyfrom(const place_t *from) override
 		{
 			test_place_t *s = (test_place_t*) from;
-			data      = s->data;
-			pos       = s->pos;
-			line      = s->line;
 			lnnum     = s->lnnum;
+			_data     = s->_data;
+			_ea       = s->_ea;
 		}
 
 		/// Map a number to a location.
@@ -224,10 +316,7 @@ class test_place_t : public place_t
 				uval_t x,
 				int lnnum) const override
 		{
-			static test_place_t p;
-			p.data  = data;
-			p.line  = x;
-			p.pos   = x;
+			static test_place_t p(_data, _data->y_to_ea(x));
 			p.lnnum = lnnum;
 			return &p;
 		}
@@ -245,8 +334,8 @@ class test_place_t : public place_t
 		virtual int idaapi compare(const place_t *t2) const override
 		{
 			test_place_t *s = (test_place_t*) t2;
-			if (pos < s->pos) return -1;
-			else if (pos > s->pos) return 1;
+			if (ea() < s->ea()) return -1;
+			else if (ea() > s->ea()) return 1;
 			else return 0;
 		}
 
@@ -259,12 +348,7 @@ class test_place_t : public place_t
 		///            Is supplied by ::linearray_t
 		virtual void idaapi adjust(void *ud) override
 		{
-			if (line > data->maxline())
-			{
-				pos = 0;
-				line = 0;
-				lnnum = 0;
-			}
+			_ea = _data->adjust_ea(ea());
 		}
 
 		/// Move to the previous displayable location.
@@ -273,11 +357,11 @@ class test_place_t : public place_t
 		/// \return success
 		virtual bool idaapi prev(void *ud) override
 		{
-			if (line == 0)
+			if (ea() <= _data->min_ea())
 			{
 				return false;
 			}
-			line--;
+			_ea = _data->prev_ea(ea());
 			return true;
 		}
 
@@ -287,11 +371,11 @@ class test_place_t : public place_t
 		/// \return success
 		virtual bool idaapi next(void *ud) override
 		{
-			if (line >= data->size())
+			if (ea() >= _data->max_ea())
 			{
 				return false;
 			}
-			line++;
+			_ea = _data->next_ea(ea());
 			return true;
 		}
 
@@ -302,7 +386,7 @@ class test_place_t : public place_t
 		///         displayable object
 		virtual bool idaapi beginning(void *ud) const override
 		{
-			return line == 0;
+			return ea() == _data->min_ea();
 		}
 
 		/// Are we at the last displayable object?.
@@ -312,7 +396,7 @@ class test_place_t : public place_t
 		///         displayable object
 		virtual bool idaapi ending(void *ud) const override
 		{
-			return line == data->size();
+			return ea() == _data->max_ea();
 		}
 
 		/// Generate text lines for the current location.
@@ -335,16 +419,19 @@ class test_place_t : public place_t
 				void *ud,
 				int maxsize) const override
 		{
-			if (line > data->maxline() || maxsize <= 0)
+			if (maxsize <= 0)
 			{
 				return 0;
 			}
 
-			out->push_back(data->_data[line].c_str());
+			auto lines = _data->ea_to_lines(ea());
+			for (auto& l : lines)
+			{
+				out->push_back(l.c_str());
+			}
 
 			*out_deflnnum = 0;
-
-			return 1;
+			return lines.size();
 		}
 
 		/// Serialize this instance.
@@ -354,8 +441,7 @@ class test_place_t : public place_t
 		virtual void idaapi serialize(bytevec_t *out) const override
 		{
 			place_t__serialize(this, out);
-			append_ea(*out, this->pos);
-			append_ea(*out, this->line);
+			append_ea(*out, this->ea());
 		}
 
 		/// De-serialize into this instance.
@@ -373,8 +459,7 @@ class test_place_t : public place_t
 			{
 				return false;
 			}
-			this->pos = unpack_ea(pptr, end);
-			this->line = unpack_ea(pptr, end);
+			this->_ea = unpack_ea(pptr, end);
 			return true;
 		}
 
@@ -394,16 +479,14 @@ class test_place_t : public place_t
 		///         of your plugin. E.g., "myplugin:srcplace_t".
 		virtual const char *idaapi name() const override
 		{
-			return "testview:test_place_t";
+			return "test_place_t";
 		}
 
 		/// Map the location to an ea_t.
 		/// \return the corresponding ea_t, or BADADDR;
 		virtual ea_t idaapi toea() const
 		{
-			// TODO
-			return BADADDR;
-			// return 0x8048577 + pos;
+			return ea();
 		}
 
 		/// Rebase the place instance
@@ -436,14 +519,10 @@ class test_place_t : public place_t
 		{
 			// nothing
 		}
-
-	public:
-		test_data_t* data = nullptr;
-		uint64_t pos = 0;
-		uval_t line = 0;
 };
 
-static test_place_t _template;
+static test_place_t _template(nullptr, 0);
+static idaplace_t _idaplace;
 
 //==============================================================================
 
@@ -463,37 +542,17 @@ struct test_info_t
 //==============================================================================
 
 // custom_viewer_adjust_place_t
-void idaapi ct_adjust_place(TWidget *v, lochist_entry_t *loc, void *ud)
+void idaapi cv_adjust_place(TWidget *v, lochist_entry_t *loc, void *ud)
 {
-	static unsigned cntr = 0;
+	test_data_t* data = (test_data_t*)ud;
 
-	int x = 0;
-	int y = 0;
-
-	get_custom_viewer_place(v, false, &x, &y);
-
-	auto* data = (test_data_t*)ud;
-	auto* place = (test_place_t*)loc->plce;
-
-	auto pos = data->x_y_to_pos(x, y);
-
-	msg("ct_adjust_place() %d:%d = %d # %d\n", y, x, pos, cntr++);
-
-	place->pos = pos;
+	loc->set_place(test_place_t(
+			data,
+			data->xy_to_ea(
+					loc->renderer_info().pos.cx,
+					((test_place_t*)loc->place())->y())
+	));
 }
-
-// custom_viewer_get_place_xcoord_t
-int idaapi ct_get_place_xcoord(
-		TWidget *v,
-		const place_t *pline,
-		const place_t *pitem,
-		void *ud)
-{
-	msg("ct_get_place_xcoord()\n");
-	return 0;
-}
-
-//==============================================================================
 
 static const custom_viewer_handlers_t handlers(
 		nullptr,     // keyboard
@@ -504,17 +563,70 @@ static const custom_viewer_handlers_t handlers(
 		nullptr,     // current position change
 		nullptr,     // close
 		nullptr,     // help
-		ct_adjust_place,     // adjust_place
-		ct_get_place_xcoord,     // get_place_xcoord
+		cv_adjust_place,     // adjust_place
+		nullptr,     // get_place_xcoord
 		nullptr,     // location_changed
 		nullptr      // can_navigate
 );
 
 //==============================================================================
 
+// lochist_entry_cvt_t
+bool idaapi place_converter(
+        lochist_entry_t *dst,
+        const lochist_entry_t &src,
+        TWidget *view)
+{
+	// idaplace_t -> test_place_t
+	if (src.place()->name() == std::string(_idaplace.name()))
+	{
+		test_place_t p(global_data, src.place()->toea());
+		dst->set_place(p);
+		dst->renderer_info().pos.cx = p.x();
+		return true;
+	}
+	// test_place_t -> idaplace_t
+	else if (src.place()->name() == std::string(_template.name()))
+	{
+		idaplace_t p(src.place()->toea(), 0);
+		dst->set_place(p);
+		return true;
+	}
+	// should not happen
+	else
+	{
+		return false;
+	}
+}
+
+//==============================================================================
+
+ssize_t idaapi ui_callback(void *ud, int code, va_list va)
+{
+	test_info_t *si = (test_info_t*)ud;
+	switch (code)
+	{
+		case ui_widget_invisible:
+		{
+			TWidget *f = va_arg(va, TWidget *);
+			if (f == si->testview || f == si->cv)
+			{
+				delete si;
+				unhook_from_notification_point(HT_UI, ui_callback);
+			}
+		}
+		break;
+	}
+
+	return 0;
+}
+
+//==============================================================================
+
 bool idaapi run(size_t)
 {
 	test_place_id = register_place_class(&_template, 0, &PLUGIN);
+	register_loc_converter(_template.name(), _idaplace.name(), place_converter);
 
 	static const char title[] = "Places testview";
 	TWidget *widget = find_widget(title);
@@ -525,12 +637,12 @@ bool idaapi run(size_t)
 		return true;
 	}
 
-	test_data_t data(text_main);
+	test_data_t data(fnc_ack);
 
 	test_info_t* si = new test_info_t(data);
 
-	test_place_t s1(&si->data);
-	test_place_t s2(&si->data, si->data.size() - 1);
+	test_place_t s1(&si->data, si->data.min_ea());
+	test_place_t s2(&si->data, si->data.max_ea());
 
 	si->cv = create_custom_viewer(
 			title,      // title
@@ -545,6 +657,8 @@ bool idaapi run(size_t)
 	);
 
 	si->testview = create_code_viewer(si->cv);
+
+	hook_to_notification_point(HT_UI, ui_callback, si);
 
 	display_widget(si->testview, WOPN_TAB|WOPN_MENU|WOPN_RESTORE);
 

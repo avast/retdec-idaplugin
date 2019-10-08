@@ -1,3 +1,6 @@
+
+#include <string>
+
 //--------------------------------------------------------------------------
 // hex place methods
 
@@ -6,16 +9,19 @@ typedef hex_place_t hp_t;
 //--------------------------------------------------------------------------
 // Short information about the current location.
 // It will be displayed in the status line
-void ida_export hex_place_t__print(const hp_t *, qstring *res, void *)
+void ida_export hex_place_t__print(const hp_t *place, qstring *res, void *ud)
 {
-  *res = "shit";
+  std::string s = "hello @ "
+      + std::to_string(place->y)
+      + ":" + std::to_string(place->x);
+  *res = s.c_str();
 }
 
 //--------------------------------------------------------------------------
 // Convert current location to 'uval_t'
 uval_t ida_export hex_place_t__touval(const hp_t *ths, void *)
 {
-  return ths->n;
+  return ths->y;
 }
 
 //--------------------------------------------------------------------------
@@ -31,7 +37,8 @@ void ida_export hex_place_t__copyfrom(hp_t *ths, const place_t *from)
 {
   hp_t *s = (hp_t *)from;
   ths->d      = s->d;
-  ths->n      = s->n;
+  ths->y      = s->y;
+  ths->x      = s->x;
   ths->lnnum  = s->lnnum;
 }
 
@@ -40,9 +47,10 @@ void ida_export hex_place_t__copyfrom(hp_t *ths, const place_t *from)
 // with the specified data
 place_t *ida_export hex_place_t__makeplace(const hp_t *ths, void *, uval_t x, int lnnum)
 {
-  static hex_place_t p;
+  static hex_place_t p(nullptr, 0);
   p.d     = ths->d;
-  p.n     = x;
+  p.y     = x;
+  p.x     = 0;
   p.lnnum = lnnum;
   return &p;
 }
@@ -53,16 +61,26 @@ place_t *ida_export hex_place_t__makeplace(const hp_t *ths, void *, uval_t x, in
 int ida_export hex_place_t__compare(const hp_t *ths, const place_t *t2)
 {
   hp_t *s = (hp_t *)t2;
-  return compare(ths->n, s->n);
+  // return compare(ths->y, s->y);
+
+  if (ths->y == s->y)
+  {
+    return compare(ths->x, s->x);
+  }
+  else
+  {
+    return compare(ths->y, s->y);
+  }
 }
 
 //--------------------------------------------------------------------------
 // Check if the location data is correct and if not, adjust it
 void ida_export hex_place_t__adjust(hp_t *ths, void *)
 {
-  if ( ths->n > ths->d->maxline() )
+  if ( ths->y > ths->d->maxline() )
   {
-    ths->n = 0;
+    ths->y = 0;
+    ths->x = 0;
     ths->lnnum = 0;
   }
 }
@@ -71,9 +89,9 @@ void ida_export hex_place_t__adjust(hp_t *ths, void *)
 // Move to the previous location
 bool ida_export hex_place_t__prev(hp_t *ths, void *)
 {
-  if ( ths->n == 0 )
+  if ( ths->y == 0 )
     return false;
-  ths->n--;
+  ths->y--;
   return true;
 }
 
@@ -81,9 +99,9 @@ bool ida_export hex_place_t__prev(hp_t *ths, void *)
 // Move to the next location
 bool ida_export hex_place_t__next(hp_t *ths, void *)
 {
-  if ( ths->n >= ths->d->maxline() )
+  if ( ths->y >= ths->d->maxline() )
     return false;
-  ths->n++;
+  ths->y++;
   return true;
 }
 
@@ -91,14 +109,14 @@ bool ida_export hex_place_t__next(hp_t *ths, void *)
 // Are we at the beginning of the data?
 bool ida_export hex_place_t__beginning(const hp_t *ths, void *)
 {
-  return ths->n == 0;
+  return ths->y == 0;
 }
 
 //--------------------------------------------------------------------------
 // Are we at the end of the data?
 bool ida_export hex_place_t__ending(const hp_t *ths, void *)
 {
-  return ths->n == ths->d->maxline();
+  return ths->y == ths->d->maxline();
 }
 
 //--------------------------------------------------------------------------
@@ -112,12 +130,15 @@ int ida_export hex_place_t__generate(
         void *,
         int maxsize)
 {
-  int idx = ths->n;
+  static unsigned cntr = 0;
+  msg("[%d] generate() %d:%d\n", cntr++, ths->y, ths->x);
+
+  int idx = ths->y;
   if ( idx > ths->d->maxline() || maxsize <= 0 )
     return 0;
   uint alignment = ths->d->alignment();
   uchar *data = (uchar *)qalloc(alignment);
-  if ( !ths->d->read(alignment * ths->n, data, alignment) )
+  if ( !ths->d->read(alignment * ths->y, data, alignment) )
   {
     qfree(data);
     return 0;
@@ -165,7 +186,8 @@ int ida_export hex_place_t__generate(
 void ida_export hex_place_t__serialize(const hex_place_t *_this, bytevec_t *out)
 {
   place_t__serialize(_this, out);
-  append_ea(*out, _this->n);
+  append_ea(*out, _this->y);
+  append_ea(*out, _this->x);
 }
 
 //-------------------------------------------------------------------------
@@ -173,17 +195,18 @@ bool ida_export hex_place_t__deserialize(hex_place_t *_this, const uchar **pptr,
 {
   if ( !place_t__deserialize(_this, pptr, end) || *pptr >= end )
     return false;
-  _this->n = unpack_ea(pptr, end);
+  _this->y = unpack_ea(pptr, end);
+  _this->x = unpack_ea(pptr, end);
   return true;
 }
 
 //-------------------------------------------------------------------------
 //lint -esym(843,hex_place_id) could be declared const
 static int hex_place_id = -1;
-static hex_place_t _template;
+static hex_place_t _template(nullptr, 0);
 void register_hex_place()
 {
-  hex_place_id = register_place_class(&_template, 0, &PLUGIN);
+  hex_place_id = register_place_class(&_template, PCF_EA_CAPABLE, &PLUGIN);
 }
 
 //-------------------------------------------------------------------------
@@ -195,7 +218,7 @@ int ida_export hex_place_t__id(const hex_place_t *)
 //-------------------------------------------------------------------------
 const char *ida_export hex_place_t__name(const hex_place_t *)
 {
-  return "hexview:hex_place_t";
+  return "hex_place_t";
 }
 
 //-------------------------------------------------------------------------
