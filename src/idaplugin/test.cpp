@@ -17,46 +17,125 @@ static int test_place_id = -1;
 
 //==============================================================================
 
-struct Entry
+struct Token
 {
 	std::string body;
 	ea_t addr;
 };
 
-using Line = std::vector<Entry>;
-using Function = std::vector<Line>;
+using Line = std::vector<Token>;
+
+class Function
+{
+	public:
+		ea_t start;
+		ea_t end;
+		std::vector<Line> lines;
+
+	public:
+		bool operator<(const Function& rhs) const
+		{
+			return start < rhs.start;
+		}
+};
 
 Function fnc_ack =
 {
-	{ {"int __cdecl ack(int a1, int a2)", 0x804851C} },
-	{ {"{", 0x804851C} },
-	{ {"  int v3; // eax", 0x804851C} },
-	{ {"", 0x804851C} },
-	{ {"  if ( !a1 )", 0x8048526} },
-	{ {"    return a2 + 1;", 0x804852B} },
-	{ {"  if ( !a2 )", 0x8048534} },
-	{ {"    return ack(", 0x8048547}, {"a1 - ", 0x8048544}, {"1, ", 0x8048539}, {"1);", 0x804853C} },
-	{ {"  v3 = ack(", 0x804855E}, {"a1, ", 0x804855B}, {"a2 - ", 0x8048554}, {"1);", 0x8048551} },
-	{ {"  return ", 0x8048575}, {"ack(", 0x8048570}, {"a1 - ", 0x804856D}, {"1, ", 0x8048566}, {"v3);", 0x8048569} },
-	{ {"}", 0x8048575} },
+	0x804851C,
+	0x8048577,
+	{
+		{ {"int __cdecl ack(int a1, int a2)", 0x804851C} },
+		{ {"{", 0x804851C} },
+		{ {"  int v3; // eax", 0x804851C} },
+		{ {"", 0x804851C} },
+		{ {"  if ( !a1 )", 0x8048526} },
+		{ {"    return a2 + 1;", 0x804852B} },
+		{ {"  if ( !a2 )", 0x8048534} },
+		{ {"    return ack(", 0x8048547},
+		  {"a1 - ", 0x8048544},
+		  {"1, ", 0x8048539},
+		  {"1);", 0x804853C} },
+		{ {"  v3 = ack(", 0x804855E},
+		  {"a1, ", 0x804855B},
+		  {"a2 - ", 0x8048554},
+		  {"1);", 0x8048551} },
+		{ {"  return ", 0x8048575},
+		  {"ack(", 0x8048570},
+		  {"a1 - ", 0x804856D},
+		  {"1, ", 0x8048566},
+		  {"v3);", 0x8048569} },
+		{ {"}", 0x8048575} },
+	}
 };
 
 Function fnc_main =
 {
-	{ {"int __cdecl main(int argc, const char **argv, const char **envp)", 0x8048577} },
-	{ {"{", 0x8048577} },
-	{ {"  int v4; // [esp+14h] [ebp-Ch]", 0x8048577} },
-	{ {"  int v5; // [esp+18h] [ebp-8h]", 0x8048577} },
-	{ {"  int v6; // [esp+1Ch] [ebp-4h]", 0x8048577} },
-	{ {"", 0x8048577} },
-	{ {"  v6 = 0;", 0x8048580} },
-	{ {"  v5 = 0;", 0x8048588} },
-	{ {"  v4 = 0;", 0x8048590} },
-	{ {"  __isoc99_scanf(", 0x80485AF}, {"\"%d %d\", ", 0x80485A8}, {"&v5, ", 0x80485A4}, {"&v4);", 0x804859C} },
-	{ {"  v6 = ", 0x80485C8}, {"ack(", 0x80485C3}, {"v5, ", 0x80485C0}, {"v4);", 0x80485BC} },
-	{ {"  printf(", 0x80485EB}, {"\"ackerman( %d , %d ) = %d\\n\", ", 0x80485E4}, {"v5, ", 0x80485E0}, {"v4, ", 0x80485DC}, {"v6);", 0x80485D8} },
-	{ {"  return v6;", 0x80485F4} },
-	{ {"}", 0x80485F4} },
+	0x8048577,
+	0x80485F6,
+	{
+		{ {"int __cdecl main(int argc, const char **argv, const char **envp)", 0x8048577} },
+		{ {"{", 0x8048577} },
+		{ {"  int v4; // [esp+14h] [ebp-Ch]", 0x8048577} },
+		{ {"  int v5; // [esp+18h] [ebp-8h]", 0x8048577} },
+		{ {"  int v6; // [esp+1Ch] [ebp-4h]", 0x8048577} },
+		{ {"", 0x8048577} },
+		{ {"  v6 = 0;", 0x8048580} },
+		{ {"  v5 = 0;", 0x8048588} },
+		{ {"  v4 = 0;", 0x8048590} },
+		{ {"  __isoc99_scanf(", 0x80485AF},
+		  {"\"%d %d\", ", 0x80485A8},
+		  {"&v5, ", 0x80485A4},
+		  {"&v4);", 0x804859C} },
+		{ {"  v6 = ", 0x80485C8},
+		  {"ack(", 0x80485C3},
+		  {"v5, ", 0x80485C0},
+		  {"v4);", 0x80485BC} },
+		{ {"  printf(", 0x80485EB},
+		  {"\"ackerman( %d , %d ) = %d\\n\", ", 0x80485E4},
+		  {"v5, ", 0x80485E0},
+		  {"v4, ", 0x80485DC},
+		  {"v6);", 0x80485D8} },
+		{ {"  return v6;", 0x80485F4} },
+		{ {"}", 0x80485F4} },
+	}
+};
+
+using Functions = std::map<ea_t, Function>;
+Functions functions = {
+	{fnc_ack.start, fnc_ack},
+	{fnc_main.start, fnc_main}
+};
+
+class Decompiler
+{
+	public:
+		static Function* decompile(ea_t addr)
+		{
+			auto it = functions.upper_bound(addr);
+
+			if (it == functions.begin())
+			{
+				// Before the first -> no function.
+				return nullptr;
+			}
+			else if (it == functions.end() && !functions.empty())
+			{
+				// After the last -> check the last function.
+				auto& last = functions.rbegin()->second;
+				return last.start <= addr && addr < last.end ? &last : nullptr;
+			}
+			else if (it != functions.end())
+			{
+				// In the middle -> check the previous.
+				--it;
+				auto& prev = it->second;
+				return prev.start <= addr && addr < prev.end ? &prev : nullptr;
+			}
+			else
+			{
+				return nullptr;
+			}
+		}
 };
 
 //==============================================================================
@@ -125,14 +204,14 @@ class test_data_t
 	friend class test_place_t;
 
 	private:
-		std::map<YX, Entry> _tokens;
+		std::map<YX, Token> _tokens;
 		std::map<ea_t, YX> _addr2yx;
 
 	public:
 		test_data_t(Function& f)
 		{
 			std::size_t y = YX::starting_y();
-			for (auto& l : f)
+			for (auto& l : f.lines)
 			{
 				std::size_t x = YX::starting_x();
 				for (auto& e : l)
@@ -478,12 +557,10 @@ class test_place_t : public place_t
 
 			if (maxsize <= 0)
 			{
-				msg("[%d] generate(%d, %d): maxsize <= 0\n", cntr, y(), x());
 				return 0;
 			}
 			if (x() != 0)
 			{
-				msg("[%d] generate(%d, %d): x() != 0\n", cntr, y(), x());
 				return 0;
 			}
 
@@ -491,8 +568,6 @@ class test_place_t : public place_t
 
 			std::string str = _data->yx_to_line(yx());
 			out->push_back(str.c_str());
-			msg("[%d] generate(%d, %d): return 1 = |%s|   (%d)\n",
-					cntr, y(), x(), str.c_str(), out->size());
 			return 1;
 		}
 
@@ -626,26 +701,17 @@ int idaapi cv_get_place_xcoord(TWidget *v, const place_t *pline, const place_t *
 	test_place_t* mpline = (test_place_t*)pline;
 	test_place_t* mpitem = (test_place_t*)pitem;
 
-static unsigned cntr = 0;
-cntr++;
-
 	if (mpline->y() != mpitem->y())
 	{
-msg("\t[%d] cv_get_place_xcoord(): (%d,%d) ? (%d,%d) -> -1\n",
-		cntr, mpline->y(), mpline->x(), mpitem->y(), mpitem->x());
 		return -1; // not included
 	}
 	// mpline->y() == mpitem->y()
 	else if (mpitem->x() == 0)
 	{
-msg("\t[%d] cv_get_place_xcoord(): (%d,%d) ? (%d,%d) -> -2\n",
-		cntr, mpline->y(), mpline->x(), mpitem->y(), mpitem->x());
 		return -2; // points to entire line
 	}
 	else
 	{
-msg("\t[%d] cv_get_place_xcoord(): (%d,%d) ? (%d,%d) -> %d\n",
-		cntr, mpline->y(), mpline->x(), mpitem->y(), mpitem->x(), mpitem->x());
 		return mpitem->x(); // included at coordinate
 	}
 }
@@ -733,8 +799,14 @@ bool idaapi run(size_t)
 		return true;
 	}
 
-	// test_data_t data(fnc_ack);
-	test_data_t data(fnc_main);
+	ea_t addr = get_screen_ea();
+	auto fnc = Decompiler::decompile(addr);
+	if (fnc == nullptr)
+	{
+		warning("Cannot decompile function @ %a\n", addr);
+		return true;
+	}
+	test_data_t data(*fnc);
 
 	test_info_t* si = new test_info_t(data);
 	global_data = &si->data;
