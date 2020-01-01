@@ -7,6 +7,10 @@
 #ifndef IDAPLUGIN_DEFS_H
 #define IDAPLUGIN_DEFS_H
 
+#ifdef NO_OBSOLETE_FUNCS
+#undef NO_OBSOLETE_FUNCS
+#endif
+
 #include <iostream>
 #include <list>
 #include <map>
