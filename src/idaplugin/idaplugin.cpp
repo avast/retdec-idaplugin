@@ -404,7 +404,7 @@ bool canDecompileInput()
 	// 32-bit binary -> is_32bit() == 1 && is_64bit() == 0.
 	// 64-bit binary -> is_32bit() == 1 && is_64bit() == 1.
 	// Allow 64-bit x86.
-#if !defined(IDA_SDK_VERSION) || IDA_SDK_VERSION < 740
+#if IDA_SDK_VERSION < 730
 	if ((!inf.is_32bit() || inf.is_64bit()) && !isX86())
 #else
 	if ((!inf_is_32bit() || inf_is_64bit()) && !isX86())
@@ -536,7 +536,7 @@ bool canDecompileInput()
 		else if (isX86())
 		{
 
-#if !defined(IDA_SDK_VERSION) || IDA_SDK_VERSION < 740
+#if IDA_SDK_VERSION < 730
 			decompInfo.architecture = inf.is_64bit() ? "x86-64" : "x86";
 #else
 			decompInfo.architecture = inf_is_64bit() ? "x86-64" : "x86";

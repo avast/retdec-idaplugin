@@ -121,7 +121,7 @@ struct ShowOutput : public exec_request_t
 
 		display_widget(
 				di->codeViewer,
-#if !defined(IDA_SDK_VERSION) || IDA_SDK_VERSION < 740
+#if IDA_SDK_VERSION < 730
 				WOPN_TAB |
 #else 
 				WOPN_DP_TAB |
