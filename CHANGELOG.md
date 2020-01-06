@@ -3,6 +3,7 @@
 ## dev
 
 * Fix: Show the decompilation windows always next to a disassembly IDA view window ([#12](https://github.com/avast/retdec-idaplugin/issues/12)).
+* Fix: Fixed the build of the plugin under IDA 7.4 ([#54](https://github.com/avast/retdec-idaplugin/pull/54)).
 
 ## v0.9 (March 19, 2019)
 
