@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.6)
 
-project(retdec-idaplugin CXX)
+project(retdec-idaplugin CXX C)
 set(RELEASE_VERSION "0.9")
 
 # Set the default build type to 'Release'
@@ -10,7 +10,7 @@ if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE STRING "Choose the type of build." FORCE)
 endif()
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
@@ -36,7 +36,7 @@ if(MSVC) # Windows
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DNOMINMAX")
 elseif(UNIX) # Linux or macOS
 	# Common options.
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")

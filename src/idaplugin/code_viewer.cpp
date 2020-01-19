@@ -160,14 +160,14 @@ static bool get_current_word(
 bool isWordGlobal(const std::string& word, int color)
 {
 	return color == COLOR_DEFAULT
-			&& decompInfo.configDB.globals.getObjectByNameOrRealName(word)
+			&& decompInfo.configDB.globals.getObjectByName(word)
 					!= nullptr;
 }
 
-const retdec::config::Object* getWordGlobal(const std::string& word, int color)
+const retdec::common::Object* getWordGlobal(const std::string& word, int color)
 {
 	return !word.empty() && color == COLOR_DEFAULT
-			? decompInfo.configDB.globals.getObjectByNameOrRealName(word)
+			? decompInfo.configDB.globals.getObjectByName(word)
 			: nullptr;
 }
 
@@ -182,7 +182,7 @@ bool isWordIdentifier(const std::string& word, int color)
 	return color == COLOR_DREF;
 }
 
-const retdec::config::Function* getWordFunction(
+const retdec::common::Function* getWordFunction(
 		const std::string& word,
 		int color)
 {
@@ -275,7 +275,7 @@ void decompileFunction(
 		bool force = false,
 		bool forceDec = false)
 {
-	auto* globVar = decompInfo.configDB.globals.getObjectByNameOrRealName(
+	auto* globVar = decompInfo.configDB.globals.getObjectByName(
 			calledFnc);
 
 	if (globVar && globVar->getStorage().isMemory())
@@ -555,8 +555,8 @@ bool idaapi changeFunctionGlobalName(TWidget* cv)
 
 	std::string askString;
 	ea_t address;
-	const retdec::config::Function* fnc = nullptr;
-	const retdec::config::Object* gv = nullptr;
+	const retdec::common::Function* fnc = nullptr;
+	const retdec::common::Object* gv = nullptr;
 	if ((fnc = getWordFunction(word, color)))
 	{
 		askString = "Please enter function name";
@@ -595,7 +595,7 @@ bool idaapi changeFunctionGlobalName(TWidget* cv)
 			+ SCOLOR_OFF
 			+ ".");
 
-	if (decompInfo.configDB.globals.getObjectByNameOrRealName(newName) != nullptr
+	if (decompInfo.configDB.globals.getObjectByName(newName) != nullptr
 			|| decompInfo.configDB.functions.hasFunction(newName)
 			|| std::regex_search(fit->second.code, e))
 	{
@@ -955,8 +955,8 @@ bool idaapi ct_keyboard(TWidget* cv, int key, int shift, void* ud)
 		return false;
 	}
 	auto* idaFnc = getIdaFunction(word, color);
-	const retdec::config::Function* cFnc = getWordFunction(word, color);
-	const retdec::config::Object* cGv = getWordGlobal(word, color);
+	const retdec::common::Function* cFnc = getWordFunction(word, color);
+	const retdec::common::Object* cGv = getWordGlobal(word, color);
 
 	// 45 = INSERT
 	// 186 = ';'
@@ -1065,8 +1065,8 @@ ssize_t idaapi ui_callback(void* ud, int notification_code, va_list va)
 			}
 
 			auto* idaFnc = getIdaFunction(word, color);
-			const retdec::config::Function* cFnc = getWordFunction(word, color);
-			const retdec::config::Object* cGv = getWordGlobal(word, color);
+			const retdec::common::Function* cFnc = getWordFunction(word, color);
+			const retdec::common::Object* cGv = getWordGlobal(word, color);
 
 			TPopupMenu* p = va_arg(va, TPopupMenu*);
 
