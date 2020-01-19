@@ -7,7 +7,9 @@
 #include <fstream>
 #include <iostream>
 
-#include <json/json.h>
+#include <rapidjson/document.h>
+#include <rapidjson/ostreamwrapper.h>
+#include <rapidjson/writer.h>
 
 #include "retdec/utils/file_io.h"
 #include "retdec/utils/string.h"
@@ -33,24 +35,16 @@ namespace idaplugin {
  */
 bool getConfigRootFromString(
 		const std::string& json,
-		Json::Value& root,
+		rapidjson::Document& root,
 		bool silent = true)
 {
-	std::istringstream input(json);
-	Json::CharReaderBuilder builder;
-	JSONCPP_STRING errors;
-
-	bool success = Json::parseFromStream(builder, input, &root, &errors);
-	if (!success || root.isNull() || !root.isObject())
+	rapidjson::ParseResult success = root.Parse(json);
+	if (!success)
 	{
-		if ((!silent) && (errors.size() != 0))
-		{
-			WARNING_GUI("Failed to parse JSON content.\n" << errors << "\n");
-		}
-		return true;
+		return false;
 	}
 
-	return false;
+	return true;
 }
 
 /**
@@ -61,7 +55,7 @@ bool getConfigRootFromString(
  */
 bool getConfigRootFromFile(
 		const std::string& file,
-		Json::Value& root)
+		rapidjson::Document& root)
 {
 	std::ifstream jsonFile(file, std::ios::in | std::ios::binary);
 	if (!jsonFile)
@@ -86,16 +80,16 @@ bool getConfigRootFromFile(
  */
 bool readConfigFile(RdGlobalInfo& rdgi)
 {
-	Json::Value root;
+	rapidjson::Document root;
 
 	if (getConfigRootFromFile(rdgi.pluginConfigFile.getPath(), root))
 	{
 		return true;
 	}
 
-	rdgi.decompilerPyPath = root.get(JSON_decompilerPyPath, "").asString();
-	rdgi.pythonInterpreter = root.get(JSON_pythonInterpreterPath, "").asString();
-	rdgi.pythonInterpreterArgs = root.get(JSON_pythonInterpreterArgs, "").asString();
+	rdgi.decompilerPyPath = root.HasMember(JSON_decompilerPyPath) ? root[JSON_decompilerPyPath].GetString() : "";
+	rdgi.pythonInterpreter = root.HasMember(JSON_pythonInterpreterPath) ? root[JSON_pythonInterpreterPath].GetString() : "";
+	rdgi.pythonInterpreterArgs = root.HasMember(JSON_pythonInterpreterArgs) ? root[JSON_pythonInterpreterArgs].GetString() : "";
 
 	return false;
 }
@@ -107,21 +101,27 @@ bool readConfigFile(RdGlobalInfo& rdgi)
  */
 void saveConfigTofile(RdGlobalInfo& rdgi)
 {
-	Json::Value root;
+	rapidjson::Document root;
 
 	if (getConfigRootFromFile(rdgi.pluginConfigFile.getPath(), root))
 	{
 		// Problem when reading config -- does not matter, we use empty root.
 	}
 
-	root[JSON_decompilerPyPath] = rdgi.decompilerPyPath;
-	root[JSON_pythonInterpreterPath] = rdgi.pythonInterpreter;
-	root[JSON_pythonInterpreterArgs] = rdgi.pythonInterpreterArgs;
+	rapidjson::Value decPath(JSON_decompilerPyPath, root.GetAllocator());
+	decPath = rapidjson::StringRef(rdgi.decompilerPyPath);
 
-	Json::StreamWriterBuilder writer;
-	writer.settings_["commentStyle"] = "All";
+	rapidjson::Value pyInt(JSON_pythonInterpreterPath, root.GetAllocator());
+	pyInt = rapidjson::StringRef(rdgi.pythonInterpreter);
+
+	rapidjson::Value pyIntArgs(JSON_pythonInterpreterArgs, root.GetAllocator());
+	pyIntArgs = rapidjson::StringRef(rdgi.pythonInterpreterArgs);
+
 	std::ofstream jsonFile(rdgi.pluginConfigFile.getPath().c_str());
-	jsonFile << Json::writeString(writer, root);
+	rapidjson::OStreamWrapper osw(jsonFile);
+
+	rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
+	root.Accept(writer);
 }
 
 /**

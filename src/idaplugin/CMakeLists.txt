@@ -38,8 +38,8 @@ add_library(idaplugin64 SHARED ${IDAPLUGIN_SOURCES})
 
 target_compile_definitions(idaplugin64 PUBLIC __EA64__)
 
-target_link_libraries(idaplugin32 retdec jsoncpp ${idasdk_ea32})
-target_link_libraries(idaplugin64 retdec jsoncpp ${idasdk_ea64})
+target_link_libraries(idaplugin32 retdec rapidjson ${idasdk_ea32})
+target_link_libraries(idaplugin64 retdec rapidjson ${idasdk_ea64})
 
 if(WIN32)
 	# shlwapi.dll for PathRemoveFileSpec() used in utilsl/filesystem_path.h
