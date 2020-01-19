@@ -29,14 +29,14 @@ class ConfigGenerator
 		void generateFunctions();
 		void generateFunctionType(
 				const tinfo_t& fncType,
-				retdec::config::Function& ccFnc);
-		void generateSegmentsAndGlobals();
-		retdec::config::Storage generateObjectLocation(
+				retdec::common::Function& ccFnc);
+		void generateGlobals();
+		retdec::common::Storage generateObjectLocation(
 				const argloc_t& loc,
 				const tinfo_t& locType);
 		void generateCallingConvention(
 				const cm_t &idaCC,
-				retdec::config::CallingConvention &configCC);
+				retdec::common::CallingConvention &configCC);
 
 		std::string addrType2string(ea_t addr);
 		std::string type2string(const tinfo_t &type);

@@ -35,7 +35,7 @@ std::string ConfigGenerator::generate()
 
 	generateHeader();
 	generateFunctions();
-	generateSegmentsAndGlobals();
+	generateGlobals();
 
 	return config.generateJsonFile();
 }
@@ -58,7 +58,7 @@ void ConfigGenerator::generateHeader()
  * @param locType Location type.
  * @return False if ok, true otherwise.
  */
-retdec::config::Storage ConfigGenerator::generateObjectLocation(
+retdec::common::Storage ConfigGenerator::generateObjectLocation(
 		const argloc_t &loc,
 		const tinfo_t &locType)
 {
@@ -67,42 +67,42 @@ retdec::config::Storage ConfigGenerator::generateObjectLocation(
 		qstring buff;
 		if (get_reg_name(&buff, loc.reg1(), locType.get_size()) <= 0)
 		{
-			return retdec::config::Storage::undefined();
+			return retdec::common::Storage::undefined();
 		}
 
-		return retdec::config::Storage::inRegister(buff.c_str());
+		return retdec::common::Storage::inRegister(buff.c_str());
 	}
 	else if (loc.is_stkoff())
 	{
-		return retdec::config::Storage::onStack(loc.stkoff());
+		return retdec::common::Storage::onStack(loc.stkoff());
 	}
 	else if (loc.is_ea())
 	{
-		return retdec::config::Storage::inMemory(loc.get_ea());
+		return retdec::common::Storage::inMemory(loc.get_ea());
 	}
 	else if (loc.is_rrel())
 	{
-		return retdec::config::Storage::undefined();
+		return retdec::common::Storage::undefined();
 	}
 	else if (loc.is_scattered())
 	{
-		return retdec::config::Storage::undefined();
+		return retdec::common::Storage::undefined();
 	}
 	else if (loc.is_fragmented())
 	{
-		return retdec::config::Storage::undefined();
+		return retdec::common::Storage::undefined();
 	}
 	else if (loc.is_custom())
 	{
-		return retdec::config::Storage::undefined();
+		return retdec::common::Storage::undefined();
 	}
 	else if (loc.is_badloc())
 	{
-		return retdec::config::Storage::undefined();
+		return retdec::common::Storage::undefined();
 	}
 	else
 	{
-		return retdec::config::Storage::undefined();
+		return retdec::common::Storage::undefined();
 	}
 }
 
@@ -113,7 +113,7 @@ retdec::config::Storage ConfigGenerator::generateObjectLocation(
  */
 void ConfigGenerator::generateCallingConvention(
 		const cm_t &idaCC,
-		retdec::config::CallingConvention &configCC)
+		retdec::common::CallingConvention &configCC)
 {
 	switch (idaCC)
 	{
@@ -145,7 +145,7 @@ void ConfigGenerator::generateCallingConvention(
  */
 void ConfigGenerator::generateFunctionType(
 		const tinfo_t &fncType,
-		retdec::config::Function &ccFnc)
+		retdec::common::Function &ccFnc)
 {
 	// Generate arguments and return from function type.
 	//
@@ -171,10 +171,10 @@ void ConfigGenerator::generateFunctionType(
 			}
 
 			auto s = generateObjectLocation(a.argloc, a.type);
-			retdec::config::Object arg(name, s);
+			retdec::common::Object arg(name, s);
 			arg.type.setLlvmIr( type2string(a.type) );
 
-			ccFnc.parameters.insert(arg);
+			ccFnc.parameters.push_back(arg);
 
 			++cntr;
 		}
@@ -233,7 +233,7 @@ void ConfigGenerator::generateFunctions()
 		DBG_MSG("\t" << fncName << " @ " << std::hex << fnc->start_ea
 				<< ", #args = " << std::dec << fnc->regargqty << "\n");
 
-		retdec::config::Function ccFnc(fncName);
+		retdec::common::Function ccFnc(fncName);
 		ccFnc.setStart(fnc->start_ea);
 		ccFnc.setEnd(fnc->end_ea);
 		// TODO: return type is always set to default: ugly, make it better.
@@ -291,9 +291,9 @@ void ConfigGenerator::generateFunctions()
 }
 
 /**
- * Generate segments, and generate all global data from segments.
+ * Generate all global data from segments.
  */
-void ConfigGenerator::generateSegmentsAndGlobals()
+void ConfigGenerator::generateGlobals()
 {
 	qstring buff;
 
@@ -310,11 +310,6 @@ void ConfigGenerator::generateSegmentsAndGlobals()
 		{
 			continue;
 		}
-
-		retdec::config::Segment segment(retdec::utils::Address(seg->start_ea));
-		segment.setName(buff.c_str());
-		segment.setEnd(seg->end_ea);
-		config.segments.insert(segment);
 
 		ea_t head = seg->start_ea - 1;
 		while ( (head = next_head(head, seg->end_ea)) != BADADDR)
@@ -343,9 +338,9 @@ void ConfigGenerator::generateSegmentsAndGlobals()
 				continue;
 			}
 
-			auto s = retdec::config::Storage::inMemory(
-					retdec::utils::Address(head));
-			retdec::config::Object global(buff.c_str(), s);
+			auto s = retdec::common::Storage::inMemory(
+					retdec::common::Address(head));
+			retdec::common::Object global(buff.c_str(), s);
 
 			// Get type.
 			//
@@ -362,7 +357,7 @@ void ConfigGenerator::generateSegmentsAndGlobals()
 				std::string fncName = buff.c_str();
 				std::replace(fncName.begin(), fncName.end(), '.', '_');
 
-				retdec::config::Function ccFnc(fncName);
+				retdec::common::Function ccFnc(fncName);
 				ccFnc.setStart(head);
 				ccFnc.setEnd(head);
 				ccFnc.setIsDynamicallyLinked();
@@ -632,7 +627,7 @@ std::string ConfigGenerator::type2string(const tinfo_t &type)
 
 		ret = strName;  // only structure name is returned.
 
-		retdec::config::Type ccType( strName + " = type " + body );
+		retdec::common::Type ccType( strName + " = type " + body );
 		config.structures.insert( ccType );
 	}
 	else if (type.is_union())

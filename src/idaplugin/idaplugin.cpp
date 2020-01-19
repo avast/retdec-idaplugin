@@ -450,8 +450,8 @@ bool canDecompileInput()
 	decompInfo.mode.clear();
 	decompInfo.architecture.clear();
 	decompInfo.endian.clear();
-	decompInfo.rawEntryPoint = retdec::utils::Address();
-	decompInfo.rawSectionVma = retdec::utils::Address();
+	decompInfo.rawEntryPoint = retdec::common::Address();
+	decompInfo.rawSectionVma = retdec::common::Address();
 
 	// Check Intel HEX.
 	//

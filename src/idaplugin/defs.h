@@ -39,7 +39,7 @@
 // RetDec includes.
 //
 #include "retdec/config/config.h"
-#include "retdec/utils/address.h"
+#include "retdec/common/address.h"
 #include "retdec/utils/filesystem_path.h"
 #include "retdec/utils/os.h"
 #include "retdec/utils/time.h"
@@ -124,8 +124,8 @@ class RdGlobalInfo
 		std::string mode;
 		std::string architecture;
 		std::string endian;
-		retdec::utils::Address rawEntryPoint;
-		retdec::utils::Address rawSectionVma;
+		retdec::common::Address rawEntryPoint;
+		retdec::common::Address rawSectionVma;
 
 		std::map<func_t*, FunctionInfo> fnc2code;
 		std::list<func_t*> navigationList;
