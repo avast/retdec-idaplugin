@@ -22,8 +22,8 @@ Currently, we officially support only Windows and Linux. It may be possible to b
 
 **Note: These are requirements to build the RetDec IDA plugin, not to run it. See our [User Guide](https://github.com/avast/retdec-idaplugin/blob/master/doc/user_guide/user_guide.pdf) for information on plugin installation, configuration, and use.**
 
-* A compiler supporting C++14
-  * On Windows, only Microsoft Visual C++ is supported (version >= Visual Studio 2015).
+* A compiler supporting C++17
+  * On Windows, only Microsoft Visual C++ is supported (version >= Visual Studio 2017).
 * CMake (version >= 3.6)
 * IDA SDK (version == 7.0)
 
@@ -48,7 +48,7 @@ Currently, we officially support only Windows and Linux. It may be possible to b
 
 You must pass the following parameters to `cmake`:
 * `-DIDA_SDK_DIR=</path/to/idasdk>` to tell `cmake` where the IDA SDK directory is located.
-* (Windows only) `-G<generator>` is `-G"Visual Studio 14 2015 Win64"` for 64-bit build using Visual Studio 2015. Later versions of Visual Studio may be used. Only 64-bit build is supported.
+* (Windows only) `-G<generator>` is `-G"Visual Studio 15 2017 Win64"` for 64-bit build using Visual Studio 2017. Later versions of Visual Studio may be used. Only 64-bit build is supported.
 
 You can pass the following additional parameters to `cmake`:
 * `-DIDA_PATH=</path/to/ida>` to tell `cmake` where to install the plugin. If specified, installation will copy plugin binaries into `IDA_PATH/plugins`, and content of `scripts/idc` directory into `IDA_PATH/idc`. If not set, installation step does nothing.
