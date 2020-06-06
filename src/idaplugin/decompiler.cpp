@@ -1,176 +1,275 @@
-/**
- * @file idaplugin/decompiler.cpp
- * @brief Module contains classes/methods dealing with program decompilation.
- * @copyright (c) 2017 Avast Software, licensed under the MIT license
- */
 
-#include <algorithm>
-#include <cstdlib>
+#include <map>
 #include <fstream>
-#include <iostream>
-#include <set>
-#include <sstream>
 
-#include "retdec/utils/os.h"
-#include "code_viewer.h"
+#include <ida.hpp>
+#include <fpro.h>
+
+#include <retdec/retdec/retdec.h>
+#include <retdec/utils/binary_path.h>
+
+#include "config.h"
+#include "context.h"
 #include "decompiler.h"
-#include "plugin_config.h"
+#include "utils.h"
 
-using namespace retdec;
+bool isRelocatable()
+{
+	if (inf_get_filetype() == f_COFF && inf_get_start_ea() == BADADDR)
+	{
+		return true;
+	}
+	else if (inf_get_filetype() == f_ELF)
+	{
+		auto inFile = getInputPath();
+		if (inFile.empty())
+		{
+			return false;
+		}
 
-namespace idaplugin {
+		std::ifstream infile(inFile, std::ios::binary);
+		if (infile.good())
+		{
+			std::size_t e_type_offset = 0x10;
+			infile.seekg(e_type_offset, std::ios::beg);
+
+			// relocatable -- constant 0x1 at <0x10-0x11>
+			// little endian -- 0x01 0x00
+			// big endian -- 0x00 0x01
+			char b1 = 0;
+			char b2 = 0;
+			if (infile.get(b1))
+			{
+				if (infile.get(b2))
+				{
+					if (std::size_t(b1) + std::size_t(b2) == 1)
+					{
+						return true;
+					}
+				}
+			}
+		}
+	}
+
+	// f_BIN || f_PE || f_HEX || other
+	return false;
+}
 
 /**
- * Decompile locally on work station.
- * Working RetDec must be installed on the station.
- * @param di Plugin's global information.
+ * Perform startup check that determines, if plugin can decompile IDA's input file.
+ * @return True if plugin can decompile IDA's input, false otherwise.
  */
-static void idaapi localDecompilation(RdGlobalInfo *di)
+bool canDecompileInput()
 {
-	auto tmp = di->decCmd;
-	std::replace(tmp.begin(), tmp.end(), ' ', '\n');
-	INFO_MSG("Decompilation command: " << tmp << "\n");
-	INFO_MSG("Running the decompilation command ...\n");
+	std::string procName = inf_get_procname();
+	auto fileType = inf_get_filetype();
 
-	runCommand(
-			di->pythonInterpreter,
-			di->pythonInterpreterArgs + di->decCmd,
-			&di->decompPid,
-			true,
-			&di->hDecomp);
+	// 32-bit binary -> is_32bit() == 1 && is_64bit() == 0.
+	// 64-bit binary -> is_32bit() == 1 && is_64bit() == 1.
+	// Allow 64-bit x86.
+	if ((!inf_is_32bit() || inf_is_64bit()) && !isX86())
+	{
+		WARNING_GUI(Context::pluginName << " version " << Context::pluginVersion
+				<< " cannot decompile PROCNAME = " << procName
+		);
+		return false;
+	}
 
-	// Get decompiled and colored file content.
+	if (!(fileType == f_BIN
+			|| fileType == f_PE
+			|| fileType == f_ELF
+			|| fileType == f_COFF
+			|| fileType == f_MACHO
+			|| fileType == f_HEX))
+	{
+		if (fileType == f_LOADER)
+		{
+			WARNING_GUI("Custom IDA loader plugin was used.\n"
+					"Decompilation will be attempted, but:\n"
+					"1. RetDec idaplugin can not check if the input can be "
+					"decompiled. Decompilation may fail.\n"
+					"2. If the custom loader behaves differently than the RetDec "
+					"loader, decompilation may fail or produce nonsensical result."
+			);
+		}
+		else
+		{
+			WARNING_GUI(Context::pluginName
+					<< " version " << Context::pluginVersion
+					<< " cannot decompile this input file (file type = "
+					<< ft << ").\n"
+			);
+			return false;
+		}
+	}
+
+	// Check Intel HEX.
 	//
-	std::ifstream decFile;
-	std::string decName;
-
-	if (!di->outputFile.empty())
+	if (fileType == f_HEX)
 	{
-		decName = di->outputFile;
-	}
-	else
-	{
-		decName = di->inputPath + ".c";
-	}
-	decFile.open( decName.c_str() );
-
-	if (!decFile.is_open())
-	{
-		WARNING_GUI("Loading of output C file FAILED.\n");
-		di->decompSuccess = false;
-		return;
-	}
-
-	INFO_MSG("Decompiled file: " << decName << "\n");
-
-	if (di->isSelectiveDecompilation())
-	{
-		std::string code(
-				(std::istreambuf_iterator<char>(decFile)),
-				std::istreambuf_iterator<char>());
-		di->fnc2code[di->decompiledFunction].code = code;
+		if (procName == "mipsr" || procName == "mipsb")
+		{
+			arch = "mips";
+			endian = "big";
+		}
+		else if (procName == "mipsrl"
+				|| procName == "mipsl"
+				|| procName == "psp")
+		{
+			arch = "mips";
+			endian = "little";
+		}
+		else
+		{
+			WARNING_GUI("Intel HEX input file can be decompiled only for one of "
+					"these {mipsr, mipsb, mipsrl, mipsl, psp} processors, "
+					"not \"" << procName << "\".\n");
+			return false;
+		}
 	}
 
-	decFile.close();
-	di->decompSuccess = true;
-}
-
-/**
- * Thread function, it runs the decompilation and displays decompiled code.
- * @param ud Plugin's global information.
- */
-static int idaapi threadFunc(void* ud)
-{
-	RdGlobalInfo* di = static_cast<RdGlobalInfo*>(ud);
-	di->decompRunning = true;
-
-	INFO_MSG("Local decompilation ...\n");
-	localDecompilation(di);
-
-	if (di->decompSuccess && di->isSelectiveDecompilation())
-	{
-		showDecompiledCode(di);
-	}
-
-	di->outputFile.clear();
-	di->decompRunning = false;
-	return 0;
-}
-
-/**
- * Create ranges to decompile from the provided function.
- * @param[out] decompInfo Plugin's global information.
- * @param      fnc        Function selected for decompilation.
- */
-void createRangesFromSelectedFunction(RdGlobalInfo& decompInfo, func_t* fnc)
-{
-	std::stringstream ss;
-	ss << "0x" << std::hex << fnc->start_ea << "-" << "0x" << std::hex << (fnc->end_ea-1);
-
-	decompInfo.ranges = ss.str();
-	decompInfo.decompiledFunction = fnc;
-}
-
-/**
- * Decompile IDA's input.
- * @param decompInfo Plugin's global information.
- */
-void decompileInput(RdGlobalInfo &decompInfo)
-{
-	INFO_MSG("Decompile input ...\n");
-
-	// Construct decompiler call command.
+	// Check BIN (RAW).
 	//
-	decompInfo.decCmd = "\"" + decompInfo.decompilationCmd + "\"";
-	decompInfo.decCmd += " \"" + decompInfo.inputPath + "\"";
-	decompInfo.decCmd += " --config=\"" + decompInfo.dbFile + "\"";
+	if (inf.filetype == f_BIN)
+	{
+		// Section VMA.
+		//
+		decompInfo.rawSectionVma = inf.min_ea;
 
-	if (!decompInfo.mode.empty())
-	{
-		decompInfo.decCmd += " -m " + decompInfo.mode + " ";
-	}
-	if (!decompInfo.architecture.empty())
-	{
-		decompInfo.decCmd += " -a " + decompInfo.architecture + " ";
-	}
-	if (!decompInfo.endian.empty())
-	{
-		decompInfo.decCmd += " -e " + decompInfo.endian + " ";
-	}
-	if (decompInfo.rawEntryPoint.isDefined())
-	{
-		decompInfo.decCmd += " --raw-entry-point " + decompInfo.rawEntryPoint.toHexPrefixString() + " ";
-	}
-	if (decompInfo.rawSectionVma.isDefined())
-	{
-		decompInfo.decCmd += " --raw-section-vma " + decompInfo.rawSectionVma.toHexPrefixString() + " ";
+		// Entry point.
+		//
+		if (inf.start_ea != BADADDR)
+		{
+			decompInfo.rawEntryPoint = inf.start_ea;
+		}
+		else
+		{
+			decompInfo.rawEntryPoint = decompInfo.rawSectionVma;
+		}
+
+		// Architecture + endian.
+		//
+		std::string procName = inf.procname;
+		if (procName == "mipsr" || procName == "mipsb")
+		{
+			arch = "mips";
+			decompInfo.endian = "big";
+		}
+		else if (procName == "mipsrl" || procName == "mipsl" || procName == "psp")
+		{
+			arch = "mips";
+			decompInfo.endian = "little";
+		}
+		else if (procName == "ARM")
+		{
+			arch = "arm";
+			decompInfo.endian = "little";
+		}
+		else if (procName == "ARMB")
+		{
+			arch = "arm";
+			decompInfo.endian = "big";
+		}
+		else if (procName == "PPCL")
+		{
+			arch = "powerpc";
+			decompInfo.endian = "little";
+		}
+		else if (procName == "PPC")
+		{
+			arch = "powerpc";
+			decompInfo.endian = "big";
+		}
+		else if (isX86())
+		{
+			arch = inf_is_64bit() ? "x86-64" : "x86";
+			decompInfo.endian = "little";
+		}
+		else
+		{
+			WARNING_GUI("Binary input file can be decompiled only for one of these "
+					"{mipsr, mipsb, mipsrl, mipsl, psp, ARM, ARMB, PPCL, PPC, 80386p, "
+					"80386r, 80486p, 80486r, 80586p, 80586r, 80686p, p2, p3, p4} "
+					"processors, not \"" << procName << "\".\n");
+			return false;
+		}
 	}
 
-	if (decompInfo.isSelectiveDecompilation())
-	{
-		decompInfo.decCmd += " --color-for-ida";
-		decompInfo.decCmd += " -o \"" + decompInfo.inputPath + ".c\"";
-	}
-	else
-	{
-		decompInfo.decCmd += " -o \"" + decompInfo.outputFile + "\"";
-	}
-
-	if ( !decompInfo.ranges.empty() )
-	{
-		decompInfo.decCmd += " --select-decode-only --select-ranges=\"" + decompInfo.ranges + "\"";
-	}
-
-	// Create decompilation thread.
-	//
-	if (decompInfo.isUseThreads())
-	{
-		decompInfo.decompThread = qthread_create(threadFunc, static_cast<void*>(&decompInfo));
-	}
-	else
-	{
-		threadFunc(static_cast<void*>(&decompInfo));
-	}
+	return true;
 }
 
-} // namespace idaplugin
+Function* Decompiler::decompile(ea_t ea)
+{
+	func_t* fnc = get_func(ea);
+	if (fnc == nullptr)
+	{
+		WARNING_GUI("Function must be selected by the cursor.\n");
+		return nullptr;
+	}
+
+	auto inFile = getInputPath();
+	if (inFile.empty())
+	{
+		WARNING_GUI("Cannot decompile - there is no input file.");
+		return nullptr;
+	}
+	if (!canDecompileInput())
+	{
+		return nullptr;
+	}
+
+	retdec::config::Config config;
+
+	auto idaPath = retdec::utils::getThisBinaryDirectoryPath();
+	auto configPath = idaPath;
+	configPath.append("plugins");
+	configPath.append("retdec");
+	configPath.append("decompiler-config.json");
+	if (configPath.exists())
+	{
+		config = retdec::config::Config::fromFile(configPath.getPath());
+		config.parameters.fixRelativePaths(idaPath.getPath());
+	}
+
+	std::string tmp = qtmpnam(nullptr, 0);
+
+	config.parameters.setInputFile(inFile);
+
+	config.parameters.setOutputAsmFile(tmp + ".dsm");
+	config.parameters.setOutputBitcodeFile(tmp + ".bc");
+	config.parameters.setOutputLlvmirFile(tmp + ".ll");
+	config.parameters.setOutputConfigFile(tmp + ".config.json");
+	config.parameters.setOutputFile(tmp + ".c.json");
+	config.parameters.setOutputUnpackedFile(tmp + "-unpacked");
+
+	retdec::common::AddressRange r(fnc->start_ea, fnc->end_ea);
+	config.parameters.selectedRanges.insert(r);
+	config.parameters.setIsSelectedDecodeOnly(true);
+
+	msg("===============> %s\n", tmp.c_str());
+
+	fillConfig(config);
+
+	try
+	{
+		auto rc = retdec::decompile(config);
+		if (rc != 0)
+		{
+			throw std::runtime_error(
+					"decompilation error code = " + std::to_string(rc)
+			);
+		}
+	}
+	catch (const std::runtime_error& e)
+	{
+		WARNING_GUI("Decompilation exception: " << e.what() << std::endl);
+		return nullptr;
+	}
+	catch (...)
+	{
+		WARNING_GUI("Decompilation exception: unknown" << std::endl);
+		return nullptr;
+	}
+
+	return nullptr;
+}

@@ -24,12 +24,16 @@ include_directories(SYSTEM
 
 # RetDec idaplugin sources.
 set(IDAPLUGIN_SOURCES
-	code_viewer.cpp
-	config_generator.cpp
+	config.cpp
+	context.cpp
 	decompiler.cpp
-	defs.cpp
-	idaplugin.cpp
-	plugin_config.cpp
+	function.cpp
+	place.cpp
+	token.cpp
+	retdec.cpp
+	ui.cpp
+	utils
+	yx.cpp
 )
 
 # RetDec idaplugin libs.
@@ -38,8 +42,8 @@ add_library(idaplugin64 SHARED ${IDAPLUGIN_SOURCES})
 
 target_compile_definitions(idaplugin64 PUBLIC __EA64__)
 
-target_link_libraries(idaplugin32 retdec jsoncpp ${idasdk_ea32})
-target_link_libraries(idaplugin64 retdec jsoncpp ${idasdk_ea64})
+target_link_libraries(idaplugin32 ${idasdk_ea32} retdec::retdec retdec::utils)
+target_link_libraries(idaplugin64 ${idasdk_ea64} retdec::retdec retdec::utils)
 
 if(WIN32)
 	# shlwapi.dll for PathRemoveFileSpec() used in utilsl/filesystem_path.h
@@ -49,6 +53,45 @@ endif()
 if(MSYS)
 	target_link_libraries(idaplugin32 ws2_32)
 	target_link_libraries(idaplugin64 ws2_32)
+endif()
+
+# Due to the implementation of the plugin system in LLVM, we have to link our
+# libraries into retdec as a whole.
+if(MSVC)
+	# -WHOLEARCHIVE needs path to the target, but when we use the target like
+	# that, its properties (associated includes, etc.) are not propagated.
+	# Therefore, we state 'bin2llvmir|llvmir2hll' twice in target_link_libraries(),
+	# first as a target to get its properties, second as path to library to
+	# link it as a whole.
+	target_link_libraries(idaplugin32
+		retdec::bin2llvmir -WHOLEARCHIVE:$<TARGET_FILE_NAME:retdec::bin2llvmir>
+		retdec::llvmir2hll -WHOLEARCHIVE:$<TARGET_FILE_NAME:retdec::llvmir2hll>
+	)
+	set_property(TARGET idaplugin32
+		APPEND_STRING PROPERTY LINK_FLAGS " /FORCE:MULTIPLE"
+	)
+	# Increase the stack size of the created binaries on MS Windows because the
+	# default value is too small. The default Linux value is 8388608 (8 MB).
+	set_property(TARGET idaplugin32
+		APPEND_STRING PROPERTY LINK_FLAGS " /STACK:16777216"
+	)
+	# Allow the 32b version of bin2llvmir on Windows handle addresses larger
+	# than 2 GB (up to 4 GB).
+	if(CMAKE_SIZEOF_VOID_P MATCHES "4")
+		set_property(TARGET retdec
+			APPEND_STRING PROPERTY LINK_FLAGS " /LARGEADDRESSAWARE"
+		)
+	endif()
+elseif(APPLE)
+	target_link_libraries(idaplugin32
+		-Wl,-force_load retdec::bin2llvmir
+		-Wl,-force_load retdec::llvmir2hll
+	)
+else() # Linux
+	target_link_libraries(idaplugin32
+		-Wl,--whole-archive retdec::bin2llvmir -Wl,--no-whole-archive
+		-Wl,--whole-archive retdec::llvmir2hll -Wl,--no-whole-archive
+	)
 endif()
 
 set_target_properties(idaplugin32 PROPERTIES PREFIX "")
@@ -61,5 +104,9 @@ if(IDA_PATH)
 	install(TARGETS idaplugin32 idaplugin64
 		LIBRARY DESTINATION "${IDA_PATH}/plugins/"
 		RUNTIME DESTINATION "${IDA_PATH}/plugins/"
+	)
+	install(
+		FILES "decompiler-config.json"
+		DESTINATION "${IDA_PATH}/plugins/retdec/"
 	)
 endif()
