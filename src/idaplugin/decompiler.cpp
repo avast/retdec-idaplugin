@@ -98,37 +98,11 @@ static int idaapi threadFunc(void* ud)
 }
 
 /**
- * Create ranges to decompile from the provided function.
- * @param[out] decompInfo Plugin's global information.
- * @param      fnc        Function selected for decompilation.
- */
-void createRangesFromSelectedFunction(RdGlobalInfo& decompInfo, func_t* fnc)
-{
-	std::stringstream ss;
-	ss << "0x" << std::hex << fnc->start_ea << "-" << "0x" << std::hex << (fnc->end_ea-1);
-
-	decompInfo.ranges = ss.str();
-	decompInfo.decompiledFunction = fnc;
-}
-
-/**
  * Decompile IDA's input.
  * @param decompInfo Plugin's global information.
  */
 void decompileInput(RdGlobalInfo &decompInfo)
 {
-	INFO_MSG("Decompile input ...\n");
-
-	// Construct decompiler call command.
-	//
-	decompInfo.decCmd = "\"" + decompInfo.decompilationCmd + "\"";
-	decompInfo.decCmd += " \"" + decompInfo.inputPath + "\"";
-	decompInfo.decCmd += " --config=\"" + decompInfo.dbFile + "\"";
-
-	if (!decompInfo.mode.empty())
-	{
-		decompInfo.decCmd += " -m " + decompInfo.mode + " ";
-	}
 	if (!decompInfo.architecture.empty())
 	{
 		decompInfo.decCmd += " -a " + decompInfo.architecture + " ";
@@ -144,21 +118,6 @@ void decompileInput(RdGlobalInfo &decompInfo)
 	if (decompInfo.rawSectionVma.isDefined())
 	{
 		decompInfo.decCmd += " --raw-section-vma " + decompInfo.rawSectionVma.toHexPrefixString() + " ";
-	}
-
-	if (decompInfo.isSelectiveDecompilation())
-	{
-		decompInfo.decCmd += " --color-for-ida";
-		decompInfo.decCmd += " -o \"" + decompInfo.inputPath + ".c\"";
-	}
-	else
-	{
-		decompInfo.decCmd += " -o \"" + decompInfo.outputFile + "\"";
-	}
-
-	if ( !decompInfo.ranges.empty() )
-	{
-		decompInfo.decCmd += " --select-decode-only --select-ranges=\"" + decompInfo.ranges + "\"";
 	}
 
 	// Create decompilation thread.

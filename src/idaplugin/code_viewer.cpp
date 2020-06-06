@@ -327,160 +327,6 @@ void decompileFunction(
 //==============================================================================
 //
 
-bool idaapi moveToPrevious()
-{
-	DBG_MSG("\t ESC : [");
-	for (auto& fnc : decompInfo.navigationList)
-	{
-		DBG_MSG(" " << std::hex << fnc->start_ea);
-	}
-	DBG_MSG(" ] (# " << std::dec << decompInfo.navigationList.size()
-			<< ") : from " << std::hex << (*decompInfo.navigationActual)->start_ea
-			<< " => BACK\n");
-
-	if (decompInfo.navigationList.size() <= 1)
-	{
-		return false;
-	}
-
-	if (decompInfo.navigationActual != decompInfo.navigationList.begin())
-	{
-		decompInfo.navigationActual--;
-
-		DBG_MSG("\t\t=> " << std::hex
-				<< (*decompInfo.navigationActual)->start_ea << "\n");
-
-		auto fit = decompInfo.fnc2code.find(*decompInfo.navigationActual);
-		if (fit == decompInfo.fnc2code.end())
-		{
-			return false;
-		}
-
-		decompInfo.decompiledFunction = fit->first;
-		ShowOutput show(&decompInfo);
-		show.execute();
-	}
-	else
-	{
-		DBG_MSG("\t\t=> FIRST : cannot move to the previous\n");
-	}
-
-	return false;
-}
-
-struct move_backward_ah_t : public action_handler_t
-{
-	static const char* actionName;
-	static const char* actionLabel;
-	static const char* actionHotkey;
-
-	virtual int idaapi activate(action_activation_ctx_t*)
-	{
-		moveToPrevious();
-		return false;
-	}
-
-	virtual action_state_t idaapi update(action_update_ctx_t*)
-	{
-		return AST_ENABLE_ALWAYS;
-	}
-};
-
-const char* move_backward_ah_t::actionName   = "retdec:ActionMoveBackward";
-const char* move_backward_ah_t::actionLabel  = "Move backward";
-const char* move_backward_ah_t::actionHotkey = "ESC";
-
-static move_backward_ah_t move_backward_ah;
-static const action_desc_t move_backward_ah_desc = ACTION_DESC_LITERAL(
-		move_backward_ah_t::actionName,
-		move_backward_ah_t::actionLabel,
-		&move_backward_ah,
-		nullptr,
-		move_backward_ah_t::actionHotkey,
-		-1);
-
-//
-//==============================================================================
-//
-
-bool idaapi moveToNext()
-{
-	DBG_MSG("\t CTRL + F : [");
-	for (auto& fnc : decompInfo.navigationList)
-	{
-		DBG_MSG(" " << std::hex << fnc->start_ea);
-	}
-	DBG_MSG(" ] (#" << std::dec << decompInfo.navigationList.size()
-			<< ") : from " << std::hex << (*decompInfo.navigationActual)->start_ea
-			<< " => FORWARD\n");
-
-	if (decompInfo.navigationList.size() <= 1)
-	{
-		return false;
-	}
-
-	auto last = decompInfo.navigationList.end();
-	last--;
-	if (decompInfo.navigationActual != last)
-	{
-		decompInfo.navigationActual++;
-
-		DBG_MSG("\t\t=> " << std::hex
-				<< (*decompInfo.navigationActual)->start_ea << "\n");
-
-		auto fit = decompInfo.fnc2code.find(*decompInfo.navigationActual);
-		if (fit != decompInfo.fnc2code.end())
-		{
-			decompInfo.decompiledFunction = fit->first;
-			ShowOutput show(&decompInfo);
-			show.execute();
-
-			return false;
-		}
-	}
-	else
-	{
-		DBG_MSG("\t\t=> LAST : cannot move to the next\n");
-	}
-
-	return false;
-}
-
-struct move_forward_ah_t : public action_handler_t
-{
-	static const char* actionName;
-	static const char* actionLabel;
-	static const char* actionHotkey;
-
-	virtual int idaapi activate(action_activation_ctx_t*)
-	{
-		moveToNext();
-		return false;
-	}
-
-	virtual action_state_t idaapi update(action_update_ctx_t*)
-	{
-		return AST_ENABLE_ALWAYS;
-	}
-};
-
-const char* move_forward_ah_t::actionName   = "retdec:ActionMoveForward";
-const char* move_forward_ah_t::actionLabel  = "Move forward";
-const char* move_forward_ah_t::actionHotkey = "Ctrl+F";
-
-static move_forward_ah_t move_forward_ah;
-static const action_desc_t move_forward_ah_desc = ACTION_DESC_LITERAL(
-		move_forward_ah_t::actionName,
-		move_forward_ah_t::actionLabel,
-		&move_forward_ah,
-		nullptr,
-		move_forward_ah_t::actionHotkey,
-		-1);
-
-//
-//==============================================================================
-//
-
 bool idaapi insertCurrentFunctionComment()
 {
 	auto* fnc = getCurrentFunction();
@@ -1113,8 +959,6 @@ ssize_t idaapi ui_callback(void* ud, int notification_code, va_list va)
 			//
 			attach_action_to_popup(view, p, "-");
 			attach_action_to_popup(view, p, change_fnc_comment_ah_t::actionName);
-			attach_action_to_popup(view, p, move_backward_ah_t::actionName);
-			attach_action_to_popup(view, p, move_forward_ah_t::actionName);
 			attach_action_to_popup(view, p, "-");
 			break;
 		}
@@ -1131,8 +975,6 @@ void registerPermanentActions()
 	register_action(open_calls_ah_desc);
 	register_action(change_fnc_type_ah_desc);
 	register_action(change_fnc_comment_ah_desc);
-	register_action(move_forward_ah_desc);
-	register_action(move_backward_ah_desc);
 }
 
 //
