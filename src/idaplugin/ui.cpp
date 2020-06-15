@@ -105,12 +105,6 @@ ssize_t idaapi Context::on_event(ssize_t code, va_list va)
 				return false;
 			}
 
-			demo_msg("on_event(ui_populating_widget_popup):"
-					" token=|%s| @ %s\n",
-					token->value.c_str(),
-					place->toString().c_str()
-			);
-
 			if (token->kind == Token::Kind::ID_FNC)
 			{
 				attach_action_to_popup(
@@ -192,8 +186,6 @@ ssize_t idaapi Context::on_event(ssize_t code, va_list va)
 				return false;
 			}
 
-			demo_msg("on_event(ui_widget_invisible)\n");
-
 			unhook_event_listener(HT_UI, this);
 			custViewer = nullptr;
 			codeViewer = nullptr;
@@ -228,7 +220,6 @@ void idaapi cv_adjust_place(TWidget* v, lochist_entry_t* loc, void* ud)
 
 	if (plc->compare(&nplc) != 0) // not equal
 	{
-		demo_msg("cv_adjust_place() @ %s\n", fnc->getName().c_str());
 		loc->set_place(nplc);
 	}
 }
@@ -248,8 +239,6 @@ bool idaapi cv_keyboard(TWidget *cv, int vk_key, int shift, void *ud)
 		{
 			return false;
 		}
-
-		demo_msg("cv_keyboard(): jumping to IDA view @ %a\n", place->toea());
 
 		// Jump to IDA view.
 		jumpto(place->toea(), 0, UIJMP_ACTIVATE | UIJMP_IDAVIEW);
@@ -278,11 +267,6 @@ bool idaapi cv_double(TWidget* cv, int shift, void* ud)
 	}
 	auto fncName = token->value;
 
-	demo_msg("cv_double(): token=|%s| @ %s\n",
-			fncName.c_str(),
-			place->toString().c_str()
-	);
-
 	func_t* fnc = nullptr;
 	for (unsigned i = 0; i < get_func_qty(); ++i)
 	{
@@ -298,16 +282,10 @@ bool idaapi cv_double(TWidget* cv, int shift, void* ud)
 
 	if (fnc == nullptr)
 	{
-		demo_msg("cv_double(): function \"%s\" not found in IDA functions\n",
-				fncName.c_str()
-		);
+		INFO_MSG("function \"" << fncName << "\" not found in IDA functions\n");
 		return false;
 	}
 
-
-	demo_msg("cv_double(): jumping to %a\n",
-			fnc->start_ea
-	);
 	jumpto(fnc->start_ea, -1, UIJMP_ACTIVATE);
 
 	return true;
@@ -344,13 +322,6 @@ void idaapi cv_location_changed(
 		case lcr_internal: reason = "lcr_internal"; break;
 		default: reason = "lcr_unknown"; break;
 	}
-	demo_msg("cv_location_changed(): reason = %s, synced = %d,"
-			" %s  ==>  %s\n",
-			reason.c_str(),
-			md.is_sync(),
-			oldp->toString().c_str(),
-			newp->toString().c_str()
-	);
 
 	if (oldp->fnc() != newp->fnc())
 	{
@@ -399,6 +370,5 @@ int idaapi cv_can_navigate(
         const locchange_md_t &md,
         void *ud)
 {
-	demo_msg("cv_can_navigate()\n");
 	return 0;
 }

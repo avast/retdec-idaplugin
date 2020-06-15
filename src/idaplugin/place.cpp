@@ -318,12 +318,6 @@ lecvt_code_t idaapi place_converter(
 			// Set both x and y, see renderer_info_t comment in demo.cpp.
 			dst->renderer_info().pos.cy = p.y();
 			dst->renderer_info().pos.cx = p.x();
-
-			demo_msg("place_converter(): idaplace_t (%a) -> demo_place_t (%s)"
-					" inside currently displayed function\n",
-					idaEa,
-					p.toString().c_str()
-			);
 		}
 		else if (Function* fnc = Decompiler::decompile(idaEa))
 		{
@@ -332,19 +326,9 @@ lecvt_code_t idaapi place_converter(
 			// Set both x and y, see renderer_info_t comment in demo.cpp.
 			dst->renderer_info().pos.cy = cur.y();
 			dst->renderer_info().pos.cx = cur.x();
-
-			demo_msg("place_converter(): idaplace_t (%a) -> demo_place_t (%s)"
-					" inside newly displayed function\n",
-					idaEa,
-					cur.toString().c_str()
-			);
 		}
 		else
 		{
-			demo_msg("place_converter(): idaplace_t (%a) -> demo_place_t (-)"
-					" outside decompilable function\n",
-					idaEa
-			);
 			return LECVT_CANCELED;
 		}
 
@@ -356,18 +340,11 @@ lecvt_code_t idaapi place_converter(
 		auto* demoPlc = static_cast<const demo_place_t*>(src.place());
 		idaplace_t p(demoPlc->toea(), 0);
 		dst->set_place(p);
-
-		demo_msg("place_converter(): demo_place_t (%a) -> idaplace_t (%a)\n",
-				demoPlc->toea(),
-				p.toea()
-		);
-
 		return LECVT_OK;
 	}
 	// should not happen
 	else
 	{
-		demo_msg("place_converter(): should not happen\n");
 		return LECVT_CANCELED;
 	}
 }

@@ -38,11 +38,6 @@
 #include "utils.h"
 
 /**
- * Plugin's info messages.
- */
-int demo_msg(const char *format, ...);
-
-/**
  * Plugin's global data.
  */
 class Context : public plugmod_t, public event_listener_t
