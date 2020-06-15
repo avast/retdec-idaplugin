@@ -10,7 +10,9 @@ class Decompiler
 {
 	public:
 		/// Decompile the function contianing the given \p ea.
-		static Function* decompile(ea_t ea);
+		/// If the function was already decompiled, just display it, unless
+		/// \p redecompile is \c true.
+		static Function* decompile(ea_t ea, bool redecompile = false);
 
 		/// Decompile an entire input binary.
 		static void decompile(const std::string& out);

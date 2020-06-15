@@ -181,7 +181,7 @@ Function* parseOutput(func_t* fnc, const std::string& out)
 			)
 	);
 
-	return &(p.first->second);
+	return &p.first->second;
 }
 
 void Decompiler::decompile(const std::string& out)
@@ -195,7 +195,7 @@ void Decompiler::decompile(const std::string& out)
 	runDecompilation(config);
 }
 
-Function* Decompiler::decompile(ea_t ea)
+Function* Decompiler::decompile(ea_t ea, bool redecompile)
 {
 	if (isRelocatable() && inf_get_min_ea() != 0)
 	{
@@ -211,6 +211,15 @@ Function* Decompiler::decompile(ea_t ea)
 	{
 		WARNING_GUI("Function must be selected by the cursor.\n");
 		return nullptr;
+	}
+
+	if (!redecompile)
+	{
+		auto it = _fnc2fnc.find(fnc);
+		if (it != _fnc2fnc.end())
+		{
+			return &it->second;
+		}
 	}
 
 	retdec::config::Config config;
