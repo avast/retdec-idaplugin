@@ -4,11 +4,224 @@
 #include <funcs.hpp>
 #include <typeinf.hpp>
 
+#include <retdec/utils/binary_path.h>
+
 #include "config.h"
+#include "context.h"
+#include "utils.h"
 
-void generateHeader(retdec::config::Config& config)
+/**
+ * Perform startup check that determines, if plugin can decompile IDA's input file.
+ * @return True if plugin can decompile IDA's input, false otherwise.
+ */
+bool canDecompileInput(
+		std::string& arch,
+		std::string& endian,
+		retdec::common::Address& rawSectionVma,
+		retdec::common::Address& rawEntryPoint
+)
 {
+	std::string procName = inf_get_procname().c_str();
+	auto fileType = inf_get_filetype();
 
+	// 32-bit binary -> is_32bit() == 1 && is_64bit() == 0.
+	// 64-bit binary -> is_32bit() == 1 && is_64bit() == 1.
+	// Allow 64-bit x86.
+	if ((!inf_is_32bit() || inf_is_64bit()) && !isX86())
+	{
+		WARNING_GUI(Context::pluginName << " version " << Context::pluginVersion
+				<< " cannot decompile PROCNAME = " << procName
+		);
+		return false;
+	}
+
+	if (!(fileType == f_BIN
+			|| fileType == f_PE
+			|| fileType == f_ELF
+			|| fileType == f_COFF
+			|| fileType == f_MACHO
+			|| fileType == f_HEX))
+	{
+		if (fileType == f_LOADER)
+		{
+			WARNING_GUI("Custom IDA loader plugin was used.\n"
+					"Decompilation will be attempted, but:\n"
+					"1. RetDec idaplugin can not check if the input can be "
+					"decompiled. Decompilation may fail.\n"
+					"2. If the custom loader behaves differently than the RetDec "
+					"loader, decompilation may fail or produce nonsensical result."
+			);
+		}
+		else
+		{
+			WARNING_GUI(Context::pluginName
+					<< " version " << Context::pluginVersion
+					<< " cannot decompile this input file (file type = "
+					<< fileType << ").\n"
+			);
+			return false;
+		}
+	}
+
+	// Check Intel HEX.
+	//
+	if (fileType == f_HEX)
+	{
+		if (procName == "mipsr" || procName == "mipsb")
+		{
+			arch = "mips";
+			endian = "big";
+		}
+		else if (procName == "mipsrl"
+				|| procName == "mipsl"
+				|| procName == "psp")
+		{
+			arch = "mips";
+			endian = "little";
+		}
+		else
+		{
+			WARNING_GUI("Intel HEX input file can be decompiled only for one of "
+					"these {mipsr, mipsb, mipsrl, mipsl, psp} processors, "
+					"not \"" << procName << "\".\n");
+			return false;
+		}
+	}
+
+	// Check BIN (RAW).
+	//
+	if (fileType == f_BIN)
+	{
+		// Section VMA.
+		//
+		rawSectionVma = inf_get_min_ea();
+
+		// Entry point.
+		//
+		if (inf_get_start_ea() != BADADDR)
+		{
+			rawEntryPoint = inf_get_start_ea();
+		}
+		else
+		{
+			rawEntryPoint = rawSectionVma;
+		}
+
+		// Architecture + endian.
+		//
+		if (procName == "mipsr" || procName == "mipsb")
+		{
+			arch = "mips";
+			endian = "big";
+		}
+		else if (procName == "mipsrl" || procName == "mipsl" || procName == "psp")
+		{
+			arch = "mips";
+			endian = "little";
+		}
+		else if (procName == "ARM")
+		{
+			arch = "arm";
+			endian = "little";
+		}
+		else if (procName == "ARMB")
+		{
+			arch = "arm";
+			endian = "big";
+		}
+		else if (procName == "PPCL")
+		{
+			arch = "powerpc";
+			endian = "little";
+		}
+		else if (procName == "PPC")
+		{
+			arch = "powerpc";
+			endian = "big";
+		}
+		else if (isX86())
+		{
+			arch = inf_is_64bit() ? "x86-64" : "x86";
+			endian = "little";
+		}
+		else
+		{
+			WARNING_GUI("Binary input file can be decompiled only for one of these "
+					"{mipsr, mipsb, mipsrl, mipsl, psp, ARM, ARMB, PPCL, PPC, 80386p, "
+					"80386r, 80486p, 80486r, 80586p, 80586r, 80686p, p2, p3, p4} "
+					"processors, not \"" << procName << "\".\n");
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool generateHeader(retdec::config::Config& config, std::string out)
+{
+	auto inFile = getInputPath();
+	if (inFile.empty())
+	{
+		WARNING_GUI("Cannot decompile - there is no input file.");
+		return true;
+	}
+
+	std::string arch;
+	std::string endian;
+	retdec::common::Address rawSectionVma;
+	retdec::common::Address rawEntryPoint;
+	if (!canDecompileInput(arch, endian, rawSectionVma, rawEntryPoint))
+	{
+		return true;
+	}
+
+	auto idaPath = retdec::utils::getThisBinaryDirectoryPath();
+	auto configPath = idaPath;
+	configPath.append("plugins");
+	configPath.append("retdec");
+	configPath.append("decompiler-config.json");
+	if (configPath.exists())
+	{
+		config = retdec::config::Config::fromFile(configPath.getPath());
+		config.parameters.fixRelativePaths(idaPath.getPath());
+	}
+
+	if (!arch.empty())
+	{
+		config.architecture.setName(arch);
+	}
+	if (endian == "little")
+	{
+		config.architecture.setIsEndianLittle();
+	}
+	else if (endian == "big")
+	{
+		config.architecture.setIsEndianBig();
+	}
+	if (rawSectionVma.isDefined())
+	{
+		config.parameters.setSectionVMA(rawSectionVma);
+	}
+	if (rawEntryPoint.isDefined())
+	{
+		config.parameters.setEntryPoint(rawEntryPoint);
+	}
+
+	if (out.empty())
+	{
+		out = qtmpnam(nullptr, 0);
+	}
+
+	config.parameters.setInputFile(inFile);
+
+	config.parameters.setOutputAsmFile(out + ".dsm");
+	config.parameters.setOutputBitcodeFile(out + ".bc");
+	config.parameters.setOutputLlvmirFile(out + ".ll");
+	config.parameters.setOutputConfigFile(out + ".config.json");
+	config.parameters.setOutputFile(out);
+	config.parameters.setOutputUnpackedFile(out + "-unpacked");
+
+	return false;
 }
 
 std::string defaultTypeString()
@@ -601,7 +814,7 @@ void generateGlobals(
 	}
 }
 
-void fillConfig(retdec::config::Config& config)
+bool fillConfig(retdec::config::Config& config, const std::string& out)
 {
 	std::map<tinfo_t, std::string> structIdSet;
 
@@ -609,7 +822,12 @@ void fillConfig(retdec::config::Config& config)
 	config.functions.clear();
 	config.globals.clear();
 
-	generateHeader(config);
+	if (generateHeader(config, out))
+	{
+		return true;
+	}
 	generateFunctions(config, structIdSet);
 	generateGlobals(config, structIdSet);
+
+	return false;
 }

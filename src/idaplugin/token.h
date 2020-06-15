@@ -43,6 +43,9 @@ struct Token
 	ea_t ea;
 	std::string value;
 
+	Token();
+	Token(Kind k, ea_t a, const std::string& v);
+
 	const std::string& getKindString() const;
 	const std::string& getColorTag() const;
 };

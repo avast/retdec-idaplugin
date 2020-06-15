@@ -42,8 +42,8 @@ add_library(idaplugin64 SHARED ${IDAPLUGIN_SOURCES})
 
 target_compile_definitions(idaplugin64 PUBLIC __EA64__)
 
-target_link_libraries(idaplugin32 ${idasdk_ea32} retdec::retdec retdec::utils)
-target_link_libraries(idaplugin64 ${idasdk_ea64} retdec::retdec retdec::utils)
+target_link_libraries(idaplugin32 ${idasdk_ea32} retdec::retdec retdec::config retdec::utils retdec::deps::rapidjson)
+target_link_libraries(idaplugin64 ${idasdk_ea64} retdec::retdec retdec::config retdec::utils retdec::deps::rapidjson)
 
 if(WIN32)
 	# shlwapi.dll for PathRemoveFileSpec() used in utilsl/filesystem_path.h
@@ -100,13 +100,13 @@ set_target_properties(idaplugin32 PROPERTIES OUTPUT_NAME "retdec")
 set_target_properties(idaplugin64 PROPERTIES OUTPUT_NAME "retdec64")
 
 # Installation.
-if(IDA_PATH)
+if(IDA_DIR)
 	install(TARGETS idaplugin32 idaplugin64
-		LIBRARY DESTINATION "${IDA_PATH}/plugins/"
-		RUNTIME DESTINATION "${IDA_PATH}/plugins/"
+		LIBRARY DESTINATION "${IDA_DIR}/plugins/"
+		RUNTIME DESTINATION "${IDA_DIR}/plugins/"
 	)
 	install(
 		FILES "decompiler-config.json"
-		DESTINATION "${IDA_PATH}/plugins/retdec/"
+		DESTINATION "${IDA_DIR}/plugins/retdec/"
 	)
 endif()

@@ -10,8 +10,10 @@ class Decompiler
 {
 	public:
 		/// Decompile the function contianing the given \p ea.
-		// static Function* decompile(Context& ctx, ea_t ea);
 		static Function* decompile(ea_t ea);
+
+		/// Decompile an entire input binary.
+		static void decompile(const std::string& out);
 };
 
 #endif

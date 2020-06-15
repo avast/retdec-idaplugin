@@ -51,6 +51,19 @@ std::map<Token::Kind, std::string> TokenKindStrings =
 	{Token::Kind::COMMENT, "COMMENT"},
 };
 
+Token::Token()
+{
+
+}
+
+Token::Token(Kind k, ea_t a, const std::string& v)
+		: kind(k)
+		, ea(a)
+		, value(v)
+{
+
+}
+
 const std::string& Token::getKindString() const
 {
 	return TokenKindStrings[kind];

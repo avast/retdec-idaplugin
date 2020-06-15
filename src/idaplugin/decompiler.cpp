@@ -6,12 +6,16 @@
 #include <fpro.h>
 
 #include <retdec/retdec/retdec.h>
-#include <retdec/utils/binary_path.h>
+#include <rapidjson/error/en.h>
+#include <rapidjson/document.h>
+#include <rapidjson/istreamwrapper.h>
 
 #include "config.h"
 #include "context.h"
 #include "decompiler.h"
 #include "utils.h"
+
+std::map<func_t*, Function> _fnc2fnc;
 
 bool isRelocatable()
 {
@@ -55,201 +59,8 @@ bool isRelocatable()
 	return false;
 }
 
-/**
- * Perform startup check that determines, if plugin can decompile IDA's input file.
- * @return True if plugin can decompile IDA's input, false otherwise.
- */
-bool canDecompileInput()
+bool runDecompilation(retdec::config::Config& config)
 {
-	std::string procName = inf_get_procname();
-	auto fileType = inf_get_filetype();
-
-	// 32-bit binary -> is_32bit() == 1 && is_64bit() == 0.
-	// 64-bit binary -> is_32bit() == 1 && is_64bit() == 1.
-	// Allow 64-bit x86.
-	if ((!inf_is_32bit() || inf_is_64bit()) && !isX86())
-	{
-		WARNING_GUI(Context::pluginName << " version " << Context::pluginVersion
-				<< " cannot decompile PROCNAME = " << procName
-		);
-		return false;
-	}
-
-	if (!(fileType == f_BIN
-			|| fileType == f_PE
-			|| fileType == f_ELF
-			|| fileType == f_COFF
-			|| fileType == f_MACHO
-			|| fileType == f_HEX))
-	{
-		if (fileType == f_LOADER)
-		{
-			WARNING_GUI("Custom IDA loader plugin was used.\n"
-					"Decompilation will be attempted, but:\n"
-					"1. RetDec idaplugin can not check if the input can be "
-					"decompiled. Decompilation may fail.\n"
-					"2. If the custom loader behaves differently than the RetDec "
-					"loader, decompilation may fail or produce nonsensical result."
-			);
-		}
-		else
-		{
-			WARNING_GUI(Context::pluginName
-					<< " version " << Context::pluginVersion
-					<< " cannot decompile this input file (file type = "
-					<< ft << ").\n"
-			);
-			return false;
-		}
-	}
-
-	// Check Intel HEX.
-	//
-	if (fileType == f_HEX)
-	{
-		if (procName == "mipsr" || procName == "mipsb")
-		{
-			arch = "mips";
-			endian = "big";
-		}
-		else if (procName == "mipsrl"
-				|| procName == "mipsl"
-				|| procName == "psp")
-		{
-			arch = "mips";
-			endian = "little";
-		}
-		else
-		{
-			WARNING_GUI("Intel HEX input file can be decompiled only for one of "
-					"these {mipsr, mipsb, mipsrl, mipsl, psp} processors, "
-					"not \"" << procName << "\".\n");
-			return false;
-		}
-	}
-
-	// Check BIN (RAW).
-	//
-	if (inf.filetype == f_BIN)
-	{
-		// Section VMA.
-		//
-		decompInfo.rawSectionVma = inf.min_ea;
-
-		// Entry point.
-		//
-		if (inf.start_ea != BADADDR)
-		{
-			decompInfo.rawEntryPoint = inf.start_ea;
-		}
-		else
-		{
-			decompInfo.rawEntryPoint = decompInfo.rawSectionVma;
-		}
-
-		// Architecture + endian.
-		//
-		std::string procName = inf.procname;
-		if (procName == "mipsr" || procName == "mipsb")
-		{
-			arch = "mips";
-			decompInfo.endian = "big";
-		}
-		else if (procName == "mipsrl" || procName == "mipsl" || procName == "psp")
-		{
-			arch = "mips";
-			decompInfo.endian = "little";
-		}
-		else if (procName == "ARM")
-		{
-			arch = "arm";
-			decompInfo.endian = "little";
-		}
-		else if (procName == "ARMB")
-		{
-			arch = "arm";
-			decompInfo.endian = "big";
-		}
-		else if (procName == "PPCL")
-		{
-			arch = "powerpc";
-			decompInfo.endian = "little";
-		}
-		else if (procName == "PPC")
-		{
-			arch = "powerpc";
-			decompInfo.endian = "big";
-		}
-		else if (isX86())
-		{
-			arch = inf_is_64bit() ? "x86-64" : "x86";
-			decompInfo.endian = "little";
-		}
-		else
-		{
-			WARNING_GUI("Binary input file can be decompiled only for one of these "
-					"{mipsr, mipsb, mipsrl, mipsl, psp, ARM, ARMB, PPCL, PPC, 80386p, "
-					"80386r, 80486p, 80486r, 80586p, 80586r, 80686p, p2, p3, p4} "
-					"processors, not \"" << procName << "\".\n");
-			return false;
-		}
-	}
-
-	return true;
-}
-
-Function* Decompiler::decompile(ea_t ea)
-{
-	func_t* fnc = get_func(ea);
-	if (fnc == nullptr)
-	{
-		WARNING_GUI("Function must be selected by the cursor.\n");
-		return nullptr;
-	}
-
-	auto inFile = getInputPath();
-	if (inFile.empty())
-	{
-		WARNING_GUI("Cannot decompile - there is no input file.");
-		return nullptr;
-	}
-	if (!canDecompileInput())
-	{
-		return nullptr;
-	}
-
-	retdec::config::Config config;
-
-	auto idaPath = retdec::utils::getThisBinaryDirectoryPath();
-	auto configPath = idaPath;
-	configPath.append("plugins");
-	configPath.append("retdec");
-	configPath.append("decompiler-config.json");
-	if (configPath.exists())
-	{
-		config = retdec::config::Config::fromFile(configPath.getPath());
-		config.parameters.fixRelativePaths(idaPath.getPath());
-	}
-
-	std::string tmp = qtmpnam(nullptr, 0);
-
-	config.parameters.setInputFile(inFile);
-
-	config.parameters.setOutputAsmFile(tmp + ".dsm");
-	config.parameters.setOutputBitcodeFile(tmp + ".bc");
-	config.parameters.setOutputLlvmirFile(tmp + ".ll");
-	config.parameters.setOutputConfigFile(tmp + ".config.json");
-	config.parameters.setOutputFile(tmp + ".c.json");
-	config.parameters.setOutputUnpackedFile(tmp + "-unpacked");
-
-	retdec::common::AddressRange r(fnc->start_ea, fnc->end_ea);
-	config.parameters.selectedRanges.insert(r);
-	config.parameters.setIsSelectedDecodeOnly(true);
-
-	msg("===============> %s\n", tmp.c_str());
-
-	fillConfig(config);
-
 	try
 	{
 		auto rc = retdec::decompile(config);
@@ -263,13 +74,160 @@ Function* Decompiler::decompile(ea_t ea)
 	catch (const std::runtime_error& e)
 	{
 		WARNING_GUI("Decompilation exception: " << e.what() << std::endl);
-		return nullptr;
+		return true;
 	}
 	catch (...)
 	{
 		WARNING_GUI("Decompilation exception: unknown" << std::endl);
+		return true;
+	}
+
+	return false;
+}
+
+Function* parseOutput(func_t* fnc, const std::string& out)
+{
+	std::ifstream ifs(out);
+	if (!ifs)
+	{
+		WARNING_GUI("Unable to open decompilation output: "
+				<< out << std::endl
+		);
 		return nullptr;
 	}
 
-	return nullptr;
+	rapidjson::IStreamWrapper isw(ifs);
+	rapidjson::Document d;
+	rapidjson::ParseResult ok = d.ParseStream(isw);
+	if (!ok)
+	{
+		std::string errMsg = GetParseError_En(ok.Code());
+		WARNING_GUI("Unable to parse decompilation output: "
+				<< out << std::endl
+				<< "Parser error: " << errMsg << std::endl
+		);
+		return nullptr;
+	}
+
+	auto tokens = d.FindMember("tokens");
+	if (tokens == d.MemberEnd() || !tokens->value.IsArray())
+	{
+		WARNING_GUI("Unable to parse tokens from decompilation output: "
+				<< out << std::endl
+		);
+		return nullptr;
+	}
+
+	std::vector<Token> ts;
+	ea_t ea = fnc->start_ea;
+
+	for (auto i = tokens->value.Begin(), e = tokens->value.End(); i != e; ++i)
+	{
+		auto& obj = *i;
+		if (obj.IsNull())
+		{
+			continue;
+		}
+
+		auto addr = obj.FindMember("addr");
+		if (addr != obj.MemberEnd() && addr->value.IsString())
+		{
+			retdec::common::Address a(addr->value.GetString());
+			ea = a.isDefined() ? a.getValue() : fnc->start_ea;
+		}
+		auto kind = obj.FindMember("kind");
+		auto val = obj.FindMember("val");
+		if (kind != obj.MemberEnd() && kind->value.IsString()
+				&& val != obj.MemberEnd() && val->value.IsString())
+		{
+			Token::Kind kk;
+			std::string k = kind->value.GetString();
+			if (k == "nl") kk = Token::Kind::NEW_LINE;
+			else if (k == "ws") kk = Token::Kind::WHITE_SPACE;
+			else if (k == "punc") kk = Token::Kind::PUNCTUATION;
+			else if (k == "op") kk = Token::Kind::OPERATOR;
+			else if (k == "i_var") kk = Token::Kind::ID_VAR;
+			else if (k == "i_mem") kk = Token::Kind::ID_MEM;
+			else if (k == "i_lab") kk = Token::Kind::ID_LAB;
+			else if (k == "i_fnc") kk = Token::Kind::ID_FNC;
+			else if (k == "i_arg") kk = Token::Kind::ID_ARG;
+			else if (k == "keyw") kk = Token::Kind::KEYWORD;
+			else if (k == "type") kk = Token::Kind::TYPE;
+			else if (k == "preproc") kk = Token::Kind::PREPROCESSOR;
+			else if (k == "inc") kk = Token::Kind::INCLUDE;
+			else if (k == "l_bool") kk = Token::Kind::LITERAL_BOOL;
+			else if (k == "l_int") kk = Token::Kind::LITERAL_INT;
+			else if (k == "l_fp") kk = Token::Kind::LITERAL_FP;
+			else if (k == "l_str") kk = Token::Kind::LITERAL_STR;
+			else if (k == "l_sym") kk = Token::Kind::LITERAL_SYM;
+			else if (k == "l_ptr") kk = Token::Kind::LITERAL_PTR;
+			else if (k == "cmnt") kk = Token::Kind::COMMENT;
+			else continue;
+
+			ts.emplace_back(Token(kk, ea, val->value.GetString()));
+		}
+	}
+
+	qstring qFncName;
+	get_func_name(&qFncName, fnc->start_ea);
+
+	auto p = _fnc2fnc.emplace(
+			fnc,
+			Function(
+					qFncName.c_str(),
+					fnc->start_ea,
+					fnc->end_ea,
+					ts
+			)
+	);
+
+	return &(p.first->second);
+}
+
+void Decompiler::decompile(const std::string& out)
+{
+	retdec::config::Config config;
+	if (fillConfig(config, out))
+	{
+		return;
+	}
+	config.parameters.setOutputFormat("c");
+	runDecompilation(config);
+}
+
+Function* Decompiler::decompile(ea_t ea)
+{
+	if (isRelocatable() && inf_get_min_ea() != 0)
+	{
+		WARNING_GUI("RetDec plugin can selectively decompile only "
+				"relocatable objects loaded at 0x0.\n"
+				"Rebase the program to 0x0 or use full decompilation."
+		);
+		return nullptr;
+	}
+
+	func_t* fnc = get_func(ea);
+	if (fnc == nullptr)
+	{
+		WARNING_GUI("Function must be selected by the cursor.\n");
+		return nullptr;
+	}
+
+	retdec::config::Config config;
+	if (fillConfig(config))
+	{
+		return nullptr;
+	}
+
+	config.parameters.setOutputFormat("json");
+	retdec::common::AddressRange r(fnc->start_ea, fnc->end_ea);
+	config.parameters.selectedRanges.insert(r);
+	config.parameters.setIsSelectedDecodeOnly(true);
+
+	if (runDecompilation(config))
+	{
+		return nullptr;
+	}
+
+	return parseOutput(fnc, config.parameters.getOutputFile());
 }

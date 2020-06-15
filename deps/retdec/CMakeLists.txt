@@ -13,7 +13,7 @@ else()
 
 	FetchContent_Declare(retdec
 		GIT_REPOSITORY https://github.com/avast/retdec
-		GIT_TAG        c1ecff3c0c9b494e89f918595dc00d2bce336ac2
+		GIT_TAG        c824ae00397fd69c7407e8b136705239bfc04ae3
 	)
 
 	FetchContent_GetProperties(retdec)
@@ -27,14 +27,14 @@ else()
 	endif()
 endif()
 
-if(IDA_PATH)
+if(IDA_DIR)
 	install(
 		DIRECTORY
 			"${retdec_SOURCE_DIR}/support/ordinals"
 			"${retdec_SOURCE_DIR}/support/yara_patterns"
 			"${retdec_SOURCE_DIR}/support/types"
 		DESTINATION
-			"${IDA_PATH}/plugins/retdec/"
+			"${IDA_DIR}/plugins/retdec/"
 	)
 endif()
 

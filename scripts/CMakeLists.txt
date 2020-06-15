@@ -1,4 +1,4 @@
-if(IDA_PATH)
+if(IDA_DIR)
 	file(GLOB IDC_SCRIPTS "${CMAKE_CURRENT_SOURCE_DIR}/idc/*.idc")
-	install(FILES ${IDC_SCRIPTS} DESTINATION "${IDA_PATH}/idc/")
+	install(FILES ${IDC_SCRIPTS} DESTINATION "${IDA_DIR}/idc/")
 endif()

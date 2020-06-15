@@ -82,3 +82,31 @@ std::string getInputPath()
 
 	return inPath;
 }
+
+void saveIdaDatabase(bool inSitu, const std::string& suffix)
+{
+	INFO_MSG("Saving IDA database ...\n");
+
+	std::string workIdb = get_path(PATH_TYPE_IDB);
+	if (workIdb.empty())
+	{
+		return;
+	}
+
+	auto dotPos = workIdb.find_last_of(".");
+	if (dotPos != std::string::npos)
+	{
+		workIdb.erase(dotPos, std::string::npos);
+	}
+
+	if (!inSitu)
+	{
+		workIdb += suffix;
+	}
+
+	workIdb += std::string(".") + IDB_EXT;
+
+	save_database(workIdb.c_str(), DBFL_COMP);
+
+	INFO_MSG("IDA database saved into :  " << workIdb << "\n");
+}

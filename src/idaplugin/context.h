@@ -35,24 +35,7 @@
 
 #include "function.h"
 #include "ui.h"
-
-// General print msg macros.
-//
-#define PRINT_DEBUG   false
-#define PRINT_ERROR   false
-#define PRINT_WARNING true
-#define PRINT_INFO    true
-
-#define DBG_MSG(body)     if (PRINT_DEBUG)   { std::stringstream ss; ss << std::showbase << body; msg("%s", ss.str().c_str()); }
-/// Use this only for non-critical error messages.
-#define ERROR_MSG(body)   if (PRINT_ERROR)   { std::stringstream ss; ss << std::showbase << "[RetDec error]  :\t" << body; msg("%s", ss.str().c_str()); }
-/// Use this only for user info warnings.
-#define WARNING_MSG(body) if (PRINT_WARNING) { std::stringstream ss; ss << std::showbase << "[RetDec warning]:\t" << body; msg("%s", ss.str().c_str()); }
-/// Use this to inform user.
-#define INFO_MSG(body)    if (PRINT_INFO)    { std::stringstream ss; ss << std::showbase << "[RetDec info]   :\t" << body; msg("%s", ss.str().c_str()); }
-
-/// Use instead of IDA SDK's warning() function.
-#define WARNING_GUI(body) { std::stringstream ss; ss << std::showbase << body; warning("%s", ss.str().c_str()); }
+#include "utils.h"
 
 /**
  * Plugin's info messages.
@@ -68,6 +51,9 @@ class Context : public plugmod_t, public event_listener_t
 	//
 	public:
 		virtual bool idaapi run(size_t) override;
+		bool runSelectiveDecompilation(ea_t ea);
+		bool runFullDecompilation();
+
 		virtual ssize_t idaapi on_event(ssize_t code, va_list va) override;
 
 		Context();
@@ -118,6 +104,8 @@ class Context : public plugmod_t, public event_listener_t
 		Function* fnc = nullptr;
 		// Color used by view synchronization.
 		bgcolor_t syncColor = 0x90ee90;
+		// Should the triggered decompilations run in their own threads?
+		bool useThreads = true;
 
 	// Plugin information.
 	public:

@@ -91,7 +91,7 @@ Retargetable Decompiler (RetDec) is a reverse-engineering tool independent of an
 RetDec can be used in the following ways:
 \begin{enumerate}
 	\item Standalone RetDec: either compiling \href{https://github.com/avast/retdec}{RetDec repository} on your own, or downloading and installing \href{https://github.com/avast/retdec/releases}{RetDec binary release}.
-	\item \href{https://retdec.com/idaplugin/}{RetDec IDA plugin} (this guide's topic): requires the standalone version of RetDec to be installed.
+	\item Standalone \href{https://retdec.com/idaplugin/}{RetDec IDA plugin} (this guide's topic).
 \end{enumerate}
 
 \begin{figure}[!ht]
@@ -112,30 +112,14 @@ This section describes prerequisites and the installation process of RetDec IDA 
 It is also possible to build and install the plugin directly from sources. To do so, follow the \href{https://github.com/avast/retdec-idaplugin#build-and-installation}{Build and Installation} instructions instead of this section.
 
 \subsection{IDA}
-The plugin is created using IDA SDK version 7.0. The plugin is compatible with the following IDA versions: 7.0, 7.1, 7.2. The plugin does NOT work with IDA 6.x, or freeware version of IDA 7.0. The plugin comes at both 32-bit and 64-bit address space variants (both are 64-bit binaries). I.e. it works in both \texttt{ida} and \texttt{ida64}. At the moment, it can decompile the following architectures:
+The plugin is created using IDA SDK version 7.5. The plugin is compatible with IDA versions 7.5+. The plugin does NOT work with IDA 6.x, IDA 7.0-7.4, or freeware version of IDA 7.0. The plugin comes at both 32-bit and 64-bit address space variants (both are 64-bit binaries). I.e. it works in both \texttt{ida} and \texttt{ida64}. At the moment, it can decompile the following architectures:
 \begin{itemize}
-    \item 32-bit: Intel x86, ARM, MIPS, PIC32, and PowerPC.
-    \item 64-bit: x86-64.
+    \item 32-bit: x86, arm, mips, and powerpc.
+    \item 64-bit: x86-64, arm64.
 \end{itemize}
 
-\subsection{RetDec}
-\label{sec:installation:retdec}
-RetDec IDA plugin needs a standalone RetDec installation in order to perform decompilations. This particular RetDec IDA plugin release needs RetDec version 3.3. Follow \href{https://github.com/avast/retdec/blob/v3.3/README.md#installation-and-use}{these instructions} to install it.
-
-\subsection{Python}
-\label{sec:installation:python}
-RetDec needs Python 3 (at least version 3.4) in order to run. If you have not installed Python 3, as described in instructions referenced in Section~\ref{sec:installation:retdec}, do it now. RetDec IDA plugin also needs the \href{http://pygments.org/}{Pygments} library -- install it as well.
-
-RetDec IDA plugin tries to execute the main decompilation script using one of these commands (in this order):
-\begin{enumerate}
-    \item \texttt{python3}
-    \item \texttt{py -3}
-    \item \texttt{python}
-\end{enumerate}
-Make sure at least one of these works, i.e. Python 3 is in \texttt{PATH}, and that it really is Python version 3 that gets executed (especially if the third option is used on your system). Alternatively, you can explicitly set the path to the Python 3 interpreter in plugin's configuration dialog (see Section~\ref{sec:config:decompilation}).
-
 \subsection{RetDec IDA plugin}
-Finally, we need to install the RetDec IDA plugin itself.
+Now, we need to install the RetDec IDA plugin itself.
 
 \subsubsection{Linux}
 Follow the next steps to install RetDec plugin in a Linux environment:
@@ -145,7 +129,8 @@ Follow the next steps to install RetDec plugin in a Linux environment:
 libc.so.6 libgcc_s.so.1 libm.so.6 libpthread.so.0 libstdc++.so.6
 \end{verbatim}
 	\item Download the Linux installation package (Table~\ref{table:installation-package-linux}) from the \href{https://github.com/avast/retdec-idaplugin/releases}{project's release page}.
-	\item Copy \texttt{retdec.so} and \texttt{retdec64.so} to the IDA's plugin directory (\texttt{<IDA\_ROOT>/plugins}).
+	\item Extract the package. Directory \texttt{retdec-idaplugin} gets created.
+	\item Copy the contents of the directory, not the directory itself, to the IDA's plugins directory (\texttt{<IDA\_ROOT>/plugins}).
 \end{enumerate}
 
 \begin{table}[!ht]
@@ -155,12 +140,14 @@ libc.so.6 libgcc_s.so.1 libm.so.6 libpthread.so.0 libstdc++.so.6
 \begin{tabular}{ll}
 \textbf{File} & \textbf{Description}\\
 \hline
-\texttt{license} & Directory with licenses. \\
-\texttt{license/LICENSE} & RetDec IDA plugin's license. \\
-\texttt{license/LICENSE-THIRD-PARTY} & Licenses of libraries used by RetDec plugin. \\
 \texttt{retdec.so} & 64-bit Linux RetDec plugin for 32-bit address space. \\
 \texttt{retdec64.so} & 64-bit Linux RetDec plugin for 64-bit address space. \\
-\texttt{user_guide.pdf} & RetDec plugin's user guide (this document). \\
+\texttt{retdec/} & Directory with RetDec resources. \\
+\texttt{retdec/user_guide.pdf} & RetDec plugin's user guide (this document). \\
+\texttt{retdec/LICENSE} & RetDec IDA plugin's license. \\
+\texttt{retdec/LICENSE-THIRD-PARTY} & Licenses of libraries used by RetDec plugin. \\
+\texttt{retdec/decompiler-config.json} & RetDec configuration file. \\
+\texttt{retdec/support/} & Directory with decompilation resources. \\
 \end{tabular}
 \end{table}
 
@@ -171,7 +158,8 @@ The Windows version of the plugin requires Windows 7 or later, with the MSVC 201
 Follow the next steps to install RetDec plugin in a Windows environment:
 \begin{enumerate}
 	\item Download the Windows installation package (Table~\ref{table:installation-package-windows}) from the \href{https://github.com/avast/retdec-idaplugin/releases}{project's release page}.
-	\item Copy \texttt{retdec.dll} and \texttt{retdec64.dll} to the IDA's plugin directory (\texttt{<IDA\_ROOT>/plugins}).
+	\item Extract the package. Directory \texttt{retdec-idaplugin} gets created.
+	\item Copy the contents of the directory, not the directory itself, to the IDA's plugins directory (\texttt{<IDA\_ROOT>/plugins}).
 \end{enumerate}
 
 \begin{table}[!ht]
@@ -181,12 +169,14 @@ Follow the next steps to install RetDec plugin in a Windows environment:
 \begin{tabular}{ll}
 \textbf{File} & \textbf{Description}\\
 \hline
-\texttt{license} & Directory with licenses. \\
-\texttt{license/LICENSE} & RetDec IDA plugin's license. \\
-\texttt{license/LICENSE-THIRD-PARTY} & Licenses of libraries used by RetDec plugin. \\
 \texttt{retdec.dll} & 64-bit Windows RetDec plugin for 32-bit address space. \\
 \texttt{retdec64.dll} & 64-bit Windows RetDec plugin for 64-bit address space. \\
-\texttt{user_guide.pdf} & RetDec plugin's user guide (this document). \\
+\texttt{retdec/} & Directory with RetDec resources. \\
+\texttt{retdec/user_guide.pdf} & RetDec plugin's user guide (this document). \\
+\texttt{retdec/LICENSE} & RetDec IDA plugin's license. \\
+\texttt{retdec/LICENSE-THIRD-PARTY} & Licenses of libraries used by RetDec plugin. \\
+\texttt{retdec/decompiler-config.json} & RetDec configuration file. \\
+\texttt{retdec/support/} & Directory with decompilation resources. \\
 \end{tabular}
 \end{table}
 
@@ -207,7 +197,6 @@ The IDA's plugin configuration file is in \texttt{<IDA\_ROOT>/plugins/plugins.cf
 ; -------------------------------------------------
 Retargetable_Decompiler retdec    Ctrl-d        0
 Retargetable_Decompiler retdec    Ctrl-Shift-d  1
-Retargetable_Decompiler retdec    Ctrl-Shift-c  2
 \end{verbatim}
 These lines tell IDA which hotkeys invoke the plugin and what argument is passed to it. The plugin's behavior after invocation is determined by the passed argument. Possible argument values are summarized in Table~\ref{table:plugin-args}. In the provided example, we mapped selective decompilation to hotkey \texttt{CTRL+D} (plugin's default), full decompilation to \texttt{CTRL+SHIFT+D}, and plugin configuration to \texttt{CTRL+SHIFT+C}. However, you may choose whichever hotkeys you like, provided they do not clash with other plugins or IDA.
 
@@ -220,34 +209,8 @@ These lines tell IDA which hotkeys invoke the plugin and what argument is passed
 \hline
 \texttt{0} & Invokes selective decompilation. See Section~\ref{sec:decompilation}. \\
 \texttt{1} & Invokes full decompilation. See Section~\ref{sec:decompilation}. \\
-\texttt{2} & Invokes plugin configuration inside IDA. See Section~\ref{sec:config:from-ida}.
 \end{tabular}
 \end{table}
-
-\subsection{Decompilation Configuration}
-\label{sec:config:decompilation}
-Each time a decompilation is triggered, plugin checks that it is properly configured. If it is not, warning is displayed, then the configuration dialog appears. Here, you have to make sure of the following:
-\begin{itemize}
-    \item Plugin finds the \texttt{retdec-decompiler.py} script from the standalone RetDec installation (Section~\ref{sec:installation:retdec}). Either set path to \texttt{retdec-decompiler.py} in the configuration dialog, or add the decompiler's \texttt{bin} directory to the system \texttt{PATH}.
-    \item Plugin can execute a Python 3 interpreter. Either set path to the Python 3 interpreter in the configuration dialog, or make sure one of the commands in Section~\ref{sec:installation:python} works.
-\end{itemize}
-
-The settings will be saved and if you want to change them later, you need to manually invoke the plugin's configuration from IDA (see Section~\ref{sec:config:from-ida}).
-
-\subsection{Configuration from IDA}
-\label{sec:config:from-ida}
-The same dialog that is displayed if the plugin is misconfigured can be opened from IDA anytime later. There are the following two ways to do it:
-\begin{itemize}
-	\item If you configured a hotkey for the plugin's configuration argument value according to Section~\ref{sec:config:plugin-cfg}, you can use it to invoke the configuration dialog.
-	\item You can also open the configuration dialog from the \texttt{Options/RetDec plugin options} menu (Figure~\ref{fig:config-menu}).
-\end{itemize}
-
-\begin{figure}[!ht]
-	\centering
-	\includegraphics[width=12cm]{figures/menu-config-cut}
-	\caption{Opening the plugin's configuration dialog from the menu.}
-	\label{fig:config-menu}
-\end{figure}
 
 %-----------------------------------------------------------------------------
 %  Plugin Information
