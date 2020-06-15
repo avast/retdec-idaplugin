@@ -1,21 +1,19 @@
-/**
- * @file idaplugin/decompiler.h
- * @brief Module contains classes/methods dealing with program decompilation.
- * @copyright (c) 2017 Avast Software, licensed under the MIT license
- */
 
-#ifndef IDAPLUGIN_DECOMPILER_H
-#define IDAPLUGIN_DECOMPILER_H
+#ifndef HEXRAYS_DEMO_DECOMPILER_H
+#define HEXRAYS_DEMO_DECOMPILER_H
 
-#include <string>
+#include <pro.h>
 
-#include "defs.h"
+#include "function.h"
 
-namespace idaplugin {
+class Decompiler
+{
+	public:
+		/// Decompile the function contianing the given \p ea.
+		static Function* decompile(ea_t ea);
 
-void createRangesFromSelectedFunction(RdGlobalInfo& decompInfo, func_t* fnc);
-void decompileInput(RdGlobalInfo &decompInfo);
-
-} // namespace idaplugin
+		/// Decompile an entire input binary.
+		static void decompile(const std::string& out);
+};
 
 #endif

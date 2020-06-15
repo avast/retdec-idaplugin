@@ -1,176 +1,233 @@
-/**
- * @file idaplugin/decompiler.cpp
- * @brief Module contains classes/methods dealing with program decompilation.
- * @copyright (c) 2017 Avast Software, licensed under the MIT license
- */
 
-#include <algorithm>
-#include <cstdlib>
+#include <map>
 #include <fstream>
-#include <iostream>
-#include <set>
-#include <sstream>
 
-#include "retdec/utils/os.h"
-#include "code_viewer.h"
+#include <ida.hpp>
+#include <fpro.h>
+
+#include <retdec/retdec/retdec.h>
+#include <rapidjson/error/en.h>
+#include <rapidjson/document.h>
+#include <rapidjson/istreamwrapper.h>
+
+#include "config.h"
+#include "context.h"
 #include "decompiler.h"
-#include "plugin_config.h"
+#include "utils.h"
 
-using namespace retdec;
+std::map<func_t*, Function> _fnc2fnc;
 
-namespace idaplugin {
-
-/**
- * Decompile locally on work station.
- * Working RetDec must be installed on the station.
- * @param di Plugin's global information.
- */
-static void idaapi localDecompilation(RdGlobalInfo *di)
+bool isRelocatable()
 {
-	auto tmp = di->decCmd;
-	std::replace(tmp.begin(), tmp.end(), ' ', '\n');
-	INFO_MSG("Decompilation command: " << tmp << "\n");
-	INFO_MSG("Running the decompilation command ...\n");
-
-	runCommand(
-			di->pythonInterpreter,
-			di->pythonInterpreterArgs + di->decCmd,
-			&di->decompPid,
-			true,
-			&di->hDecomp);
-
-	// Get decompiled and colored file content.
-	//
-	std::ifstream decFile;
-	std::string decName;
-
-	if (!di->outputFile.empty())
+	if (inf_get_filetype() == f_COFF && inf_get_start_ea() == BADADDR)
 	{
-		decName = di->outputFile;
+		return true;
 	}
-	else
+	else if (inf_get_filetype() == f_ELF)
 	{
-		decName = di->inputPath + ".c";
-	}
-	decFile.open( decName.c_str() );
+		auto inFile = getInputPath();
+		if (inFile.empty())
+		{
+			return false;
+		}
 
-	if (!decFile.is_open())
+		std::ifstream infile(inFile, std::ios::binary);
+		if (infile.good())
+		{
+			std::size_t e_type_offset = 0x10;
+			infile.seekg(e_type_offset, std::ios::beg);
+
+			// relocatable -- constant 0x1 at <0x10-0x11>
+			// little endian -- 0x01 0x00
+			// big endian -- 0x00 0x01
+			char b1 = 0;
+			char b2 = 0;
+			if (infile.get(b1))
+			{
+				if (infile.get(b2))
+				{
+					if (std::size_t(b1) + std::size_t(b2) == 1)
+					{
+						return true;
+					}
+				}
+			}
+		}
+	}
+
+	// f_BIN || f_PE || f_HEX || other
+	return false;
+}
+
+bool runDecompilation(retdec::config::Config& config)
+{
+	try
 	{
-		WARNING_GUI("Loading of output C file FAILED.\n");
-		di->decompSuccess = false;
+		auto rc = retdec::decompile(config);
+		if (rc != 0)
+		{
+			throw std::runtime_error(
+					"decompilation error code = " + std::to_string(rc)
+			);
+		}
+	}
+	catch (const std::runtime_error& e)
+	{
+		WARNING_GUI("Decompilation exception: " << e.what() << std::endl);
+		return true;
+	}
+	catch (...)
+	{
+		WARNING_GUI("Decompilation exception: unknown" << std::endl);
+		return true;
+	}
+
+	return false;
+}
+
+Function* parseOutput(func_t* fnc, const std::string& out)
+{
+	std::ifstream ifs(out);
+	if (!ifs)
+	{
+		WARNING_GUI("Unable to open decompilation output: "
+				<< out << std::endl
+		);
+		return nullptr;
+	}
+
+	rapidjson::IStreamWrapper isw(ifs);
+	rapidjson::Document d;
+	rapidjson::ParseResult ok = d.ParseStream(isw);
+	if (!ok)
+	{
+		std::string errMsg = GetParseError_En(ok.Code());
+		WARNING_GUI("Unable to parse decompilation output: "
+				<< out << std::endl
+				<< "Parser error: " << errMsg << std::endl
+		);
+		return nullptr;
+	}
+
+	auto tokens = d.FindMember("tokens");
+	if (tokens == d.MemberEnd() || !tokens->value.IsArray())
+	{
+		WARNING_GUI("Unable to parse tokens from decompilation output: "
+				<< out << std::endl
+		);
+		return nullptr;
+	}
+
+	std::vector<Token> ts;
+	ea_t ea = fnc->start_ea;
+
+	for (auto i = tokens->value.Begin(), e = tokens->value.End(); i != e; ++i)
+	{
+		auto& obj = *i;
+		if (obj.IsNull())
+		{
+			continue;
+		}
+
+		auto addr = obj.FindMember("addr");
+		if (addr != obj.MemberEnd() && addr->value.IsString())
+		{
+			retdec::common::Address a(addr->value.GetString());
+			ea = a.isDefined() ? a.getValue() : fnc->start_ea;
+		}
+		auto kind = obj.FindMember("kind");
+		auto val = obj.FindMember("val");
+		if (kind != obj.MemberEnd() && kind->value.IsString()
+				&& val != obj.MemberEnd() && val->value.IsString())
+		{
+			Token::Kind kk;
+			std::string k = kind->value.GetString();
+			if (k == "nl") kk = Token::Kind::NEW_LINE;
+			else if (k == "ws") kk = Token::Kind::WHITE_SPACE;
+			else if (k == "punc") kk = Token::Kind::PUNCTUATION;
+			else if (k == "op") kk = Token::Kind::OPERATOR;
+			else if (k == "i_var") kk = Token::Kind::ID_VAR;
+			else if (k == "i_mem") kk = Token::Kind::ID_MEM;
+			else if (k == "i_lab") kk = Token::Kind::ID_LAB;
+			else if (k == "i_fnc") kk = Token::Kind::ID_FNC;
+			else if (k == "i_arg") kk = Token::Kind::ID_ARG;
+			else if (k == "keyw") kk = Token::Kind::KEYWORD;
+			else if (k == "type") kk = Token::Kind::TYPE;
+			else if (k == "preproc") kk = Token::Kind::PREPROCESSOR;
+			else if (k == "inc") kk = Token::Kind::INCLUDE;
+			else if (k == "l_bool") kk = Token::Kind::LITERAL_BOOL;
+			else if (k == "l_int") kk = Token::Kind::LITERAL_INT;
+			else if (k == "l_fp") kk = Token::Kind::LITERAL_FP;
+			else if (k == "l_str") kk = Token::Kind::LITERAL_STR;
+			else if (k == "l_sym") kk = Token::Kind::LITERAL_SYM;
+			else if (k == "l_ptr") kk = Token::Kind::LITERAL_PTR;
+			else if (k == "cmnt") kk = Token::Kind::COMMENT;
+			else continue;
+
+			ts.emplace_back(Token(kk, ea, val->value.GetString()));
+		}
+	}
+
+	qstring qFncName;
+	get_func_name(&qFncName, fnc->start_ea);
+
+	auto p = _fnc2fnc.emplace(
+			fnc,
+			Function(
+					qFncName.c_str(),
+					fnc->start_ea,
+					fnc->end_ea,
+					ts
+			)
+	);
+
+	return &(p.first->second);
+}
+
+void Decompiler::decompile(const std::string& out)
+{
+	retdec::config::Config config;
+	if (fillConfig(config, out))
+	{
 		return;
 	}
-
-	INFO_MSG("Decompiled file: " << decName << "\n");
-
-	if (di->isSelectiveDecompilation())
-	{
-		std::string code(
-				(std::istreambuf_iterator<char>(decFile)),
-				std::istreambuf_iterator<char>());
-		di->fnc2code[di->decompiledFunction].code = code;
-	}
-
-	decFile.close();
-	di->decompSuccess = true;
+	config.parameters.setOutputFormat("c");
+	runDecompilation(config);
 }
 
-/**
- * Thread function, it runs the decompilation and displays decompiled code.
- * @param ud Plugin's global information.
- */
-static int idaapi threadFunc(void* ud)
+Function* Decompiler::decompile(ea_t ea)
 {
-	RdGlobalInfo* di = static_cast<RdGlobalInfo*>(ud);
-	di->decompRunning = true;
-
-	INFO_MSG("Local decompilation ...\n");
-	localDecompilation(di);
-
-	if (di->decompSuccess && di->isSelectiveDecompilation())
+	if (isRelocatable() && inf_get_min_ea() != 0)
 	{
-		showDecompiledCode(di);
+		WARNING_GUI("RetDec plugin can selectively decompile only "
+				"relocatable objects loaded at 0x0.\n"
+				"Rebase the program to 0x0 or use full decompilation."
+		);
+		return nullptr;
 	}
 
-	di->outputFile.clear();
-	di->decompRunning = false;
-	return 0;
+	func_t* fnc = get_func(ea);
+	if (fnc == nullptr)
+	{
+		WARNING_GUI("Function must be selected by the cursor.\n");
+		return nullptr;
+	}
+
+	retdec::config::Config config;
+	if (fillConfig(config))
+	{
+		return nullptr;
+	}
+
+	config.parameters.setOutputFormat("json");
+	retdec::common::AddressRange r(fnc->start_ea, fnc->end_ea);
+	config.parameters.selectedRanges.insert(r);
+	config.parameters.setIsSelectedDecodeOnly(true);
+
+	if (runDecompilation(config))
+	{
+		return nullptr;
+	}
+
+	return parseOutput(fnc, config.parameters.getOutputFile());
 }
-
-/**
- * Create ranges to decompile from the provided function.
- * @param[out] decompInfo Plugin's global information.
- * @param      fnc        Function selected for decompilation.
- */
-void createRangesFromSelectedFunction(RdGlobalInfo& decompInfo, func_t* fnc)
-{
-	std::stringstream ss;
-	ss << "0x" << std::hex << fnc->start_ea << "-" << "0x" << std::hex << (fnc->end_ea-1);
-
-	decompInfo.ranges = ss.str();
-	decompInfo.decompiledFunction = fnc;
-}
-
-/**
- * Decompile IDA's input.
- * @param decompInfo Plugin's global information.
- */
-void decompileInput(RdGlobalInfo &decompInfo)
-{
-	INFO_MSG("Decompile input ...\n");
-
-	// Construct decompiler call command.
-	//
-	decompInfo.decCmd = "\"" + decompInfo.decompilationCmd + "\"";
-	decompInfo.decCmd += " \"" + decompInfo.inputPath + "\"";
-	decompInfo.decCmd += " --config=\"" + decompInfo.dbFile + "\"";
-
-	if (!decompInfo.mode.empty())
-	{
-		decompInfo.decCmd += " -m " + decompInfo.mode + " ";
-	}
-	if (!decompInfo.architecture.empty())
-	{
-		decompInfo.decCmd += " -a " + decompInfo.architecture + " ";
-	}
-	if (!decompInfo.endian.empty())
-	{
-		decompInfo.decCmd += " -e " + decompInfo.endian + " ";
-	}
-	if (decompInfo.rawEntryPoint.isDefined())
-	{
-		decompInfo.decCmd += " --raw-entry-point " + decompInfo.rawEntryPoint.toHexPrefixString() + " ";
-	}
-	if (decompInfo.rawSectionVma.isDefined())
-	{
-		decompInfo.decCmd += " --raw-section-vma " + decompInfo.rawSectionVma.toHexPrefixString() + " ";
-	}
-
-	if (decompInfo.isSelectiveDecompilation())
-	{
-		decompInfo.decCmd += " --color-for-ida";
-		decompInfo.decCmd += " -o \"" + decompInfo.inputPath + ".c\"";
-	}
-	else
-	{
-		decompInfo.decCmd += " -o \"" + decompInfo.outputFile + "\"";
-	}
-
-	if ( !decompInfo.ranges.empty() )
-	{
-		decompInfo.decCmd += " --select-decode-only --select-ranges=\"" + decompInfo.ranges + "\"";
-	}
-
-	// Create decompilation thread.
-	//
-	if (decompInfo.isUseThreads())
-	{
-		decompInfo.decompThread = qthread_create(threadFunc, static_cast<void*>(&decompInfo));
-	}
-	else
-	{
-		threadFunc(static_cast<void*>(&decompInfo));
-	}
-}
-
-} // namespace idaplugin

@@ -1,7 +1,9 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.11)
 
 project(retdec-idaplugin CXX C)
-set(RELEASE_VERSION "0.9")
+set(RELEASE_VERSION "1.0")
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Set the default build type to 'Release'
 if(NOT CMAKE_BUILD_TYPE)
@@ -78,7 +80,7 @@ add_subdirectory(src)
 if(RETDEC_IDAPLUGIN_DOC)
 	set(RELEASE_DIR_NAME "retdec-idaplugin")
 	set(RELEASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/${RELEASE_DIR_NAME}")
-	set(RELEASE_LICENSE_DIR "${RELEASE_DIR}/license")
+	set(RELEASE_RESOURCES_DIR "${RELEASE_DIR}/retdec")
 	if(MSVC) # Windows
 		set(RELEASE_OS_NAME "windows")
 	elseif(APPLE) # macOS
@@ -88,13 +90,21 @@ if(RETDEC_IDAPLUGIN_DOC)
 	endif()
 	add_custom_target(release
 		DEPENDS user-guide idaplugin32 idaplugin64
+		# Create directory structure.
 		COMMAND ${CMAKE_COMMAND} -E make_directory "${RELEASE_DIR}"
-		COMMAND ${CMAKE_COMMAND} -E make_directory "${RELEASE_LICENSE_DIR}"
-		COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/LICENSE" "${RELEASE_LICENSE_DIR}"
-		COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/LICENSE-THIRD-PARTY" "${RELEASE_LICENSE_DIR}"
-		COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/doc/user_guide/user_guide.pdf" "${RELEASE_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E make_directory "${RELEASE_RESOURCES_DIR}"
+		# Copy plugins.
 		COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:idaplugin32>" "${RELEASE_DIR}"
 		COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:idaplugin64>" "${RELEASE_DIR}"
+		# Copy resources.
+		COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/LICENSE" "${RELEASE_RESOURCES_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/LICENSE-THIRD-PARTY" "${RELEASE_RESOURCES_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/doc/user_guide/user_guide.pdf" "${RELEASE_RESOURCES_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/src/idaplugin/decompiler-config.json" "${RELEASE_RESOURCES_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E copy "${retdec_SOURCE_DIR}/support/ordinals" "${RELEASE_RESOURCES_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E copy "${retdec_SOURCE_DIR}/support/yara_patterns" "${RELEASE_RESOURCES_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E copy "${retdec_SOURCE_DIR}/support/types" "${RELEASE_RESOURCES_DIR}"
+		# Create the archive.
 		COMMAND ${CMAKE_COMMAND} -E tar "cvf" "${CMAKE_CURRENT_BINARY_DIR}/${RELEASE_DIR_NAME}-v${RELEASE_VERSION}-${RELEASE_OS_NAME}.zip" --format=zip "${RELEASE_DIR}"
 	)
 endif()
