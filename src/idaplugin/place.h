@@ -1,6 +1,6 @@
 
-#ifndef HEXRAYS_DEMO_PLACE_H
-#define HEXRAYS_DEMO_PLACE_H
+#ifndef RETDEC_PLACE_H
+#define RETDEC_PLACE_H
 
 #include <iostream>
 
@@ -14,7 +14,7 @@
  * An object may be displayed on one or more lines. All lines of an object are
  * generated at once and kept in a linearray_t class.
  */
-class demo_place_t : public place_t
+class retdec_place_t : public place_t
 {
 	// Inherited from place_t.
 	//
@@ -185,7 +185,7 @@ class demo_place_t : public place_t
 	public:
 		static int ID;
 
-		demo_place_t(Function* fnc, YX yx);
+		retdec_place_t(Function* fnc, YX yx);
 		static void registerPlace(const plugin_t& PLUGIN);
 
 		YX yx() const;
@@ -197,11 +197,11 @@ class demo_place_t : public place_t
 		std::string toString() const;
 		friend std::ostream& operator<<(
 				std::ostream& os,
-				const demo_place_t& p
+				const retdec_place_t& p
 		);
 
 	private:
-		inline static const char* _name = "demo_place_t";
+		inline static const char* _name = "retdec_place_t";
 
 		Function* _fnc = nullptr;
 		YX _yx;

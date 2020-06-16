@@ -1,6 +1,6 @@
 
-#ifndef HEXRAYS_DEMO_TOKEN_H
-#define HEXRAYS_DEMO_TOKEN_H
+#ifndef RETDEC_TOKEN_H
+#define RETDEC_TOKEN_H
 
 #include <string>
 

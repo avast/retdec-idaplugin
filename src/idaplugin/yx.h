@@ -1,6 +1,6 @@
 
-#ifndef HEXRAYS_DEMO_YX_H
-#define HEXRAYS_DEMO_YX_H
+#ifndef RETDEC_YX_H
+#define RETDEC_YX_H
 
 #include <iostream>
 #include <utility>

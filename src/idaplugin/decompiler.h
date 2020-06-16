@@ -1,6 +1,6 @@
 
-#ifndef HEXRAYS_DEMO_DECOMPILER_H
-#define HEXRAYS_DEMO_DECOMPILER_H
+#ifndef RETDEC_DECOMPILER_H
+#define RETDEC_DECOMPILER_H
 
 #include <pro.h>
 

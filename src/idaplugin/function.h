@@ -1,6 +1,6 @@
 
-#ifndef HEXRAYS_DEMO_FUNCTION_H
-#define HEXRAYS_DEMO_FUNCTION_H
+#ifndef RETDEC_FUNCTION_H
+#define RETDEC_FUNCTION_H
 
 #include <iostream>
 #include <map>

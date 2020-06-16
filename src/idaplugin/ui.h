@@ -1,12 +1,25 @@
 
-#ifndef HEXRAYS_DEMO_UI_H
-#define HEXRAYS_DEMO_UI_H
+#ifndef RETDEC_UI_H
+#define RETDEC_UI_H
 
 class Context;
 
+struct fullDecompilation_ah_t : public action_handler_t
+{
+	inline static const char* actionName = "retdec:ActionFullDecompilation";
+	inline static const char* actionLabel = "Create C file RetDec...";
+	inline static const char* actionHotkey = "Ctrl+Shift+D";
+
+	Context& ctx;
+	fullDecompilation_ah_t(Context& c);
+
+	virtual int idaapi activate(action_activation_ctx_t*) override;
+	virtual action_state_t idaapi update(action_update_ctx_t*) override;
+};
+
 struct function_ctx_ah_t : public action_handler_t
 {
-	inline static const char* actionName = "demo:ActionFunctionCtx";
+	inline static const char* actionName = "retdec:ActionFunctionCtx";
 	inline static const char* actionLabel = "Function context";
 	inline static const char* actionHotkey = "F";
 
@@ -16,7 +29,7 @@ struct function_ctx_ah_t : public action_handler_t
 
 struct variable_ctx_ah_t : public action_handler_t
 {
-	inline static const char* actionName = "demo:ActionVariableCtx";
+	inline static const char* actionName = "retdec:ActionVariableCtx";
 	inline static const char* actionLabel = "Variable context";
 	inline static const char* actionHotkey = "V";
 
@@ -26,7 +39,7 @@ struct variable_ctx_ah_t : public action_handler_t
 
 struct copy2asm_ah_t : public action_handler_t
 {
-	inline static const char* actionName = "demo:ActionCopy2Asm";
+	inline static const char* actionName = "retdec:ActionCopy2Asm";
 	inline static const char* actionLabel = "Copy to assembly";
 	inline static const char* actionHotkey = "C";
 

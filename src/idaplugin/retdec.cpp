@@ -36,6 +36,14 @@ Context::Context()
 		return;
 	}
 
+	if (!register_action(fullDecompilation_ah_desc)
+			|| !attach_action_to_menu(
+					"File/Produce file/Create DIF file",
+					fullDecompilation_ah_t::actionName,
+					SETMENU_APP))
+	{
+		ERROR_MSG("Failed to register: " << fullDecompilation_ah_t::actionName);
+	}
 	register_action(function_ctx_ah_desc);
 	register_action(variable_ctx_ah_desc);
 	register_action(copy2asm_ah_desc);
@@ -49,11 +57,11 @@ bool Context::runSelectiveDecompilation(ea_t ea)
 		return false;
 	}
 
-	demo_place_t min(fnc, fnc->min_yx());
-	demo_place_t max(fnc, fnc->max_yx());
-	demo_place_t cur(fnc, fnc->ea_2_yx(ea));
+	retdec_place_t min(fnc, fnc->min_yx());
+	retdec_place_t max(fnc, fnc->max_yx());
+	retdec_place_t cur(fnc, fnc->ea_2_yx(ea));
 
-	static const char title[] = "hexrays demo";
+	static const char title[] = "RetDec";
 	TWidget* widget = find_widget(title);
 	if (widget != nullptr)
 	{
@@ -125,7 +133,7 @@ bool idaapi Context::run(size_t arg)
 		return false;
 	}
 
-	demo_place_t::registerPlace(PLUGIN);
+	retdec_place_t::registerPlace(PLUGIN);
 	hook_event_listener(HT_UI, this);
 
 	// ordinary selective decompilation
@@ -185,6 +193,9 @@ bool idaapi Context::run(size_t arg)
 Context::~Context()
 {
 	unhook_event_listener(HT_UI, this);
+
+	// Probably unnecessary.
+	unregister_action(fullDecompilation_ah_desc.name);
 	unregister_action(function_ctx_ah_desc.name);
 	unregister_action(variable_ctx_ah_desc.name);
 	unregister_action(copy2asm_ah_desc.name);

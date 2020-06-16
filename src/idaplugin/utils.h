@@ -1,5 +1,6 @@
-#ifndef HEXRAYS_DEMO_UTILS_H
-#define HEXRAYS_DEMO_UTILS_H
+
+#ifndef RETDEC_UTILS_H
+#define RETDEC_UTILS_H
 
 #include <string>
 #include <sstream>
@@ -10,7 +11,7 @@
 // General print msg macros.
 //
 #define PRINT_DEBUG   false
-#define PRINT_ERROR   false
+#define PRINT_ERROR   true
 #define PRINT_WARNING true
 #define PRINT_INFO    true
 

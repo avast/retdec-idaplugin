@@ -6,61 +6,57 @@
 #include "place.h"
 
 static const idaplace_t _idaplace;
-static const demo_place_t _template(nullptr, YX());
+static const retdec_place_t _template(nullptr, YX());
 
-void idaapi demo_place_t::print(qstring* out_buf, void* ud) const
+void idaapi retdec_place_t::print(qstring* out_buf, void* ud) const
 {
-	static unsigned cntr = 0;
-	cntr++;
-
 	qstring ea_str;
 	ea2str(&ea_str, toea());
 
 	std::string str = std::string("hello @ ")
 			+ ea_str.c_str()
 			+ " @ "
-			+ std::to_string(y()) + ":" + std::to_string(x())
-			+ " # " + std::to_string(cntr);
+			+ std::to_string(y()) + ":" + std::to_string(x());
 	*out_buf = str.c_str();
 }
 
-uval_t idaapi demo_place_t::touval(void* ud) const
+uval_t idaapi retdec_place_t::touval(void* ud) const
 {
 	return y();
 }
 
-place_t* idaapi demo_place_t::clone(void) const
+place_t* idaapi retdec_place_t::clone(void) const
 {
-	return new demo_place_t(*this);
+	return new retdec_place_t(*this);
 }
 
-void idaapi demo_place_t::copyfrom(const place_t* from)
+void idaapi retdec_place_t::copyfrom(const place_t* from)
 {
-	auto* p = static_cast<const demo_place_t*>(from);
+	auto* p = static_cast<const retdec_place_t*>(from);
 
 	lnnum = p->lnnum;
 	_fnc = p->_fnc;
 	_yx = p->_yx;
 }
 
-place_t* idaapi demo_place_t::makeplace(
+place_t* idaapi retdec_place_t::makeplace(
 		void* ud,
 		uval_t y,
 		int lnnum) const
 {
-	auto* p = new demo_place_t(_fnc, YX(y, 0));
+	auto* p = new retdec_place_t(_fnc, YX(y, 0));
 	p->lnnum = lnnum;
 	return p;
 }
 
-int idaapi demo_place_t::compare(const place_t* t2) const
+int idaapi retdec_place_t::compare(const place_t* t2) const
 {
 	return compare2(t2, nullptr);
 }
 
-int idaapi demo_place_t::compare2(const place_t* t2, void *ud) const
+int idaapi retdec_place_t::compare2(const place_t* t2, void *ud) const
 {
-	auto* p = static_cast<const demo_place_t*>(t2);
+	auto* p = static_cast<const retdec_place_t*>(t2);
 
 	if (_fnc == p->_fnc)
 	{
@@ -80,7 +76,7 @@ int idaapi demo_place_t::compare2(const place_t* t2, void *ud) const
 	}
 }
 
-void idaapi demo_place_t::adjust(void* ud)
+void idaapi retdec_place_t::adjust(void* ud)
 {
 	// No idea if some handling is needed here.
 	// It seems to work OK just like this.
@@ -90,7 +86,7 @@ void idaapi demo_place_t::adjust(void* ud)
 	_yx.x = 0;
 }
 
-bool idaapi demo_place_t::prev(void* ud)
+bool idaapi retdec_place_t::prev(void* ud)
 {
 	auto pyx = _fnc->prev_yx(yx());
 	if (yx() <= _fnc->min_yx() || pyx == yx())
@@ -101,7 +97,7 @@ bool idaapi demo_place_t::prev(void* ud)
 	return true;
 }
 
-bool idaapi demo_place_t::next(void* ud)
+bool idaapi retdec_place_t::next(void* ud)
 {
 	auto nyx = _fnc->next_yx(yx());
 	if (yx() >= _fnc->max_yx() || nyx == yx())
@@ -112,17 +108,17 @@ bool idaapi demo_place_t::next(void* ud)
 	return true;
 }
 
-bool idaapi demo_place_t::beginning(void* ud) const
+bool idaapi retdec_place_t::beginning(void* ud) const
 {
 	return yx() == _fnc->min_yx();
 }
 
-bool idaapi demo_place_t::ending(void* ud) const
+bool idaapi retdec_place_t::ending(void* ud) const
 {
 	return yx() == _fnc->max_yx();
 }
 
-int idaapi demo_place_t::generate(
+int idaapi retdec_place_t::generate(
 		qstrvec_t* out,
 		int* out_deflnnum,
 		color_t* out_pfx_color,
@@ -153,7 +149,7 @@ int idaapi demo_place_t::generate(
 // However, this is also used when saving/loading IDB, and so if we store and
 // than load function pointer, we are in trouble. Instead we serialize functions
 // as their addresses and use decompiler to get an actual function pointer.
-void idaapi demo_place_t::serialize(bytevec_t* out) const
+void idaapi retdec_place_t::serialize(bytevec_t* out) const
 {
 	place_t__serialize(this, out);
 	out->pack_ea(_fnc->getStart());
@@ -161,7 +157,7 @@ void idaapi demo_place_t::serialize(bytevec_t* out) const
 	out->pack_ea(x());
 }
 
-bool idaapi demo_place_t::deserialize(
+bool idaapi retdec_place_t::deserialize(
 		const uchar** pptr,
 		const uchar* end)
 {
@@ -177,50 +173,50 @@ bool idaapi demo_place_t::deserialize(
 	return true;
 }
 
-int idaapi demo_place_t::id() const
+int idaapi retdec_place_t::id() const
 {
-	return demo_place_t::ID;
+	return retdec_place_t::ID;
 }
 
-const char* idaapi demo_place_t::name() const
+const char* idaapi retdec_place_t::name() const
 {
-	return demo_place_t::_name;
+	return retdec_place_t::_name;
 }
 
-ea_t idaapi demo_place_t::toea() const
+ea_t idaapi retdec_place_t::toea() const
 {
 	return _fnc->yx_2_ea(yx());
 }
 
-bool idaapi demo_place_t::rebase(const segm_move_infos_t&)
+bool idaapi retdec_place_t::rebase(const segm_move_infos_t&)
 {
 	// nothing
 	return false;
 }
 
-place_t* idaapi demo_place_t::enter(uint32*) const
+place_t* idaapi retdec_place_t::enter(uint32*) const
 {
 	// nothing
 	return nullptr;
 }
 
-void idaapi demo_place_t::leave(uint32) const
+void idaapi retdec_place_t::leave(uint32) const
 {
 	// nothing
 }
 
-int demo_place_t::ID = -1;
+int retdec_place_t::ID = -1;
 
-demo_place_t::demo_place_t(Function* fnc, YX yx)
+retdec_place_t::retdec_place_t(Function* fnc, YX yx)
 		: _fnc(fnc)
 		, _yx(yx)
 {
 	lnnum = 0;
 }
 
-void demo_place_t::registerPlace(const plugin_t& PLUGIN)
+void retdec_place_t::registerPlace(const plugin_t& PLUGIN)
 {
-	demo_place_t::ID = register_place_class(
+	retdec_place_t::ID = register_place_class(
 			&_template,
 			PCF_EA_CAPABLE | PCF_MAKEPLACE_ALLOCATES,
 			&PLUGIN
@@ -252,39 +248,39 @@ void demo_place_t::registerPlace(const plugin_t& PLUGIN)
 	);
 }
 
-YX demo_place_t::yx() const
+YX retdec_place_t::yx() const
 {
 	return _yx;
 }
 
-std::size_t demo_place_t::y() const
+std::size_t retdec_place_t::y() const
 {
 	return yx().y;
 }
 
-std::size_t demo_place_t::x() const
+std::size_t retdec_place_t::x() const
 {
 	return yx().x;
 }
 
-const Token* demo_place_t::token() const
+const Token* retdec_place_t::token() const
 {
 	return fnc()->getToken(yx());
 }
 
-Function* demo_place_t::fnc() const
+Function* retdec_place_t::fnc() const
 {
 	return _fnc;
 }
 
-std::string demo_place_t::toString() const
+std::string retdec_place_t::toString() const
 {
 	std::stringstream ss;
 	ss << *this;
 	return ss.str();
 }
 
-std::ostream& operator<<(std::ostream& os, const demo_place_t& p)
+std::ostream& operator<<(std::ostream& os, const retdec_place_t& p)
 {
 	os << *p.fnc() << p.yx();
 	return os;
@@ -295,12 +291,12 @@ lecvt_code_t idaapi place_converter(
         const lochist_entry_t& src,
         TWidget* view)
 {
-	// idaplace_t -> demo_place_t
+	// idaplace_t -> retdec_place_t
 	if (src.place()->name() == std::string(_idaplace.name()))
 	{
 		auto idaEa = src.place()->toea();
 
-		auto* cur = dynamic_cast<demo_place_t*>(get_custom_viewer_place(
+		auto* cur = dynamic_cast<retdec_place_t*>(get_custom_viewer_place(
 						view,
 						false, // mouse
 						nullptr, // x
@@ -313,7 +309,7 @@ lecvt_code_t idaapi place_converter(
 
 		if (cur->fnc()->ea_inside(idaEa))
 		{
-			demo_place_t p(cur->fnc(), cur->fnc()->ea_2_yx(idaEa));
+			retdec_place_t p(cur->fnc(), cur->fnc()->ea_2_yx(idaEa));
 			dst->set_place(p);
 			// Set both x and y, see renderer_info_t comment in demo.cpp.
 			dst->renderer_info().pos.cy = p.y();
@@ -321,7 +317,7 @@ lecvt_code_t idaapi place_converter(
 		}
 		else if (Function* fnc = Decompiler::decompile(idaEa))
 		{
-			demo_place_t cur(fnc, fnc->ea_2_yx(idaEa));
+			retdec_place_t cur(fnc, fnc->ea_2_yx(idaEa));
 			dst->set_place(cur);
 			// Set both x and y, see renderer_info_t comment in demo.cpp.
 			dst->renderer_info().pos.cy = cur.y();
@@ -334,10 +330,10 @@ lecvt_code_t idaapi place_converter(
 
 		return LECVT_OK;
 	}
-	// demo_place_t -> idaplace_t
+	// retdec_place_t -> idaplace_t
 	else if (src.place()->name() == std::string(_template.name()))
 	{
-		auto* demoPlc = static_cast<const demo_place_t*>(src.place());
+		auto* demoPlc = static_cast<const retdec_place_t*>(src.place());
 		idaplace_t p(demoPlc->toea(), 0);
 		dst->set_place(p);
 		return LECVT_OK;

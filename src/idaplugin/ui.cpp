@@ -4,6 +4,35 @@
 #include "place.h"
 #include "ui.h"
 
+//
+//==============================================================================
+// fullDecompilation_ah_t
+//==============================================================================
+//
+
+fullDecompilation_ah_t::fullDecompilation_ah_t(Context& c)
+		: ctx(c)
+{
+
+}
+
+int idaapi fullDecompilation_ah_t::activate(action_activation_ctx_t*)
+{
+	ctx.runFullDecompilation();
+	return false;
+}
+
+action_state_t idaapi fullDecompilation_ah_t::update(action_update_ctx_t*)
+{
+	return AST_ENABLE_ALWAYS;
+}
+
+//
+//==============================================================================
+// function_ctx_ah_t
+//==============================================================================
+//
+
 int idaapi function_ctx_ah_t::activate(action_activation_ctx_t*)
 {
 	info("function context action");
@@ -15,6 +44,12 @@ action_state_t idaapi function_ctx_ah_t::update(action_update_ctx_t*)
 	return AST_ENABLE_ALWAYS;
 }
 
+//
+//==============================================================================
+// variable_ctx_ah_t
+//==============================================================================
+//
+
 int idaapi variable_ctx_ah_t::activate(action_activation_ctx_t*)
 {
 	info("variable context action");
@@ -25,6 +60,12 @@ action_state_t idaapi variable_ctx_ah_t::update(action_update_ctx_t*)
 {
 	return AST_ENABLE_ALWAYS;
 }
+
+//
+//==============================================================================
+// copy2asm_ah_t
+//==============================================================================
+//
 
 copy2asm_ah_t::copy2asm_ah_t(Context& c)
 		: ctx(c)
@@ -50,7 +91,7 @@ int idaapi copy2asm_ah_t::activate(action_activation_ctx_t*)
 		}
 
 		// Focus to IDA view.
-		auto* place = dynamic_cast<demo_place_t*>(get_custom_viewer_place(
+		auto* place = dynamic_cast<retdec_place_t*>(get_custom_viewer_place(
 				ctx.custViewer,
 				false, // mouse
 				nullptr, // x
@@ -68,6 +109,12 @@ action_state_t idaapi copy2asm_ah_t::update(action_update_ctx_t*)
 {
 	return AST_ENABLE_ALWAYS;
 }
+
+//
+//==============================================================================
+// on_event
+//==============================================================================
+//
 
 /**
  * User interface hook.
@@ -88,7 +135,7 @@ ssize_t idaapi Context::on_event(ssize_t code, va_list va)
 				return false;
 			}
 
-			auto* place = dynamic_cast<demo_place_t*>(get_custom_viewer_place(
+			auto* place = dynamic_cast<retdec_place_t*>(get_custom_viewer_place(
 					view,
 					false, // mouse
 					nullptr, // x
@@ -140,7 +187,7 @@ ssize_t idaapi Context::on_event(ssize_t code, va_list va)
 				return false;
 			}
 
-			auto* demoPlace = dynamic_cast<demo_place_t*>(get_custom_viewer_place(
+			auto* demoPlace = dynamic_cast<retdec_place_t*>(get_custom_viewer_place(
 					custViewer,
 					false, // mouse
 					nullptr, // x
@@ -196,22 +243,28 @@ ssize_t idaapi Context::on_event(ssize_t code, va_list va)
 	return false;
 }
 
+//
+//==============================================================================
+// cv handlers
+//==============================================================================
+//
+
 /**
  * Called whenever the user moves the cursor around (mouse, keyboard).
  * Fine-tune 'loc->place()' according to the X position.
  *
- * Without this, demo_place_t's X position would not change when cursor moves
+ * Without this, retdec_place_t's X position would not change when cursor moves
  * around.
- * Changing the position triggers some actions. E.g. demo_place_t::print().
+ * Changing the position triggers some actions. E.g. retdec_place_t::print().
  *
  * custom_viewer_adjust_place_t
  */
 void idaapi cv_adjust_place(TWidget* v, lochist_entry_t* loc, void* ud)
 {
-	auto* plc = static_cast<demo_place_t*>(loc->place());
+	auto* plc = static_cast<retdec_place_t*>(loc->place());
 	auto* fnc = plc->fnc();
 
-	demo_place_t nplc(
+	retdec_place_t nplc(
 			fnc,
 			fnc->adjust_yx(YX(
 					plc->y(),
@@ -229,7 +282,7 @@ bool idaapi cv_keyboard(TWidget *cv, int vk_key, int shift, void *ud)
 	// A
 	if (vk_key == 65 && shift == 0)
 	{
-		auto* place = dynamic_cast<demo_place_t*>(get_custom_viewer_place(
+		auto* place = dynamic_cast<retdec_place_t*>(get_custom_viewer_place(
 				cv,
 				false, // mouse
 				nullptr, // x
@@ -249,7 +302,7 @@ bool idaapi cv_keyboard(TWidget *cv, int vk_key, int shift, void *ud)
 
 bool idaapi cv_double(TWidget* cv, int shift, void* ud)
 {
-	auto* place = dynamic_cast<demo_place_t*>(get_custom_viewer_place(
+	auto* place = dynamic_cast<retdec_place_t*>(get_custom_viewer_place(
 			cv,
 			false, // mouse
 			nullptr, // x
@@ -303,8 +356,8 @@ void idaapi cv_location_changed(
 {
 	Context* ctx = static_cast<Context*>(ud);
 
-	auto* oldp = dynamic_cast<const demo_place_t*>(was->place());
-	auto* newp = dynamic_cast<const demo_place_t*>(now->place());
+	auto* oldp = dynamic_cast<const retdec_place_t*>(was->place());
+	auto* newp = dynamic_cast<const retdec_place_t*>(now->place());
 	if (oldp->compare(newp) == 0) // equal
 	{
 		return;
@@ -325,8 +378,8 @@ void idaapi cv_location_changed(
 
 	if (oldp->fnc() != newp->fnc())
 	{
-		demo_place_t min(newp->fnc(), newp->fnc()->min_yx());
-		demo_place_t max(newp->fnc(), newp->fnc()->max_yx());
+		retdec_place_t min(newp->fnc(), newp->fnc()->min_yx());
+		retdec_place_t max(newp->fnc(), newp->fnc()->max_yx());
 		set_custom_viewer_range(ctx->custViewer, &min, &max);
 		ctx->fnc = newp->fnc();
 	}
@@ -341,8 +394,8 @@ int idaapi cv_get_place_xcoord(
 		const place_t* pitem,
 		void* ud)
 {
-	auto* mpline = static_cast<const demo_place_t*>(pline);
-	auto* mpitem = static_cast<const demo_place_t*>(pitem);
+	auto* mpline = static_cast<const retdec_place_t*>(pline);
+	auto* mpitem = static_cast<const retdec_place_t*>(pitem);
 
 	if (mpline->y() != mpitem->y())
 	{

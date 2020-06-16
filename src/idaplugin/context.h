@@ -1,6 +1,6 @@
 
-#ifndef HEXRAYS_DEMO_CONTEXT_H
-#define HEXRAYS_DEMO_CONTEXT_H
+#ifndef RETDEC_CONTEXT_H
+#define RETDEC_CONTEXT_H
 
 #include <iostream>
 #include <iomanip>
@@ -57,6 +57,17 @@ class Context : public plugmod_t, public event_listener_t
 	// Actions.
 	//
 	public:
+		fullDecompilation_ah_t fullDecompilation_ah = fullDecompilation_ah_t(*this);
+		const action_desc_t fullDecompilation_ah_desc = ACTION_DESC_LITERAL_PLUGMOD(
+				fullDecompilation_ah_t::actionName,
+				fullDecompilation_ah_t::actionLabel,
+				&fullDecompilation_ah,
+				this,
+				fullDecompilation_ah_t::actionHotkey,
+				nullptr,
+				-1
+		);
+
 		function_ctx_ah_t function_ctx_ah;
 		const action_desc_t function_ctx_ah_desc = ACTION_DESC_LITERAL_PLUGMOD(
 				function_ctx_ah_t::actionName,
