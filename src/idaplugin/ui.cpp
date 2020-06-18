@@ -1,7 +1,7 @@
 
-#include "context.h"
 #include "decompiler.h"
 #include "place.h"
+#include "retdec.h"
 #include "ui.h"
 
 //
@@ -10,15 +10,15 @@
 //==============================================================================
 //
 
-fullDecompilation_ah_t::fullDecompilation_ah_t(Context& c)
-		: ctx(c)
+fullDecompilation_ah_t::fullDecompilation_ah_t(Context& p)
+		: plg(p)
 {
 
 }
 
 int idaapi fullDecompilation_ah_t::activate(action_activation_ctx_t*)
 {
-	ctx.runFullDecompilation();
+	plg.runFullDecompilation();
 	return false;
 }
 
@@ -29,36 +29,37 @@ action_state_t idaapi fullDecompilation_ah_t::update(action_update_ctx_t*)
 
 //
 //==============================================================================
-// function_ctx_ah_t
+// jump2asm_ah_t
 //==============================================================================
 //
 
-int idaapi function_ctx_ah_t::activate(action_activation_ctx_t*)
+jump2asm_ah_t::jump2asm_ah_t(Context& p)
+		: plg(p)
 {
-	info("function context action");
+
+}
+
+int idaapi jump2asm_ah_t::activate(action_activation_ctx_t* ctx)
+{
+	auto* place = dynamic_cast<retdec_place_t*>(get_custom_viewer_place(
+			ctx->widget,
+			false, // mouse
+			nullptr, // x
+			nullptr // y
+	));
+	if (place == nullptr)
+	{
+		return false;
+	}
+
+	jumpto(place->toea(), 0, UIJMP_ACTIVATE | UIJMP_IDAVIEW);
 	return false;
 }
 
-action_state_t idaapi function_ctx_ah_t::update(action_update_ctx_t*)
+action_state_t idaapi jump2asm_ah_t::update(action_update_ctx_t* ctx)
 {
-	return AST_ENABLE_ALWAYS;
-}
-
-//
-//==============================================================================
-// variable_ctx_ah_t
-//==============================================================================
-//
-
-int idaapi variable_ctx_ah_t::activate(action_activation_ctx_t*)
-{
-	info("variable context action");
-	return false;
-}
-
-action_state_t idaapi variable_ctx_ah_t::update(action_update_ctx_t*)
-{
-	return AST_ENABLE_ALWAYS;
+	return ctx->widget == plg.custViewer
+			? AST_ENABLE_FOR_WIDGET : AST_DISABLE_FOR_WIDGET;
 }
 
 //
@@ -67,8 +68,8 @@ action_state_t idaapi variable_ctx_ah_t::update(action_update_ctx_t*)
 //==============================================================================
 //
 
-copy2asm_ah_t::copy2asm_ah_t(Context& c)
-		: ctx(c)
+copy2asm_ah_t::copy2asm_ah_t(Context& p)
+		: plg(p)
 {
 
 }
@@ -80,7 +81,7 @@ int idaapi copy2asm_ah_t::activate(action_activation_ctx_t*)
 			"Do you want to continue?";
 	if (ask_yn(ASKBTN_NO, text) == ASKBTN_YES)
 	{
-		for (auto& p : ctx.fnc->toLines())
+		for (auto& p : plg.fnc->toLines())
 		{
 			ea_t addr = p.second;
 			auto& line = p.first;
@@ -92,7 +93,7 @@ int idaapi copy2asm_ah_t::activate(action_activation_ctx_t*)
 
 		// Focus to IDA view.
 		auto* place = dynamic_cast<retdec_place_t*>(get_custom_viewer_place(
-				ctx.custViewer,
+				plg.custViewer,
 				false, // mouse
 				nullptr, // x
 				nullptr // y
@@ -105,9 +106,301 @@ int idaapi copy2asm_ah_t::activate(action_activation_ctx_t*)
 	return false;
 }
 
-action_state_t idaapi copy2asm_ah_t::update(action_update_ctx_t*)
+action_state_t idaapi copy2asm_ah_t::update(action_update_ctx_t* ctx)
 {
-	return AST_ENABLE_ALWAYS;
+	return ctx->widget == plg.custViewer
+			? AST_ENABLE_FOR_WIDGET : AST_DISABLE_FOR_WIDGET;
+}
+
+//
+//==============================================================================
+// funcComment_ah_t
+//==============================================================================
+//
+
+funcComment_ah_t::funcComment_ah_t(Context& p)
+		: plg(p)
+{
+
+}
+
+int idaapi funcComment_ah_t::activate(action_activation_ctx_t*)
+{
+	auto* fnc = plg.fnc ? plg.fnc->fnc() : nullptr;
+	if (fnc == nullptr)
+	{
+		return false;
+	}
+
+	qstring qCmt;
+	get_func_cmt(&qCmt, fnc, false);
+
+	qstring buff;
+	if (ask_text(
+			&buff,
+			MAXSTR,
+			qCmt.c_str(),
+			"Please enter function comment (max %d characters)",
+			MAXSTR))
+	{
+		set_func_cmt(fnc, buff.c_str(), false);
+		plg.runSelectiveDecompilation(fnc->start_ea);
+	}
+
+	return false;
+}
+
+action_state_t idaapi funcComment_ah_t::update(action_update_ctx_t* ctx)
+{
+	return ctx->widget == plg.custViewer
+			? AST_ENABLE_FOR_WIDGET : AST_DISABLE_FOR_WIDGET;
+}
+
+//
+//==============================================================================
+// renameGlobalObj_ah_t
+//==============================================================================
+//
+
+renameGlobalObj_ah_t::renameGlobalObj_ah_t(Context& p)
+		: plg(p)
+{
+
+}
+
+int idaapi renameGlobalObj_ah_t::activate(action_activation_ctx_t* ctx)
+{
+	auto* place = dynamic_cast<retdec_place_t*>(get_custom_viewer_place(
+			ctx->widget,
+			false, // mouse
+			nullptr, // x
+			nullptr // y
+	));
+	auto* token = place ? place->token() : nullptr;
+	if (token == nullptr)
+	{
+		return false;
+	}
+
+	std::string askString;
+	ea_t addr = BADADDR;
+	if (token->kind == Token::Kind::ID_FNC)
+	{
+		askString = "Please enter function name";
+		addr = getIdaFuncEa(token->value);
+	}
+	else if (token->kind == Token::Kind::ID_GVAR)
+	{
+		askString = "Please enter global variable name";
+		addr = getIdaGlobalEa(token->value);
+	}
+	if (addr == BADADDR)
+	{
+		return false;
+	}
+
+	qstring qNewName = token->value.c_str();
+	if (!ask_str(&qNewName, HIST_IDENT, "%s", askString.c_str())
+			|| qNewName.empty())
+	{
+		return false;
+	}
+	std::string newName = qNewName.c_str();
+	if (newName == token->value)
+	{
+		return false;
+	}
+
+	if (set_name(addr, newName.c_str()) == false)
+	{
+		return false;
+	}
+
+	// TODO: set new name accross all decompiled code.
+
+	return false;
+}
+
+action_state_t idaapi renameGlobalObj_ah_t::update(action_update_ctx_t* ctx)
+{
+	return ctx->widget == plg.custViewer
+			? AST_ENABLE_FOR_WIDGET : AST_DISABLE_FOR_WIDGET;
+}
+
+//
+//==============================================================================
+// openXrefs_ah_t
+//==============================================================================
+//
+
+openXrefs_ah_t::openXrefs_ah_t(Context& p)
+		: plg(p)
+{
+
+}
+
+int idaapi openXrefs_ah_t::activate(action_activation_ctx_t* ctx)
+{
+	auto* place = dynamic_cast<retdec_place_t*>(get_custom_viewer_place(
+			ctx->widget,
+			false, // mouse
+			nullptr, // x
+			nullptr // y
+	));
+	auto* token = place ? place->token() : nullptr;
+	if (token == nullptr)
+	{
+		return false;
+	}
+
+	ea_t ea = BADADDR;
+	if (token->kind == Token::Kind::ID_FNC)
+	{
+		ea = getIdaFuncEa(token->value);
+	}
+	else if (token->kind == Token::Kind::ID_GVAR)
+	{
+		ea = getIdaGlobalEa(token->value);
+	}
+	if (ea == BADADDR)
+	{
+		return false;
+	}
+
+	open_xrefs_window(ea);
+	return false;
+}
+
+action_state_t idaapi openXrefs_ah_t::update(action_update_ctx_t* ctx)
+{
+	return ctx->widget == plg.custViewer
+			? AST_ENABLE_FOR_WIDGET : AST_DISABLE_FOR_WIDGET;
+}
+
+//
+//==============================================================================
+// openCalls_ah_t
+//==============================================================================
+//
+
+openCalls_ah_t::openCalls_ah_t(Context& p)
+		: plg(p)
+{
+
+}
+
+int idaapi openCalls_ah_t::activate(action_activation_ctx_t* ctx)
+{
+	auto* place = dynamic_cast<retdec_place_t*>(get_custom_viewer_place(
+			ctx->widget,
+			false, // mouse
+			nullptr, // x
+			nullptr // y
+	));
+	auto* token = place ? place->token() : nullptr;
+	if (token == nullptr)
+	{
+		return false;
+	}
+
+	ea_t ea = BADADDR;
+	if (token->kind == Token::Kind::ID_FNC)
+	{
+		ea = getIdaFuncEa(token->value);
+	}
+	else if (token->kind == Token::Kind::ID_GVAR)
+	{
+		ea = getIdaGlobalEa(token->value);
+	}
+	if (ea == BADADDR)
+	{
+		return false;
+	}
+
+	open_calls_window(ea);
+	return false;
+}
+
+action_state_t idaapi openCalls_ah_t::update(action_update_ctx_t* ctx)
+{
+	return ctx->widget == plg.custViewer
+			? AST_ENABLE_FOR_WIDGET : AST_DISABLE_FOR_WIDGET;
+}
+
+//
+//==============================================================================
+// changeFuncType_ah_t
+//==============================================================================
+//
+
+changeFuncType_ah_t::changeFuncType_ah_t(Context& p)
+		: plg(p)
+{
+
+}
+
+int idaapi changeFuncType_ah_t::activate(action_activation_ctx_t* ctx)
+{
+	auto* place = dynamic_cast<retdec_place_t*>(get_custom_viewer_place(
+			ctx->widget,
+			false, // mouse
+			nullptr, // x
+			nullptr // y
+	));
+	auto* token = place ? place->token() : nullptr;
+	if (token == nullptr)
+	{
+		return false;
+	}
+
+	func_t* fnc = nullptr;
+	if (token->kind == Token::Kind::ID_FNC)
+	{
+		fnc = getIdaFunc(token->value);
+	}
+	if (fnc == nullptr)
+	{
+		return false;
+	}
+
+	qstring buf;
+	int flags = PRTYPE_1LINE | PRTYPE_SEMI;
+	if (!print_type(&buf, fnc->start_ea, flags))
+	{
+		qstring qFncName;
+		get_func_name(&qFncName, fnc->start_ea);;
+		WARNING_GUI("Cannot change declaration for: "
+			<< qFncName.c_str() << "\n"
+		);
+	}
+
+	std::string askString = "Please enter type declaration:";
+
+	qstring qNewDeclr = buf;
+	if (!ask_str(&qNewDeclr, HIST_IDENT, "%s", askString.c_str())
+			|| qNewDeclr.empty())
+	{
+		return false;
+	}
+
+	if (apply_cdecl(nullptr, fnc->start_ea, qNewDeclr.c_str()))
+	{
+		plg.runSelectiveDecompilation(fnc->start_ea);
+	}
+	else
+	{
+		WARNING_GUI("Cannot change declaration to: "
+			<< qNewDeclr.c_str() << "\n"
+		);
+	}
+
+	return false;
+}
+
+action_state_t idaapi changeFuncType_ah_t::update(action_update_ctx_t* ctx)
+{
+	return ctx->widget == plg.custViewer
+			? AST_ENABLE_FOR_WIDGET : AST_DISABLE_FOR_WIDGET;
 }
 
 //
@@ -152,27 +445,66 @@ ssize_t idaapi Context::on_event(ssize_t code, va_list va)
 				return false;
 			}
 
-			if (token->kind == Token::Kind::ID_FNC)
+			func_t* tfnc = nullptr;
+			if (token->kind == Token::Kind::ID_FNC
+					&& (tfnc = getIdaFunc(token->value)))
 			{
 				attach_action_to_popup(
 						view,
 						popup,
-						function_ctx_ah_t::actionName
+						renameGlobalObj_ah_t::actionName
 				);
+				attach_action_to_popup(
+						view,
+						popup,
+						openXrefs_ah_t::actionName
+				);
+				attach_action_to_popup(
+						view,
+						popup,
+						openCalls_ah_t::actionName
+				);
+
+				if (fnc->fnc() == tfnc)
+				{
+					attach_action_to_popup(
+							view,
+							popup,
+							changeFuncType_ah_t::actionName
+					);
+				}
+
+				attach_action_to_popup(view, popup, "-");
 			}
-			else if (token->kind == Token::Kind::ID_VAR)
+			else if (token->kind == Token::Kind::ID_GVAR)
 			{
 				attach_action_to_popup(
 						view,
 						popup,
-						variable_ctx_ah_t::actionName
+						renameGlobalObj_ah_t::actionName
 				);
+				attach_action_to_popup(
+						view,
+						popup,
+						openXrefs_ah_t::actionName
+				);
+				attach_action_to_popup(view, popup, "-");
 			}
 
 			attach_action_to_popup(
 					view,
 					popup,
+					jump2asm_ah_t::actionName
+			);
+			attach_action_to_popup(
+					view,
+					popup,
 					copy2asm_ah_t::actionName
+			);
+			attach_action_to_popup(
+					view,
+					popup,
+					funcComment_ah_t::actionName
 			);
 
 			break;
@@ -277,29 +609,6 @@ void idaapi cv_adjust_place(TWidget* v, lochist_entry_t* loc, void* ud)
 	}
 }
 
-bool idaapi cv_keyboard(TWidget *cv, int vk_key, int shift, void *ud)
-{
-	// A
-	if (vk_key == 65 && shift == 0)
-	{
-		auto* place = dynamic_cast<retdec_place_t*>(get_custom_viewer_place(
-				cv,
-				false, // mouse
-				nullptr, // x
-				nullptr // y
-		));
-		if (place == nullptr)
-		{
-			return false;
-		}
-
-		// Jump to IDA view.
-		jumpto(place->toea(), 0, UIJMP_ACTIVATE | UIJMP_IDAVIEW);
-	}
-
-	return true;
-}
-
 bool idaapi cv_double(TWidget* cv, int shift, void* ud)
 {
 	auto* place = dynamic_cast<retdec_place_t*>(get_custom_viewer_place(
@@ -320,19 +629,7 @@ bool idaapi cv_double(TWidget* cv, int shift, void* ud)
 	}
 	auto fncName = token->value;
 
-	func_t* fnc = nullptr;
-	for (unsigned i = 0; i < get_func_qty(); ++i)
-	{
-		func_t* f = getn_func(i);
-		qstring qFncName;
-		get_func_name(&qFncName, f->start_ea);
-		if (qFncName.c_str() == fncName)
-		{
-			fnc = f;
-			break;
-		}
-	}
-
+	auto* fnc = getIdaFunc(fncName);
 	if (fnc == nullptr)
 	{
 		INFO_MSG("function \"" << fncName << "\" not found in IDA functions\n");
@@ -361,19 +658,6 @@ void idaapi cv_location_changed(
 	if (oldp->compare(newp) == 0) // equal
 	{
 		return;
-	}
-
-	std::string reason;
-	switch (md.reason())
-	{
-		case lcr_goto: reason = "lcr_goto"; break;
-		case lcr_user_switch: reason = "lcr_user_switch"; break;
-		case lcr_auto_switch: reason = "lcr_auto_switch"; break;
-		case lcr_jump: reason = "lcr_jump"; break;
-		case lcr_navigate: reason = "lcr_navigate"; break;
-		case lcr_scroll: reason = "lcr_scroll"; break;
-		case lcr_internal: reason = "lcr_internal"; break;
-		default: reason = "lcr_unknown"; break;
 	}
 
 	if (oldp->fnc() != newp->fnc())
@@ -410,18 +694,4 @@ int idaapi cv_get_place_xcoord(
 	{
 		return mpitem->x(); // included at coordinate
 	}
-}
-
-/**
- * custom_viewer_can_navigate_t
- *
- * I can't seem to trigger this.
- */
-int idaapi cv_can_navigate(
-        TWidget *v,
-        const lochist_entry_t *now,
-        const locchange_md_t &md,
-        void *ud)
-{
-	return 0;
 }

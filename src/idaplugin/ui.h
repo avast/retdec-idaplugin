@@ -2,6 +2,8 @@
 #ifndef RETDEC_UI_H
 #define RETDEC_UI_H
 
+#include "utils.h"
+
 class Context;
 
 struct fullDecompilation_ah_t : public action_handler_t
@@ -10,28 +12,21 @@ struct fullDecompilation_ah_t : public action_handler_t
 	inline static const char* actionLabel = "Create C file RetDec...";
 	inline static const char* actionHotkey = "Ctrl+Shift+D";
 
-	Context& ctx;
-	fullDecompilation_ah_t(Context& c);
+	Context& plg;
+	fullDecompilation_ah_t(Context& p);
 
 	virtual int idaapi activate(action_activation_ctx_t*) override;
 	virtual action_state_t idaapi update(action_update_ctx_t*) override;
 };
 
-struct function_ctx_ah_t : public action_handler_t
+struct jump2asm_ah_t : public action_handler_t
 {
-	inline static const char* actionName = "retdec:ActionFunctionCtx";
-	inline static const char* actionLabel = "Function context";
-	inline static const char* actionHotkey = "F";
+	inline static const char* actionName = "retdec:ActionJump2Asm";
+	inline static const char* actionLabel = "Jump to assembly";
+	inline static const char* actionHotkey = "A";
 
-	virtual int idaapi activate(action_activation_ctx_t*) override;
-	virtual action_state_t idaapi update(action_update_ctx_t*) override;
-};
-
-struct variable_ctx_ah_t : public action_handler_t
-{
-	inline static const char* actionName = "retdec:ActionVariableCtx";
-	inline static const char* actionLabel = "Variable context";
-	inline static const char* actionHotkey = "V";
+	Context& plg;
+	jump2asm_ah_t(Context& p);
 
 	virtual int idaapi activate(action_activation_ctx_t*) override;
 	virtual action_state_t idaapi update(action_update_ctx_t*) override;
@@ -41,16 +36,80 @@ struct copy2asm_ah_t : public action_handler_t
 {
 	inline static const char* actionName = "retdec:ActionCopy2Asm";
 	inline static const char* actionLabel = "Copy to assembly";
-	inline static const char* actionHotkey = "C";
+	inline static const char* actionHotkey = "";
 
-	Context& ctx;
-	copy2asm_ah_t(Context& c);
+	Context& plg;
+	copy2asm_ah_t(Context& p);
 
 	virtual int idaapi activate(action_activation_ctx_t*) override;
 	virtual action_state_t idaapi update(action_update_ctx_t*) override;
 };
 
-bool idaapi cv_keyboard(TWidget *cv, int vk_key, int shift, void *ud);
+struct funcComment_ah_t : public action_handler_t
+{
+	inline static const char* actionName = "retdec:ActionFunctionComment";
+	inline static const char* actionLabel = "Edit func comment";
+	inline static const char* actionHotkey = ";";
+
+	Context& plg;
+	funcComment_ah_t(Context& p);
+
+	virtual int idaapi activate(action_activation_ctx_t*) override;
+	virtual action_state_t idaapi update(action_update_ctx_t*) override;
+};
+
+struct renameGlobalObj_ah_t : public action_handler_t
+{
+	inline static const char* actionName = "retdec:RenameGlobalObj";
+	inline static const char* actionLabel = "Rename global object";
+	inline static const char* actionHotkey = "R";
+
+	Context& plg;
+	renameGlobalObj_ah_t(Context& p);
+
+	virtual int idaapi activate(action_activation_ctx_t*) override;
+	virtual action_state_t idaapi update(action_update_ctx_t*) override;
+};
+
+struct openXrefs_ah_t : public action_handler_t
+{
+	inline static const char* actionName = "retdec:OpenXrefs";
+	inline static const char* actionLabel = "Open xrefs";
+	inline static const char* actionHotkey = "X";
+
+	Context& plg;
+	openXrefs_ah_t(Context& p);
+
+	virtual int idaapi activate(action_activation_ctx_t*) override;
+	virtual action_state_t idaapi update(action_update_ctx_t*) override;
+};
+
+struct openCalls_ah_t : public action_handler_t
+{
+	inline static const char* actionName = "retdec:OpenCalls";
+	inline static const char* actionLabel = "Open calls";
+	inline static const char* actionHotkey = "C";
+
+	Context& plg;
+	openCalls_ah_t(Context& p);
+
+	virtual int idaapi activate(action_activation_ctx_t*) override;
+	virtual action_state_t idaapi update(action_update_ctx_t*) override;
+};
+
+struct changeFuncType_ah_t : public action_handler_t
+{
+	inline static const char* actionName = "retdec:ChangeFuncType";
+	inline static const char* actionLabel = "Change function type";
+	inline static const char* actionHotkey = "T";
+
+	Context& plg;
+	changeFuncType_ah_t(Context& p);
+
+	virtual int idaapi activate(action_activation_ctx_t*) override;
+	virtual action_state_t idaapi update(action_update_ctx_t*) override;
+};
+
 bool idaapi cv_double(TWidget* cv, int shift, void* ud);
 void idaapi cv_adjust_place(TWidget* v, lochist_entry_t* loc, void* ud);
 int idaapi cv_get_place_xcoord(
@@ -66,15 +125,9 @@ void idaapi cv_location_changed(
         const locchange_md_t& md,
         void* ud
 );
-int idaapi cv_can_navigate(
-        TWidget *v,
-        const lochist_entry_t *now,
-        const locchange_md_t &md,
-        void *ud
-);
 
 static const custom_viewer_handlers_t ui_handlers(
-		cv_keyboard,         // keyboard
+		nullptr,             // keyboard
 		nullptr,             // popup
 		nullptr,             // mouse_moved
 		nullptr,             // click
@@ -85,7 +138,7 @@ static const custom_viewer_handlers_t ui_handlers(
 		cv_adjust_place,     // adjust_place
 		cv_get_place_xcoord, // get_place_xcoord
 		cv_location_changed, // location_changed
-		cv_can_navigate      // can_navigate
+		nullptr              // can_navigate
 );
 
 #endif

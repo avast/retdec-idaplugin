@@ -2,8 +2,6 @@
 #ifndef RETDEC_DECOMPILER_H
 #define RETDEC_DECOMPILER_H
 
-#include <pro.h>
-
 #include "function.h"
 
 class Decompiler

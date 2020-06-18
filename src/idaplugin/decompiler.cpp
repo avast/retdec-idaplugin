@@ -2,17 +2,13 @@
 #include <map>
 #include <fstream>
 
-#include <ida.hpp>
-#include <fpro.h>
-
 #include <retdec/retdec/retdec.h>
 #include <rapidjson/error/en.h>
 #include <rapidjson/document.h>
-#include <rapidjson/istreamwrapper.h>
 
 #include "config.h"
-#include "context.h"
 #include "decompiler.h"
+#include "retdec.h"
 #include "utils.h"
 
 std::map<func_t*, Function> _fnc2fnc;
@@ -59,11 +55,13 @@ bool isRelocatable()
 	return false;
 }
 
-bool runDecompilation(retdec::config::Config& config)
+bool runDecompilation(
+		retdec::config::Config& config,
+		std::string* output = nullptr)
 {
 	try
 	{
-		auto rc = retdec::decompile(config);
+		auto rc = retdec::decompile(config, output);
 		if (rc != 0)
 		{
 			throw std::runtime_error(
@@ -87,18 +85,9 @@ bool runDecompilation(retdec::config::Config& config)
 
 Function* parseOutput(func_t* fnc, const std::string& out)
 {
-	std::ifstream ifs(out);
-	if (!ifs)
-	{
-		WARNING_GUI("Unable to open decompilation output: "
-				<< out << std::endl
-		);
-		return nullptr;
-	}
-
-	rapidjson::IStreamWrapper isw(ifs);
+	rapidjson::StringStream rss(out.c_str());
 	rapidjson::Document d;
-	rapidjson::ParseResult ok = d.ParseStream(isw);
+	rapidjson::ParseResult ok = d.ParseStream(rss);
 	if (!ok)
 	{
 		std::string errMsg = GetParseError_En(ok.Code());
@@ -146,7 +135,8 @@ Function* parseOutput(func_t* fnc, const std::string& out)
 			else if (k == "ws") kk = Token::Kind::WHITE_SPACE;
 			else if (k == "punc") kk = Token::Kind::PUNCTUATION;
 			else if (k == "op") kk = Token::Kind::OPERATOR;
-			else if (k == "i_var") kk = Token::Kind::ID_VAR;
+			else if (k == "i_gvar") kk = Token::Kind::ID_GVAR;
+			else if (k == "i_lvar") kk = Token::Kind::ID_LVAR;
 			else if (k == "i_mem") kk = Token::Kind::ID_MEM;
 			else if (k == "i_lab") kk = Token::Kind::ID_LAB;
 			else if (k == "i_fnc") kk = Token::Kind::ID_FNC;
@@ -168,20 +158,12 @@ Function* parseOutput(func_t* fnc, const std::string& out)
 		}
 	}
 
-	qstring qFncName;
-	get_func_name(&qFncName, fnc->start_ea);
-
-	auto p = _fnc2fnc.emplace(
-			fnc,
-			Function(
-					qFncName.c_str(),
-					fnc->start_ea,
-					fnc->end_ea,
-					ts
-			)
-	);
-
-	return &p.first->second;
+	return &(_fnc2fnc[fnc] = Function(
+		fnc,
+		fnc->start_ea,
+		fnc->end_ea,
+		ts
+	));
 }
 
 void Decompiler::decompile(const std::string& out)
@@ -233,10 +215,11 @@ Function* Decompiler::decompile(ea_t ea, bool redecompile)
 	config.parameters.selectedRanges.insert(r);
 	config.parameters.setIsSelectedDecodeOnly(true);
 
-	if (runDecompilation(config))
+	std::string output;
+	if (runDecompilation(config, &output))
 	{
 		return nullptr;
 	}
 
-	return parseOutput(fnc, config.parameters.getOutputFile());
+	return parseOutput(fnc, output);
 }

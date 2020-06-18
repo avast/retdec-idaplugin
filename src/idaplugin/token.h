@@ -4,8 +4,7 @@
 
 #include <string>
 
-#include <lines.hpp>
-#include <pro.h>
+#include "utils.h"
 
 /**
  * One element (lexical unit) in the decompiled source code.
@@ -21,7 +20,8 @@ struct Token
 		WHITE_SPACE,
 		PUNCTUATION,
 		OPERATOR,
-		ID_VAR,
+		ID_GVAR,
+		ID_LVAR,
 		ID_MEM,
 		ID_LAB,
 		ID_FNC,

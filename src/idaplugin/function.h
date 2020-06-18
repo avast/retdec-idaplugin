@@ -7,9 +7,8 @@
 #include <set>
 #include <vector>
 
-#include <pro.h>
-
 #include "token.h"
+#include "utils.h"
 #include "yx.h"
 
 /**
@@ -19,14 +18,16 @@
 class Function
 {
 	public:
+		Function();
 		Function(
-				const std::string& name,
+				func_t* f,
 				ea_t start,
 				ea_t end,
 				const std::vector<Token>& tokens
 		);
 
-		const std::string& getName() const;
+		func_t* fnc() const;
+		std::string getName() const;
 		ea_t getStart() const;
 		ea_t getEnd() const;
 		/// Token at YX.
@@ -60,7 +61,7 @@ class Function
 		friend std::ostream& operator<<(std::ostream& os, const Function& f);
 
 	private:
-		std::string _name;
+		func_t* _fnc = nullptr;
 		ea_t _start;
 		ea_t _end;
 		std::map<YX, Token> _tokens;

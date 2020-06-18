@@ -25,7 +25,6 @@ include_directories(SYSTEM
 # RetDec idaplugin sources.
 set(IDAPLUGIN_SOURCES
 	config.cpp
-	context.cpp
 	decompiler.cpp
 	function.cpp
 	place.cpp

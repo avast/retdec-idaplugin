@@ -1,9 +1,4 @@
 
-#include <ida.hpp>
-#include <kernwin.hpp>
-#include <loader.hpp>
-#include <nalt.hpp>
-
 #include <retdec/utils/filesystem_path.h>
 
 #include "utils.h"
@@ -109,4 +104,35 @@ void saveIdaDatabase(bool inSitu, const std::string& suffix)
 	save_database(workIdb.c_str(), DBFL_COMP);
 
 	INFO_MSG("IDA database saved into :  " << workIdb << "\n");
+}
+
+func_t* getIdaFunc(const std::string& name)
+{
+	func_t* fnc = nullptr;
+
+	for (unsigned i = 0; i < get_func_qty(); ++i)
+	{
+		func_t* f = getn_func(i);
+		qstring qFncName;
+		get_func_name(&qFncName, f->start_ea);
+		if (qFncName.c_str() == name)
+		{
+			fnc = f;
+			break;
+		}
+	}
+
+	return fnc;
+}
+
+ea_t getIdaFuncEa(const std::string& name)
+{
+	auto* fnc = getIdaFunc(name);
+	return fnc ? fnc->start_ea : BADADDR;
+}
+
+ea_t getIdaGlobalEa(const std::string& name)
+{
+	// TODO
+	return BADADDR;
 }

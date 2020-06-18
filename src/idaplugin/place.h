@@ -4,9 +4,9 @@
 
 #include <iostream>
 
-#include "context.h"
-#include "yx.h"
 #include "function.h"
+#include "retdec.h"
+#include "yx.h"
 
 /**
  * Denotes a displayed line.

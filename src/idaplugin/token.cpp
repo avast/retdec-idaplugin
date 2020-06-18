@@ -1,6 +1,9 @@
 
 #include <map>
 
+#include <lines.hpp>
+#include <pro.h>
+
 #include "token.h"
 
 std::map<Token::Kind, std::string> TokenColors =
@@ -9,7 +12,8 @@ std::map<Token::Kind, std::string> TokenColors =
 	{Token::Kind::WHITE_SPACE, SCOLOR_DEFAULT},
 	{Token::Kind::PUNCTUATION, SCOLOR_KEYWORD},
 	{Token::Kind::OPERATOR, SCOLOR_KEYWORD},
-	{Token::Kind::ID_VAR, SCOLOR_DREF},
+	{Token::Kind::ID_GVAR, SCOLOR_DREF},
+	{Token::Kind::ID_LVAR, SCOLOR_DREF},
 	{Token::Kind::ID_MEM, SCOLOR_DREF},
 	{Token::Kind::ID_LAB, SCOLOR_DREF},
 	{Token::Kind::ID_FNC, SCOLOR_DEFAULT},
@@ -33,7 +37,8 @@ std::map<Token::Kind, std::string> TokenKindStrings =
 	{Token::Kind::WHITE_SPACE, "WHITE_SPACE"},
 	{Token::Kind::PUNCTUATION, "PUNCTUATION"},
 	{Token::Kind::OPERATOR, "OPERATOR"},
-	{Token::Kind::ID_VAR, "ID_VAR"},
+	{Token::Kind::ID_GVAR, "ID_GVAR"},
+	{Token::Kind::ID_LVAR, "ID_LVAR"},
 	{Token::Kind::ID_MEM, "ID_MEM"},
 	{Token::Kind::ID_LAB, "ID_LAB"},
 	{Token::Kind::ID_FNC, "ID_FNC"},

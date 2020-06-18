@@ -3,12 +3,17 @@
 
 #include "function.h"
 
+Function::Function()
+{
+
+}
+
 Function::Function(
-		const std::string& name,
+		func_t* f,
 		ea_t start,
 		ea_t end,
 		const std::vector<Token>& tokens)
-		: _name(name)
+		: _fnc(f)
 		, _start(start)
 		, _end(end)
 {
@@ -35,9 +40,16 @@ Function::Function(
 	}
 }
 
-const std::string& Function::getName() const
+func_t* Function::fnc() const
 {
-	return _name;
+	return _fnc;
+}
+
+std::string Function::getName() const
+{
+	qstring qFncName;
+	get_func_name(&qFncName, fnc()->start_ea);
+	return qFncName.c_str();
 }
 
 ea_t Function::getStart() const

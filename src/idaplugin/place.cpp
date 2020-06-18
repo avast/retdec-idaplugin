@@ -1,8 +1,8 @@
 
 #include <sstream>
 
-#include "context.h"
 #include "decompiler.h"
+#include "retdec.h"
 #include "place.h"
 
 static const idaplace_t _idaplace;

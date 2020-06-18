@@ -5,8 +5,26 @@
 #include <string>
 #include <sstream>
 
-#include <ida.hpp>
+// IDA SDK includes.
+//
+#include <ida.hpp> // this must be included before other idasdk headers
+#include <auto.hpp>
+#include <bytes.hpp>
+#include <demangle.hpp>
+#include <diskio.hpp>
+#include <frame.hpp>
+#include <funcs.hpp>
+#include <idp.hpp>
 #include <kernwin.hpp>
+#include <lines.hpp>
+#include <loader.hpp>
+#include <moves.hpp>
+#include <segment.hpp>
+#include <strlist.hpp>
+#include <struct.hpp>
+#include <typeinf.hpp>
+#include <ua.hpp>
+#include <xref.hpp>
 
 // General print msg macros.
 //
@@ -76,5 +94,20 @@ void saveIdaDatabase(
 		bool inSitu = false,
 		const std::string &suffix = ".dec-backup"
 );
+
+/**
+ * Get IDA function with \p name or \c nullptr if no such function found.
+ */
+func_t* getIdaFunc(const std::string& name);
+
+/**
+ * Get IDA function EA with \p name or \c BADADDR if no such function found.
+ */
+ea_t getIdaFuncEa(const std::string& name);
+
+/**
+ * Get IDA global var EA with \p name or \c BADADDR if no such object found.
+ */
+ea_t getIdaGlobalEa(const std::string& name);
 
 #endif

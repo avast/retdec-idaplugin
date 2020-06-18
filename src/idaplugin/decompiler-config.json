@@ -52,7 +52,6 @@
             "retdec-inst-opt-rda",
             "retdec-inst-opt",
             "retdec-simple-types",
-            "retdec-write-dsm",
             "retdec-remove-asm-instrs",
             "retdec-class-hierarchy",
             "retdec-select-fncs",
@@ -175,8 +174,6 @@
             "loops",
             "scalar-evolution",
             "retdec-value-protect",
-            "retdec-write-ll",
-            "retdec-write-bc",
             "retdec-llvmir2hll"
         ]
     }

@@ -1,13 +1,8 @@
 
-#include <ida.hpp>
-#include <demangle.hpp>
-#include <funcs.hpp>
-#include <typeinf.hpp>
-
 #include <retdec/utils/binary_path.h>
 
 #include "config.h"
-#include "context.h"
+#include "retdec.h"
 #include "utils.h"
 
 /**
@@ -207,19 +202,8 @@ bool generateHeader(retdec::config::Config& config, std::string out)
 		config.parameters.setEntryPoint(rawEntryPoint);
 	}
 
-	if (out.empty())
-	{
-		out = qtmpnam(nullptr, 0);
-	}
-
 	config.parameters.setInputFile(inFile);
-
-	config.parameters.setOutputAsmFile(out + ".dsm");
-	config.parameters.setOutputBitcodeFile(out + ".bc");
-	config.parameters.setOutputLlvmirFile(out + ".ll");
-	config.parameters.setOutputConfigFile(out + ".config.json");
 	config.parameters.setOutputFile(out);
-	config.parameters.setOutputUnpackedFile(out + "-unpacked");
 
 	return false;
 }

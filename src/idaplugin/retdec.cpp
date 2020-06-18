@@ -1,10 +1,10 @@
 
 #include <retdec/utils/binary_path.h>
 
-#include "context.h"
 #include "decompiler.h"
 #include "function.h"
 #include "place.h"
+#include "retdec.h"
 #include "ui.h"
 
 plugmod_t* idaapi init(void)
@@ -15,9 +15,26 @@ plugmod_t* idaapi init(void)
 		return nullptr;
 	}
 	INFO_MSG(ctx->pluginName << " version "
-				<< ctx->pluginVersion << " loaded OK\n");
+			<< ctx->pluginVersion << " loaded OK\n");
 	return ctx;
 }
+
+/**
+ * Plugin interface definition.
+ * IDA is searching for this structure.
+ */
+plugin_t PLUGIN =
+{
+	IDP_INTERFACE_VERSION,
+	PLUGIN_MULTI,   // plugin flags
+	init,           // initialize fnc
+	nullptr,        // terminate fnc
+	nullptr,        // invoke fnc
+	Context::pluginCopyright.data(), // long plugin comment
+	Context::pluginURL.data(), // multiline plugin help
+	Context::pluginName.data(), // the preferred plugin short name
+	Context::pluginHotkey.data()  // the preferred plugin hotkey
+};
 
 Context::Context()
 		: idaPath(retdec::utils::getThisBinaryDirectoryPath())
@@ -44,14 +61,21 @@ Context::Context()
 	{
 		ERROR_MSG("Failed to register: " << fullDecompilation_ah_t::actionName);
 	}
-	register_action(function_ctx_ah_desc);
-	register_action(variable_ctx_ah_desc);
+	register_action(jump2asm_ah_desc);
 	register_action(copy2asm_ah_desc);
+	register_action(funcComment_ah_desc);
+	register_action(renameGlobalObj_ah_desc);
+	register_action(openCalls_ah_desc);
+	register_action(openXrefs_ah_desc);
+	register_action(changeFuncType_ah_desc);
 }
 
 bool Context::runSelectiveDecompilation(ea_t ea)
 {
-	fnc = Decompiler::decompile(ea);
+	auto* cv = get_current_viewer();
+	bool redecompile = cv == custViewer || cv == codeViewer;
+
+	fnc = Decompiler::decompile(ea, redecompile);
 	if (fnc == nullptr)
 	{
 		return false;
@@ -61,8 +85,7 @@ bool Context::runSelectiveDecompilation(ea_t ea)
 	retdec_place_t max(fnc, fnc->max_yx());
 	retdec_place_t cur(fnc, fnc->ea_2_yx(ea));
 
-	static const char title[] = "RetDec";
-	TWidget* widget = find_widget(title);
+	TWidget* widget = find_widget(Context::pluginName.c_str());
 	if (widget != nullptr)
 	{
 		set_custom_viewer_range(custViewer, &min, &max);
@@ -82,7 +105,7 @@ bool Context::runSelectiveDecompilation(ea_t ea)
 	rinfo.pos.cy = cur.y();
 
 	custViewer = create_custom_viewer(
-			title,        // title
+			Context::pluginName.c_str(),        // title
 			&min,         // minplace
 			&max,         // maxplace
 			&cur,         // curplace
@@ -118,7 +141,6 @@ bool Context::runFullDecompilation()
 
 	INFO_MSG("Selected file: " << tmp << "\n");
 
-	//saveIdaDatabase();
 	Decompiler::decompile(tmp);
 
 	return true;
@@ -134,7 +156,6 @@ bool idaapi Context::run(size_t arg)
 	}
 
 	retdec_place_t::registerPlace(PLUGIN);
-	hook_event_listener(HT_UI, this);
 
 	// ordinary selective decompilation
 	//
@@ -193,27 +214,4 @@ bool idaapi Context::run(size_t arg)
 Context::~Context()
 {
 	unhook_event_listener(HT_UI, this);
-
-	// Probably unnecessary.
-	unregister_action(fullDecompilation_ah_desc.name);
-	unregister_action(function_ctx_ah_desc.name);
-	unregister_action(variable_ctx_ah_desc.name);
-	unregister_action(copy2asm_ah_desc.name);
 }
-
-/**
- * Plugin interface definition.
- * IDA is searching for this structure.
- */
-plugin_t PLUGIN =
-{
-	IDP_INTERFACE_VERSION,
-	PLUGIN_MULTI,   // plugin flags
-	init,           // initialize fnc
-	nullptr,        // terminate fnc
-	nullptr,        // invoke fnc
-	Context::pluginCopyright.data(), // long plugin comment
-	Context::pluginURL.data(), // multiline plugin help
-	Context::pluginName.data(), // the preferred plugin short name
-	Context::pluginHotkey.data()  // the preferred plugin hotkey
-};
