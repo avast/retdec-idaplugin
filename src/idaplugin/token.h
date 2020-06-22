@@ -50,4 +50,6 @@ struct Token
 	const std::string& getColorTag() const;
 };
 
+std::vector<Token> parseTokens(const std::string& json, ea_t defaultEa);
+
 #endif

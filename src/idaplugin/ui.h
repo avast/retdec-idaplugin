@@ -4,7 +4,7 @@
 
 #include "utils.h"
 
-class Context;
+class RetDec;
 
 struct fullDecompilation_ah_t : public action_handler_t
 {
@@ -12,8 +12,8 @@ struct fullDecompilation_ah_t : public action_handler_t
 	inline static const char* actionLabel = "Create C file RetDec...";
 	inline static const char* actionHotkey = "Ctrl+Shift+D";
 
-	Context& plg;
-	fullDecompilation_ah_t(Context& p);
+	RetDec& plg;
+	fullDecompilation_ah_t(RetDec& p);
 
 	virtual int idaapi activate(action_activation_ctx_t*) override;
 	virtual action_state_t idaapi update(action_update_ctx_t*) override;
@@ -25,8 +25,8 @@ struct jump2asm_ah_t : public action_handler_t
 	inline static const char* actionLabel = "Jump to assembly";
 	inline static const char* actionHotkey = "A";
 
-	Context& plg;
-	jump2asm_ah_t(Context& p);
+	RetDec& plg;
+	jump2asm_ah_t(RetDec& p);
 
 	virtual int idaapi activate(action_activation_ctx_t*) override;
 	virtual action_state_t idaapi update(action_update_ctx_t*) override;
@@ -38,8 +38,8 @@ struct copy2asm_ah_t : public action_handler_t
 	inline static const char* actionLabel = "Copy to assembly";
 	inline static const char* actionHotkey = "";
 
-	Context& plg;
-	copy2asm_ah_t(Context& p);
+	RetDec& plg;
+	copy2asm_ah_t(RetDec& p);
 
 	virtual int idaapi activate(action_activation_ctx_t*) override;
 	virtual action_state_t idaapi update(action_update_ctx_t*) override;
@@ -51,8 +51,8 @@ struct funcComment_ah_t : public action_handler_t
 	inline static const char* actionLabel = "Edit func comment";
 	inline static const char* actionHotkey = ";";
 
-	Context& plg;
-	funcComment_ah_t(Context& p);
+	RetDec& plg;
+	funcComment_ah_t(RetDec& p);
 
 	virtual int idaapi activate(action_activation_ctx_t*) override;
 	virtual action_state_t idaapi update(action_update_ctx_t*) override;
@@ -64,8 +64,8 @@ struct renameGlobalObj_ah_t : public action_handler_t
 	inline static const char* actionLabel = "Rename global object";
 	inline static const char* actionHotkey = "R";
 
-	Context& plg;
-	renameGlobalObj_ah_t(Context& p);
+	RetDec& plg;
+	renameGlobalObj_ah_t(RetDec& p);
 
 	virtual int idaapi activate(action_activation_ctx_t*) override;
 	virtual action_state_t idaapi update(action_update_ctx_t*) override;
@@ -77,8 +77,8 @@ struct openXrefs_ah_t : public action_handler_t
 	inline static const char* actionLabel = "Open xrefs";
 	inline static const char* actionHotkey = "X";
 
-	Context& plg;
-	openXrefs_ah_t(Context& p);
+	RetDec& plg;
+	openXrefs_ah_t(RetDec& p);
 
 	virtual int idaapi activate(action_activation_ctx_t*) override;
 	virtual action_state_t idaapi update(action_update_ctx_t*) override;
@@ -90,8 +90,8 @@ struct openCalls_ah_t : public action_handler_t
 	inline static const char* actionLabel = "Open calls";
 	inline static const char* actionHotkey = "C";
 
-	Context& plg;
-	openCalls_ah_t(Context& p);
+	RetDec& plg;
+	openCalls_ah_t(RetDec& p);
 
 	virtual int idaapi activate(action_activation_ctx_t*) override;
 	virtual action_state_t idaapi update(action_update_ctx_t*) override;
@@ -103,8 +103,8 @@ struct changeFuncType_ah_t : public action_handler_t
 	inline static const char* actionLabel = "Change function type";
 	inline static const char* actionHotkey = "T";
 
-	Context& plg;
-	changeFuncType_ah_t(Context& p);
+	RetDec& plg;
+	changeFuncType_ah_t(RetDec& p);
 
 	virtual int idaapi activate(action_activation_ctx_t*) override;
 	virtual action_state_t idaapi update(action_update_ctx_t*) override;

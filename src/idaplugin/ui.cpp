@@ -1,5 +1,5 @@
 
-#include "decompiler.h"
+#include "config.h"
 #include "place.h"
 #include "retdec.h"
 #include "ui.h"
@@ -10,7 +10,7 @@
 //==============================================================================
 //
 
-fullDecompilation_ah_t::fullDecompilation_ah_t(Context& p)
+fullDecompilation_ah_t::fullDecompilation_ah_t(RetDec& p)
 		: plg(p)
 {
 
@@ -18,7 +18,7 @@ fullDecompilation_ah_t::fullDecompilation_ah_t(Context& p)
 
 int idaapi fullDecompilation_ah_t::activate(action_activation_ctx_t*)
 {
-	plg.runFullDecompilation();
+	plg.fullDecompilation();
 	return false;
 }
 
@@ -33,7 +33,7 @@ action_state_t idaapi fullDecompilation_ah_t::update(action_update_ctx_t*)
 //==============================================================================
 //
 
-jump2asm_ah_t::jump2asm_ah_t(Context& p)
+jump2asm_ah_t::jump2asm_ah_t(RetDec& p)
 		: plg(p)
 {
 
@@ -68,7 +68,7 @@ action_state_t idaapi jump2asm_ah_t::update(action_update_ctx_t* ctx)
 //==============================================================================
 //
 
-copy2asm_ah_t::copy2asm_ah_t(Context& p)
+copy2asm_ah_t::copy2asm_ah_t(RetDec& p)
 		: plg(p)
 {
 
@@ -118,7 +118,7 @@ action_state_t idaapi copy2asm_ah_t::update(action_update_ctx_t* ctx)
 //==============================================================================
 //
 
-funcComment_ah_t::funcComment_ah_t(Context& p)
+funcComment_ah_t::funcComment_ah_t(RetDec& p)
 		: plg(p)
 {
 
@@ -144,7 +144,7 @@ int idaapi funcComment_ah_t::activate(action_activation_ctx_t*)
 			MAXSTR))
 	{
 		set_func_cmt(fnc, buff.c_str(), false);
-		plg.runSelectiveDecompilation(fnc->start_ea);
+		plg.selectiveDecompilationAndDisplay(fnc->start_ea, true);
 	}
 
 	return false;
@@ -162,7 +162,7 @@ action_state_t idaapi funcComment_ah_t::update(action_update_ctx_t* ctx)
 //==============================================================================
 //
 
-renameGlobalObj_ah_t::renameGlobalObj_ah_t(Context& p)
+renameGlobalObj_ah_t::renameGlobalObj_ah_t(RetDec& p)
 		: plg(p)
 {
 
@@ -187,12 +187,12 @@ int idaapi renameGlobalObj_ah_t::activate(action_activation_ctx_t* ctx)
 	if (token->kind == Token::Kind::ID_FNC)
 	{
 		askString = "Please enter function name";
-		addr = getIdaFuncEa(token->value);
+		addr = plg.getFunctionEa(token->value);
 	}
 	else if (token->kind == Token::Kind::ID_GVAR)
 	{
 		askString = "Please enter global variable name";
-		addr = getIdaGlobalEa(token->value);
+		addr = plg.getGlobalVarEa(token->value);
 	}
 	if (addr == BADADDR)
 	{
@@ -216,7 +216,9 @@ int idaapi renameGlobalObj_ah_t::activate(action_activation_ctx_t* ctx)
 		return false;
 	}
 
-	// TODO: set new name accross all decompiled code.
+	std::string oldName = token->value;
+	plg.modifyFunctions(token->kind, oldName, newName);
+	fillConfig(plg.config);
 
 	return false;
 }
@@ -233,7 +235,7 @@ action_state_t idaapi renameGlobalObj_ah_t::update(action_update_ctx_t* ctx)
 //==============================================================================
 //
 
-openXrefs_ah_t::openXrefs_ah_t(Context& p)
+openXrefs_ah_t::openXrefs_ah_t(RetDec& p)
 		: plg(p)
 {
 
@@ -256,11 +258,11 @@ int idaapi openXrefs_ah_t::activate(action_activation_ctx_t* ctx)
 	ea_t ea = BADADDR;
 	if (token->kind == Token::Kind::ID_FNC)
 	{
-		ea = getIdaFuncEa(token->value);
+		ea = plg.getFunctionEa(token->value);
 	}
 	else if (token->kind == Token::Kind::ID_GVAR)
 	{
-		ea = getIdaGlobalEa(token->value);
+		ea = plg.getGlobalVarEa(token->value);
 	}
 	if (ea == BADADDR)
 	{
@@ -283,7 +285,7 @@ action_state_t idaapi openXrefs_ah_t::update(action_update_ctx_t* ctx)
 //==============================================================================
 //
 
-openCalls_ah_t::openCalls_ah_t(Context& p)
+openCalls_ah_t::openCalls_ah_t(RetDec& p)
 		: plg(p)
 {
 
@@ -306,11 +308,11 @@ int idaapi openCalls_ah_t::activate(action_activation_ctx_t* ctx)
 	ea_t ea = BADADDR;
 	if (token->kind == Token::Kind::ID_FNC)
 	{
-		ea = getIdaFuncEa(token->value);
+		ea = plg.getFunctionEa(token->value);
 	}
 	else if (token->kind == Token::Kind::ID_GVAR)
 	{
-		ea = getIdaGlobalEa(token->value);
+		ea = plg.getGlobalVarEa(token->value);
 	}
 	if (ea == BADADDR)
 	{
@@ -333,7 +335,7 @@ action_state_t idaapi openCalls_ah_t::update(action_update_ctx_t* ctx)
 //==============================================================================
 //
 
-changeFuncType_ah_t::changeFuncType_ah_t(Context& p)
+changeFuncType_ah_t::changeFuncType_ah_t(RetDec& p)
 		: plg(p)
 {
 
@@ -356,7 +358,7 @@ int idaapi changeFuncType_ah_t::activate(action_activation_ctx_t* ctx)
 	func_t* fnc = nullptr;
 	if (token->kind == Token::Kind::ID_FNC)
 	{
-		fnc = getIdaFunc(token->value);
+		fnc = plg.getIdaFunction(token->value);
 	}
 	if (fnc == nullptr)
 	{
@@ -385,7 +387,7 @@ int idaapi changeFuncType_ah_t::activate(action_activation_ctx_t* ctx)
 
 	if (apply_cdecl(nullptr, fnc->start_ea, qNewDeclr.c_str()))
 	{
-		plg.runSelectiveDecompilation(fnc->start_ea);
+		plg.selectiveDecompilationAndDisplay(fnc->start_ea, true);
 	}
 	else
 	{
@@ -412,11 +414,11 @@ action_state_t idaapi changeFuncType_ah_t::update(action_update_ctx_t* ctx)
 /**
  * User interface hook.
  */
-ssize_t idaapi Context::on_event(ssize_t code, va_list va)
+ssize_t idaapi RetDec::on_event(ssize_t code, va_list va)
 {
 	switch (code)
 	{
-		// IDA is populating the context menu (right-click menu) for a widget.
+		// IDA is populating the RetDec menu (right-click menu) for a widget.
 		// We can attach action to popup - i.e. create menu on the fly.
 		case ui_populating_widget_popup:
 		{
@@ -447,7 +449,7 @@ ssize_t idaapi Context::on_event(ssize_t code, va_list va)
 
 			func_t* tfnc = nullptr;
 			if (token->kind == Token::Kind::ID_FNC
-					&& (tfnc = getIdaFunc(token->value)))
+					&& (tfnc = getIdaFunction(token->value)))
 			{
 				attach_action_to_popup(
 						view,
@@ -548,7 +550,7 @@ ssize_t idaapi Context::on_event(ssize_t code, va_list va)
 					out->entries.push_back(new line_rendering_output_entry_t(
 						l,
 						LROEF_FULL_LINE,
-						0xff000000 + syncColor
+						0xff000000 + 0x90ee90
 					));
 				}
 			}
@@ -611,6 +613,7 @@ void idaapi cv_adjust_place(TWidget* v, lochist_entry_t* loc, void* ud)
 
 bool idaapi cv_double(TWidget* cv, int shift, void* ud)
 {
+	RetDec* plg = static_cast<RetDec*>(ud);
 	auto* place = dynamic_cast<retdec_place_t*>(get_custom_viewer_place(
 			cv,
 			false, // mouse
@@ -629,7 +632,7 @@ bool idaapi cv_double(TWidget* cv, int shift, void* ud)
 	}
 	auto fncName = token->value;
 
-	auto* fnc = getIdaFunc(fncName);
+	auto* fnc = plg->getIdaFunction(fncName);
 	if (fnc == nullptr)
 	{
 		INFO_MSG("function \"" << fncName << "\" not found in IDA functions\n");
@@ -651,7 +654,7 @@ void idaapi cv_location_changed(
         const locchange_md_t& md,
         void* ud)
 {
-	Context* ctx = static_cast<Context*>(ud);
+	RetDec* ctx = static_cast<RetDec*>(ud);
 
 	auto* oldp = dynamic_cast<const retdec_place_t*>(was->place());
 	auto* newp = dynamic_cast<const retdec_place_t*>(now->place());

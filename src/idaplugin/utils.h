@@ -74,6 +74,11 @@
 	}
 
 /**
+ * Is the file currently loaded to IDA relocable?
+ */
+bool isRelocatable();
+
+/**
  * Is the file currently loaded to IDA some x86 flavour?
  */
 bool isX86();
@@ -94,20 +99,5 @@ void saveIdaDatabase(
 		bool inSitu = false,
 		const std::string &suffix = ".dec-backup"
 );
-
-/**
- * Get IDA function with \p name or \c nullptr if no such function found.
- */
-func_t* getIdaFunc(const std::string& name);
-
-/**
- * Get IDA function EA with \p name or \c BADADDR if no such function found.
- */
-ea_t getIdaFuncEa(const std::string& name);
-
-/**
- * Get IDA global var EA with \p name or \c BADADDR if no such object found.
- */
-ea_t getIdaGlobalEa(const std::string& name);
 
 #endif

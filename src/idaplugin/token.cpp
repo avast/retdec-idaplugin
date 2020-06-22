@@ -4,6 +4,11 @@
 #include <lines.hpp>
 #include <pro.h>
 
+#include <rapidjson/document.h>
+#include <rapidjson/error/en.h>
+
+#include <retdec/common/address.h>
+
 #include "token.h"
 
 std::map<Token::Kind, std::string> TokenColors =
@@ -77,4 +82,80 @@ const std::string& Token::getKindString() const
 const std::string& Token::getColorTag() const
 {
 	return TokenColors[kind];
+}
+
+std::vector<Token> parseTokens(const std::string& json, ea_t defaultEa)
+{
+	std::vector<Token> res;
+
+	rapidjson::StringStream rss(json.c_str());
+	rapidjson::Document d;
+	rapidjson::ParseResult ok = d.ParseStream(rss);
+	if (!ok)
+	{
+		std::string errMsg = GetParseError_En(ok.Code());
+		WARNING_GUI("Unable to parse decompilation output: "
+				<< errMsg << std::endl
+		);
+		return res;
+	}
+
+	auto tokens = d.FindMember("tokens");
+	if (tokens == d.MemberEnd() || !tokens->value.IsArray())
+	{
+		WARNING_GUI("Unable to parse tokens from decompilation output.\n");
+		return res;
+	}
+
+	ea_t ea = defaultEa;
+
+	for (auto i = tokens->value.Begin(), e = tokens->value.End(); i != e; ++i)
+	{
+		auto& obj = *i;
+		if (obj.IsNull())
+		{
+			continue;
+		}
+
+		auto addr = obj.FindMember("addr");
+		if (addr != obj.MemberEnd() && addr->value.IsString())
+		{
+			retdec::common::Address a(addr->value.GetString());
+			ea = a.isDefined() ? a.getValue() : defaultEa;
+		}
+		auto kind = obj.FindMember("kind");
+		auto val = obj.FindMember("val");
+		if (kind != obj.MemberEnd() && kind->value.IsString()
+				&& val != obj.MemberEnd() && val->value.IsString())
+		{
+			Token::Kind kk;
+			std::string k = kind->value.GetString();
+			if (k == "nl") kk = Token::Kind::NEW_LINE;
+			else if (k == "ws") kk = Token::Kind::WHITE_SPACE;
+			else if (k == "punc") kk = Token::Kind::PUNCTUATION;
+			else if (k == "op") kk = Token::Kind::OPERATOR;
+			else if (k == "i_gvar") kk = Token::Kind::ID_GVAR;
+			else if (k == "i_lvar") kk = Token::Kind::ID_LVAR;
+			else if (k == "i_mem") kk = Token::Kind::ID_MEM;
+			else if (k == "i_lab") kk = Token::Kind::ID_LAB;
+			else if (k == "i_fnc") kk = Token::Kind::ID_FNC;
+			else if (k == "i_arg") kk = Token::Kind::ID_ARG;
+			else if (k == "keyw") kk = Token::Kind::KEYWORD;
+			else if (k == "type") kk = Token::Kind::TYPE;
+			else if (k == "preproc") kk = Token::Kind::PREPROCESSOR;
+			else if (k == "inc") kk = Token::Kind::INCLUDE;
+			else if (k == "l_bool") kk = Token::Kind::LITERAL_BOOL;
+			else if (k == "l_int") kk = Token::Kind::LITERAL_INT;
+			else if (k == "l_fp") kk = Token::Kind::LITERAL_FP;
+			else if (k == "l_str") kk = Token::Kind::LITERAL_STR;
+			else if (k == "l_sym") kk = Token::Kind::LITERAL_SYM;
+			else if (k == "l_ptr") kk = Token::Kind::LITERAL_PTR;
+			else if (k == "cmnt") kk = Token::Kind::COMMENT;
+			else continue;
+
+			res.emplace_back(Token(kk, ea, val->value.GetString()));
+		}
+	}
+
+	return res;
 }

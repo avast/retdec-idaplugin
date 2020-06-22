@@ -1,7 +1,51 @@
 
+#include <fstream>
+
 #include <retdec/utils/filesystem_path.h>
 
 #include "utils.h"
+
+bool isRelocatable()
+{
+	if (inf_get_filetype() == f_COFF && inf_get_start_ea() == BADADDR)
+	{
+		return true;
+	}
+	else if (inf_get_filetype() == f_ELF)
+	{
+		auto inFile = getInputPath();
+		if (inFile.empty())
+		{
+			return false;
+		}
+
+		std::ifstream infile(inFile, std::ios::binary);
+		if (infile.good())
+		{
+			std::size_t e_type_offset = 0x10;
+			infile.seekg(e_type_offset, std::ios::beg);
+
+			// relocatable -- constant 0x1 at <0x10-0x11>
+			// little endian -- 0x01 0x00
+			// big endian -- 0x00 0x01
+			char b1 = 0;
+			char b2 = 0;
+			if (infile.get(b1))
+			{
+				if (infile.get(b2))
+				{
+					if (std::size_t(b1) + std::size_t(b2) == 1)
+					{
+						return true;
+					}
+				}
+			}
+		}
+	}
+
+	// f_BIN || f_PE || f_HEX || other
+	return false;
+}
 
 bool isX86()
 {
@@ -104,35 +148,4 @@ void saveIdaDatabase(bool inSitu, const std::string& suffix)
 	save_database(workIdb.c_str(), DBFL_COMP);
 
 	INFO_MSG("IDA database saved into :  " << workIdb << "\n");
-}
-
-func_t* getIdaFunc(const std::string& name)
-{
-	func_t* fnc = nullptr;
-
-	for (unsigned i = 0; i < get_func_qty(); ++i)
-	{
-		func_t* f = getn_func(i);
-		qstring qFncName;
-		get_func_name(&qFncName, f->start_ea);
-		if (qFncName.c_str() == name)
-		{
-			fnc = f;
-			break;
-		}
-	}
-
-	return fnc;
-}
-
-ea_t getIdaFuncEa(const std::string& name)
-{
-	auto* fnc = getIdaFunc(name);
-	return fnc ? fnc->start_ea : BADADDR;
-}
-
-ea_t getIdaGlobalEa(const std::string& name)
-{
-	// TODO
-	return BADADDR;
 }

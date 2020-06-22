@@ -9,6 +9,7 @@
 #include <set>
 #include <sstream>
 
+#include <retdec/config/config.h>
 #include <retdec/utils/filesystem_path.h>
 #include <retdec/utils/time.h>
 
@@ -19,33 +20,19 @@
 /**
  * Plugin's global data.
  */
-class Context : public plugmod_t, public event_listener_t
+class RetDec : public plugmod_t, public event_listener_t
 {
 	// Inherited.
 	//
 	public:
-		virtual bool idaapi run(size_t) override;
-		bool runSelectiveDecompilation(ea_t ea);
-		bool runFullDecompilation();
+		RetDec();
+		virtual ~RetDec();
 
+		virtual bool idaapi run(size_t) override;
 		virtual ssize_t idaapi on_event(ssize_t code, va_list va) override;
 
-		Context();
-		virtual ~Context();
-
-	// Context data.
-	//
-	public:
-		TWidget* custViewer = nullptr;
-		TWidget* codeViewer = nullptr;
-		/// Currently displayed function.
-		Function* fnc = nullptr;
-		// Color used by view synchronization.
-		bgcolor_t syncColor = 0x90ee90;
-		// Should the triggered decompilations run in their own threads?
-		bool useThreads = true;
-
 	// Plugin information.
+	//
 	public:
 		inline static const std::string pluginName         = "RetDec";
 		inline static const std::string pluginID           = "avast.retdec";
@@ -63,16 +50,46 @@ class Context : public plugmod_t, public event_listener_t
 		addon_info_t pluginInfo;
 		int pluginRegNumber = -1;
 
-	public:
-		retdec::utils::FilesystemPath idaPath;
-		std::string workDir;
-		std::string workIdb;
-		std::string inputPath;
-		std::string inputName;
-
-	// Actions.
+	// Decompilation.
 	//
 	public:
+		static bool fullDecompilation();
+		static Function* selectiveDecompilation(ea_t ea, bool redecompile);
+
+		Function* selectiveDecompilationAndDisplay(ea_t ea, bool redecompile);
+		void displayFunction(Function* f, ea_t ea);
+
+		void modifyFunctions(
+				Token::Kind k,
+				const std::string& oldVal,
+				const std::string& newVal
+		);
+		void modifyFunction(
+				func_t* f,
+				Token::Kind k,
+				const std::string& oldVal,
+				const std::string& newVal
+		);
+
+		ea_t getFunctionEa(const std::string& name);
+		func_t* getIdaFunction(const std::string& name);
+		ea_t getGlobalVarEa(const std::string& name);
+
+		/// Currently displayed function.
+		Function* fnc = nullptr;
+
+		/// All the decompiled functions.
+		static std::map<func_t*, Function> fnc2fnc;
+
+		/// Decompilation config.
+		static retdec::config::Config config;
+
+	// UI.
+	//
+	public:
+		TWidget* custViewer = nullptr;
+		TWidget* codeViewer = nullptr;
+
 		fullDecompilation_ah_t fullDecompilation_ah = fullDecompilation_ah_t(*this);
 		const action_desc_t fullDecompilation_ah_desc = ACTION_DESC_LITERAL_PLUGMOD(
 				fullDecompilation_ah_t::actionName,

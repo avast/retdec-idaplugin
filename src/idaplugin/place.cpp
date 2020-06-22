@@ -1,7 +1,6 @@
 
 #include <sstream>
 
-#include "decompiler.h"
 #include "retdec.h"
 #include "place.h"
 
@@ -13,8 +12,7 @@ void idaapi retdec_place_t::print(qstring* out_buf, void* ud) const
 	qstring ea_str;
 	ea2str(&ea_str, toea());
 
-	std::string str = std::string("hello @ ")
-			+ ea_str.c_str()
+	std::string str = std::string(ea_str.c_str())
 			+ " @ "
 			+ std::to_string(y()) + ":" + std::to_string(x());
 	*out_buf = str.c_str();
@@ -166,7 +164,7 @@ bool idaapi retdec_place_t::deserialize(
 		return false;
 	}
 	auto fa = unpack_ea(pptr, end);
-	_fnc = Decompiler::decompile(fa);
+	_fnc = RetDec::selectiveDecompilation(fa, false);
 	auto y = unpack_ea(pptr, end);
 	auto x = unpack_ea(pptr, end);
 	_yx = YX(y, x);
@@ -315,7 +313,7 @@ lecvt_code_t idaapi place_converter(
 			dst->renderer_info().pos.cy = p.y();
 			dst->renderer_info().pos.cx = p.x();
 		}
-		else if (Function* fnc = Decompiler::decompile(idaEa))
+		else if (Function* fnc = RetDec::selectiveDecompilation(idaEa, false))
 		{
 			retdec_place_t cur(fnc, fnc->ea_2_yx(idaEa));
 			dst->set_place(cur);

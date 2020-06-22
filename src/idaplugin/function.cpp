@@ -8,14 +8,8 @@ Function::Function()
 
 }
 
-Function::Function(
-		func_t* f,
-		ea_t start,
-		ea_t end,
-		const std::vector<Token>& tokens)
+Function::Function(func_t* f, const std::vector<Token>& tokens)
 		: _fnc(f)
-		, _start(start)
-		, _end(end)
 {
 	std::size_t y = YX::starting_y;
 	std::size_t x = YX::starting_x;
@@ -54,18 +48,23 @@ std::string Function::getName() const
 
 ea_t Function::getStart() const
 {
-	return _start;
+	return _fnc->start_ea;
 }
 
 ea_t Function::getEnd() const
 {
-	return _end;
+	return _fnc->end_ea;
 }
 
 const Token* Function::getToken(YX yx) const
 {
 	auto it = _tokens.find(adjust_yx(yx));
 	return it == _tokens.end() ? nullptr : &it->second;
+}
+
+const std::map<YX, Token>& Function::getTokens() const
+{
+	return _tokens;
 }
 
 YX Function::min_yx() const

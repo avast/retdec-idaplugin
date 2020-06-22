@@ -19,12 +19,7 @@ class Function
 {
 	public:
 		Function();
-		Function(
-				func_t* f,
-				ea_t start,
-				ea_t end,
-				const std::vector<Token>& tokens
-		);
+		Function(func_t* f, const std::vector<Token>& tokens);
 
 		func_t* fnc() const;
 		std::string getName() const;
@@ -32,6 +27,8 @@ class Function
 		ea_t getEnd() const;
 		/// Token at YX.
 		const Token* getToken(YX yx) const;
+		/// All the tokens.
+		const std::map<YX, Token>& getTokens() const;
 
 		/// YX of the first token.
 		YX min_yx() const;
@@ -62,8 +59,6 @@ class Function
 
 	private:
 		func_t* _fnc = nullptr;
-		ea_t _start;
-		ea_t _end;
 		std::map<YX, Token> _tokens;
 		/// Multiple YXs can be associated with the same address.
 		/// This stores the first such XY.

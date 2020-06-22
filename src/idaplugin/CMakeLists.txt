@@ -25,7 +25,6 @@ include_directories(SYSTEM
 # RetDec idaplugin sources.
 set(IDAPLUGIN_SOURCES
 	config.cpp
-	decompiler.cpp
 	function.cpp
 	place.cpp
 	token.cpp
@@ -66,7 +65,14 @@ if(MSVC)
 		retdec::bin2llvmir -WHOLEARCHIVE:$<TARGET_FILE_NAME:retdec::bin2llvmir>
 		retdec::llvmir2hll -WHOLEARCHIVE:$<TARGET_FILE_NAME:retdec::llvmir2hll>
 	)
+	target_link_libraries(idaplugin64
+		retdec::bin2llvmir -WHOLEARCHIVE:$<TARGET_FILE_NAME:retdec::bin2llvmir>
+		retdec::llvmir2hll -WHOLEARCHIVE:$<TARGET_FILE_NAME:retdec::llvmir2hll>
+	)
 	set_property(TARGET idaplugin32
+		APPEND_STRING PROPERTY LINK_FLAGS " /FORCE:MULTIPLE"
+	)
+	set_property(TARGET idaplugin64
 		APPEND_STRING PROPERTY LINK_FLAGS " /FORCE:MULTIPLE"
 	)
 	# Increase the stack size of the created binaries on MS Windows because the
@@ -74,10 +80,18 @@ if(MSVC)
 	set_property(TARGET idaplugin32
 		APPEND_STRING PROPERTY LINK_FLAGS " /STACK:16777216"
 	)
+	set_property(TARGET idaplugin64
+		APPEND_STRING PROPERTY LINK_FLAGS " /STACK:16777216"
+	)
 	# Allow the 32b version of bin2llvmir on Windows handle addresses larger
 	# than 2 GB (up to 4 GB).
 	if(CMAKE_SIZEOF_VOID_P MATCHES "4")
-		set_property(TARGET retdec
+		set_property(TARGET idaplugin32
+			APPEND_STRING PROPERTY LINK_FLAGS " /LARGEADDRESSAWARE"
+		)
+	endif()
+	if(CMAKE_SIZEOF_VOID_P MATCHES "4")
+		set_property(TARGET idaplugin64
 			APPEND_STRING PROPERTY LINK_FLAGS " /LARGEADDRESSAWARE"
 		)
 	endif()
@@ -86,8 +100,16 @@ elseif(APPLE)
 		-Wl,-force_load retdec::bin2llvmir
 		-Wl,-force_load retdec::llvmir2hll
 	)
+	target_link_libraries(idaplugin64
+		-Wl,-force_load retdec::bin2llvmir
+		-Wl,-force_load retdec::llvmir2hll
+	)
 else() # Linux
 	target_link_libraries(idaplugin32
+		-Wl,--whole-archive retdec::bin2llvmir -Wl,--no-whole-archive
+		-Wl,--whole-archive retdec::llvmir2hll -Wl,--no-whole-archive
+	)
+	target_link_libraries(idaplugin64
 		-Wl,--whole-archive retdec::bin2llvmir -Wl,--no-whole-archive
 		-Wl,--whole-archive retdec::llvmir2hll -Wl,--no-whole-archive
 	)

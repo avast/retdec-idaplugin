@@ -21,10 +21,10 @@ bool canDecompileInput(
 
 	// 32-bit binary -> is_32bit() == 1 && is_64bit() == 0.
 	// 64-bit binary -> is_32bit() == 1 && is_64bit() == 1.
-	// Allow 64-bit x86.
-	if ((!inf_is_32bit() || inf_is_64bit()) && !isX86())
+	// Allow 64-bit x86 and arm.
+	if ((!inf_is_32bit() || inf_is_64bit()) && !isX86()) // && procName != "ARM")
 	{
-		WARNING_GUI(Context::pluginName << " version " << Context::pluginVersion
+		WARNING_GUI(RetDec::pluginName << " version " << RetDec::pluginVersion
 				<< " cannot decompile PROCNAME = " << procName
 		);
 		return false;
@@ -49,8 +49,8 @@ bool canDecompileInput(
 		}
 		else
 		{
-			WARNING_GUI(Context::pluginName
-					<< " version " << Context::pluginVersion
+			WARNING_GUI(RetDec::pluginName
+					<< " version " << RetDec::pluginVersion
 					<< " cannot decompile this input file (file type = "
 					<< fileType << ").\n"
 			);
