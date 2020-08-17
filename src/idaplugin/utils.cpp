@@ -1,7 +1,7 @@
 
 #include <fstream>
 
-#include <retdec/utils/filesystem_path.h>
+#include <retdec/utils/filesystem.h>
 
 #include "utils.h"
 
@@ -78,26 +78,26 @@ std::string getInputPath()
 	std::string workDir;
 	if (!idb.empty())
 	{
-		retdec::utils::FilesystemPath fsIdb(idb);
-		workDir = fsIdb.getParentPath();
+		fs::path fsIdb(idb);
+		workDir = fsIdb.parent_path();
 	}
 	else if (!id0.empty())
 	{
-		retdec::utils::FilesystemPath fsId0(id0);
-		workDir = fsId0.getParentPath();
+		fs::path fsId0(id0);
+		workDir = fsId0.root_path();
 	}
 	if (workDir.empty())
 	{
 		return std::string();
 	}
 
-	if (!retdec::utils::FilesystemPath(inPath).exists())
+	if (!fs::exists(inPath))
 	{
-		retdec::utils::FilesystemPath fsWork(workDir);
+		fs::path fsWork(workDir);
 		fsWork.append(inName);
-		inPath = fsWork.getPath();
+		inPath = fsWork.string();
 
-		if (!retdec::utils::FilesystemPath(inPath).exists())
+		if (!fs::exists(inPath))
 		{
 			char *tmp = ask_file(                ///< Returns: file name
 					false,                       ///< bool for_saving
@@ -110,7 +110,7 @@ std::string getInputPath()
 			{
 				return std::string();
 			}
-			if (!retdec::utils::FilesystemPath(std::string(tmp)).exists())
+			if (!fs::exists(std::string(tmp)))
 			{
 				return std::string();
 			}

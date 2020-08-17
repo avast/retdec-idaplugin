@@ -175,10 +175,10 @@ bool generateHeader(retdec::config::Config& config, std::string out)
 	configPath.append("plugins");
 	configPath.append("retdec");
 	configPath.append("decompiler-config.json");
-	if (configPath.exists())
+	if (fs::exists(configPath))
 	{
-		config = retdec::config::Config::fromFile(configPath.getPath());
-		config.parameters.fixRelativePaths(idaPath.getPath());
+		config = retdec::config::Config::fromFile(configPath.string());
+		config.parameters.fixRelativePaths(idaPath.string());
 	}
 
 	if (!arch.empty())

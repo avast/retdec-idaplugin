@@ -97,7 +97,10 @@ bool runDecompilation(
 	return false;
 }
 
-Function* RetDec::selectiveDecompilation(ea_t ea, bool redecompile)
+Function* RetDec::selectiveDecompilation(
+		ea_t ea,
+		bool redecompile,
+		bool regressionTests)
 {
 	if (isRelocatable() && inf_get_min_ea() != 0)
 	{
@@ -130,6 +133,8 @@ Function* RetDec::selectiveDecompilation(ea_t ea, bool redecompile)
 	}
 
 	std::set<ea_t> selectedFncs;
+	std::string output;
+	std::string* out = &output;
 
 	config.parameters.setOutputFormat("json");
 	retdec::common::AddressRange r(f->start_ea, f->end_ea);
@@ -137,14 +142,26 @@ Function* RetDec::selectiveDecompilation(ea_t ea, bool redecompile)
 	selectedFncs.insert(f->start_ea);
 	config.parameters.setIsSelectedDecodeOnly(true);
 
+	if (regressionTests)
+	{
+		config.parameters.setIsVerboseOutput(true);
+		config.parameters.setOutputFormat("plain");
+		config.parameters.setOutputFile(config.parameters.getInputFile() + ".c");
+		out = nullptr;
+	}
+
 	show_wait_box("Decompiling...");
-	std::string output;
-	if (runDecompilation(config, &output))
+	if (runDecompilation(config, out))
 	{
 		hide_wait_box();
 		return nullptr;
 	}
 	hide_wait_box();
+
+	if (out == nullptr)
+	{
+		return nullptr;
+	}
 
 	auto ts = parseTokens(output, f->start_ea);
 	if (ts.empty())
@@ -262,6 +279,38 @@ bool idaapi RetDec::run(size_t arg)
 	// ordinary full decompilation
 	//
 	else if (arg == 1)
+	{
+		return fullDecompilation();
+	}
+	// regression tests selective decompilation
+	// function to decompile is marked by "<retdec_select>" string in comment
+	//
+	else if (arg == 2)
+	{
+		for (unsigned i = 0; i < get_func_qty(); ++i)
+		{
+			qstring qCmt;
+			func_t *fnc = getn_func(i);
+			if (get_func_cmt(&qCmt, fnc, false) <= 0)
+			{
+				continue;
+			}
+
+			std::string cmt = qCmt.c_str();;
+			if (cmt.find("<retdec_select>") != std::string::npos)
+			{
+				auto r = selectiveDecompilation(
+						fnc->start_ea,
+						false, // redecompile
+						true); // regressionTests
+				return r;
+			}
+		}
+		return true;
+	}
+	// regression tests full decompilation
+	//
+	else if (arg == 3)
 	{
 		return fullDecompilation();
 	}

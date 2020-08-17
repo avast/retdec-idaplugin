@@ -43,11 +43,6 @@ target_compile_definitions(idaplugin64 PUBLIC __EA64__)
 target_link_libraries(idaplugin32 ${idasdk_ea32} retdec::retdec retdec::config retdec::utils retdec::deps::rapidjson)
 target_link_libraries(idaplugin64 ${idasdk_ea64} retdec::retdec retdec::config retdec::utils retdec::deps::rapidjson)
 
-if(WIN32)
-	# shlwapi.dll for PathRemoveFileSpec() used in utilsl/filesystem_path.h
-	target_link_libraries(idaplugin32 shlwapi)
-	target_link_libraries(idaplugin64 shlwapi)
-endif()
 if(MSYS)
 	target_link_libraries(idaplugin32 ws2_32)
 	target_link_libraries(idaplugin64 ws2_32)

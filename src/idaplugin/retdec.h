@@ -10,7 +10,7 @@
 #include <sstream>
 
 #include <retdec/config/config.h>
-#include <retdec/utils/filesystem_path.h>
+#include <retdec/utils/filesystem.h>
 #include <retdec/utils/time.h>
 
 #include "function.h"
@@ -54,7 +54,11 @@ class RetDec : public plugmod_t, public event_listener_t
 	//
 	public:
 		static bool fullDecompilation();
-		static Function* selectiveDecompilation(ea_t ea, bool redecompile);
+		static Function* selectiveDecompilation(
+				ea_t ea,
+				bool redecompile,
+				bool regressionTests = false
+		);
 
 		Function* selectiveDecompilationAndDisplay(ea_t ea, bool redecompile);
 		void displayFunction(Function* f, ea_t ea);

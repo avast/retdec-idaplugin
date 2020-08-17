@@ -34,7 +34,7 @@ static main()
 
 	auto ret = 0;
 	Message("[RD]\tRun Retargetable Decompiler...\n");
-	if (RunPlugin("retdec", 5))
+	if (RunPlugin("retdec", 3))
 	{
 		Message("[RD]\tOK: plugin run\n");
 	}
