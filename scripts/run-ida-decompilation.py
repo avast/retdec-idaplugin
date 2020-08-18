@@ -100,9 +100,11 @@ def main():
     if args.file_dir != args.output_dir:
         shutil.copy(args.file, args.output_dir)
         args.file = os.path.join(args.output_dir, os.path.basename(args.file))
+        ida_in = args.file
     if args.idb_path and os.path.dirname(args.idb_path) != args.output_dir:
         shutil.copy(args.idb_path, args.output_dir)
         args.idb_path = os.path.join(args.output_dir, os.path.basename(args.idb_path))
+        ida_in = args.idb_path
 
     rc = 0
     cmd = [args.idat_path, '-A']
@@ -114,7 +116,8 @@ def main():
     else:
         cmd.append('-S' + script_full + ' "' + args.file + '"')
 
-    cmd.append(args.file)
+    #cmd.append(args.file)
+    cmd.append(ida_in)
 
     print('RUN: ' + ' '.join(cmd))
     rc = subprocess.call(cmd)

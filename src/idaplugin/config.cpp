@@ -12,8 +12,10 @@
 bool canDecompileInput(
 		std::string& arch,
 		std::string& endian,
+		unsigned& bitSize,
 		retdec::common::Address& rawSectionVma,
-		retdec::common::Address& rawEntryPoint
+		retdec::common::Address& rawEntryPoint,
+		bool& isRaw
 )
 {
 	std::string procName = inf_get_procname().c_str();
@@ -87,6 +89,15 @@ bool canDecompileInput(
 	//
 	if (fileType == f_BIN)
 	{
+		if (inf_is_64bit) bitSize = 64;
+		else if (inf_is_32bit) bitSize = 32;
+		else
+		{
+			WARNING_GUI("Can decompile only 32/64 bit f_BIN.\n");
+			return false;
+		}
+		isRaw = true;
+
 		// Section VMA.
 		//
 		rawSectionVma = inf_get_min_ea();
@@ -163,9 +174,17 @@ bool generateHeader(retdec::config::Config& config, std::string out)
 
 	std::string arch;
 	std::string endian;
+	unsigned bitSize = 0;
 	retdec::common::Address rawSectionVma;
 	retdec::common::Address rawEntryPoint;
-	if (!canDecompileInput(arch, endian, rawSectionVma, rawEntryPoint))
+	bool isRaw = false;
+	if (!canDecompileInput(
+			arch,
+			endian,
+			bitSize,
+			rawSectionVma,
+			rawEntryPoint,
+			isRaw))
 	{
 		return true;
 	}
@@ -200,6 +219,13 @@ bool generateHeader(retdec::config::Config& config, std::string out)
 	if (rawEntryPoint.isDefined())
 	{
 		config.parameters.setEntryPoint(rawEntryPoint);
+	}
+
+	if (isRaw && bitSize)
+	{
+		config.fileFormat.setIsRaw();
+		config.fileFormat.setFileClassBits(bitSize);
+		config.architecture.setBitSize(bitSize);
 	}
 
 	config.parameters.setInputFile(inFile);
@@ -660,9 +686,13 @@ void generateFunction(
 	{
 		ccFnc.setIsDynamicallyLinked();
 	}
-	if (isLinkedFunction(fnc))
+	else if (isLinkedFunction(fnc))
 	{
 		ccFnc.setIsDynamicallyLinked();
+	}
+	else
+	{
+		ccFnc.setIsUserDefined();
 	}
 
 	// For IDA 6.x (don't know about IDA 7.x):
