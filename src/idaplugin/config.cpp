@@ -529,7 +529,7 @@ void generateCallingConvention(
 	{
 		case CM_CC_VOIDARG:  configCC.setIsVoidarg(); break;
 		case CM_CC_CDECL:    configCC.setIsCdecl(); break;
-		case CM_CC_ELLIPSIS: configCC.setIsEllipsis(); break;
+		case CM_CC_ELLIPSIS: configCC.setIsCdecl(); break;
 		case CM_CC_STDCALL:  configCC.setIsStdcall(); break;
 		case CM_CC_PASCAL:   configCC.setIsPascal(); break;
 		case CM_CC_FASTCALL: configCC.setIsFastcall(); break;
@@ -642,6 +642,10 @@ void generateFunctionType(
 		// Calling convention.
 		//
 		generateCallingConvention(fncType.get_cc(), ccFnc.callingConvention);
+		if (fncType.get_cc() == CM_CC_ELLIPSIS)
+		{
+			ccFnc.setIsVariadic(true);
+		}
 	}
 	else
 	{
