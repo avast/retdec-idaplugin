@@ -97,13 +97,15 @@ if(RETDEC_IDAPLUGIN_DOC)
 		COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:idaplugin32>" "${RELEASE_DIR}"
 		COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:idaplugin64>" "${RELEASE_DIR}"
 		# Copy resources.
+		COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/README.md" "${RELEASE_RESOURCES_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/CHANGELOG.md" "${RELEASE_RESOURCES_DIR}"
 		COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/LICENSE" "${RELEASE_RESOURCES_DIR}"
 		COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/LICENSE-THIRD-PARTY" "${RELEASE_RESOURCES_DIR}"
 		COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/doc/user_guide/user_guide.pdf" "${RELEASE_RESOURCES_DIR}"
 		COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/src/idaplugin/decompiler-config.json" "${RELEASE_RESOURCES_DIR}"
-		COMMAND ${CMAKE_COMMAND} -E copy "${retdec_SOURCE_DIR}/support/ordinals" "${RELEASE_RESOURCES_DIR}"
-		COMMAND ${CMAKE_COMMAND} -E copy "${retdec_SOURCE_DIR}/support/yara_patterns" "${RELEASE_RESOURCES_DIR}"
-		COMMAND ${CMAKE_COMMAND} -E copy "${retdec_SOURCE_DIR}/support/types" "${RELEASE_RESOURCES_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E copy_directory "${retdec_SOURCE_DIR}/support/ordinals" "${RELEASE_RESOURCES_DIR}/ordinals/"
+		COMMAND ${CMAKE_COMMAND} -E copy_directory "${retdec_SOURCE_DIR}/support/yara_patterns" "${RELEASE_RESOURCES_DIR}/yara_patterns/"
+		COMMAND ${CMAKE_COMMAND} -E copy_directory "${retdec_SOURCE_DIR}/support/types" "${RELEASE_RESOURCES_DIR}/types/"
 		# Create the archive.
 		COMMAND ${CMAKE_COMMAND} -E tar "cvf" "${CMAKE_CURRENT_BINARY_DIR}/${RELEASE_DIR_NAME}-v${RELEASE_VERSION}-${RELEASE_OS_NAME}.zip" --format=zip "${RELEASE_DIR}"
 	)
