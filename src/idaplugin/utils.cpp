@@ -79,12 +79,12 @@ std::string getInputPath()
 	if (!idb.empty())
 	{
 		fs::path fsIdb(idb);
-		workDir = fsIdb.parent_path();
+		workDir = fsIdb.parent_path().string();
 	}
 	else if (!id0.empty())
 	{
 		fs::path fsId0(id0);
-		workDir = fsId0.root_path();
+		workDir = fsId0.parent_path().string();
 	}
 	if (workDir.empty())
 	{
