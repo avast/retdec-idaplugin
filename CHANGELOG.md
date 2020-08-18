@@ -4,12 +4,12 @@
 
 ## v1.0 (August 18, 2020)
 
+* Enhancement: The plugin is now a stand-alone package - i.e. a separate RetDec installation is not required ([#8](https://github.com/avast/retdec-idaplugin/issues/8)). There are no longer any external process launches ([#37](https://github.com/avast/retdec-idaplugin/issues/37), [#40](https://github.com/avast/retdec-idaplugin/issues/40), [#56](https://github.com/avast/retdec-idaplugin/issues/56), [#58](https://github.com/avast/retdec-idaplugin/issues/58), [#59](https://github.com/avast/retdec-idaplugin/issues/59), [#60](https://github.com/avast/retdec-idaplugin/issues/60)).
 * Enhancement: Allow arm64 decompilation.
 * Enhancement: RetDec JSON output's ASM to C mapping is used to make the plugin address-aware ([#49](https://github.com/avast/retdec-idaplugin/issues/49)).
 * Enhancement: RetDec's JSON output is used for syntax highlighting ([#48](https://github.com/avast/retdec-idaplugin/issues/48)).
-* Enhancement: The plugin is now a stand-alone package - i.e. a separate RetDec installation is not required ([#8](https://github.com/avast/retdec-idaplugin/issues/8)). There are no longer any external process launches ([#37](https://github.com/avast/retdec-idaplugin/issues/37), [#40](https://github.com/avast/retdec-idaplugin/issues/40), [#56](https://github.com/avast/retdec-idaplugin/issues/56), [#58](https://github.com/avast/retdec-idaplugin/issues/58), [#59](https://github.com/avast/retdec-idaplugin/issues/59), [#60](https://github.com/avast/retdec-idaplugin/issues/60)).
+* Enhancement: Improve GUI interactions.
 * Fix: Show the decompilation windows always next to a disassembly IDA view window ([#12](https://github.com/avast/retdec-idaplugin/issues/12)).
-* Fix: Fixed the build of the plugin under IDA 7.4 ([#54](https://github.com/avast/retdec-idaplugin/pull/54)).
 
 ## v0.9 (March 19, 2019)
 
