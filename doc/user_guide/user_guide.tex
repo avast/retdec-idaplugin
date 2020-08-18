@@ -13,6 +13,7 @@
 \usepackage{epsfig}
 \usepackage{amsfonts}
 \usepackage{amsmath}
+\usepackage[outline]{contour}
 \usepackage{fancyhdr}
 \usepackage[center]{caption}
 
@@ -86,7 +87,7 @@
 \label{sec:introduction}
 This document describes the Retargetable Decompiler's plugin for IDA (RetDec plugin). Its goal is to integrate with IDA, give transparent access to the Retargetable Decompiler and provide user-interaction capabilities like navigation or code refactoring. An example of code decompiled by Retdec plugin is shown in Figure~\ref{fig:overview}.
 
-Retargetable Decompiler (RetDec) is a reverse-engineering tool independent of any particular target architecture, file format, operating system, or compiler. It was developed in cooperation of Faculty of Information Technology, Brno University of Technology and AVG Technologies. Since the acquisition of AVG Technologies by Avast in 2016, Avast has continued to develop the decompiler. It is using Capstone disassembler engine and a Capstone2LlvmIR library to translate machine code into a high-level-language representation. Currently, the decompiler supports the MIPS, ARM (including Thumb extension), x86, and PowerPC architectures using the Windows PE, COFF, Unix ELF, macOS Mach-O, Intel HEX, and RAW binary file formats.
+Retargetable Decompiler (RetDec) is a reverse-engineering tool independent of any particular target architecture, file format, operating system, or compiler. It was developed in cooperation of Faculty of Information Technology, Brno University of Technology and AVG Technologies. Since the acquisition of AVG Technologies by Avast in 2016, Avast has continued to develop the decompiler. It is using Capstone disassembler engine and a Capstone2LlvmIR library to translate machine code into a high-level-language representation. Currently, the decompiler supports the x86, x86-64, arm, arm64, mips, and powerpc architectures using the Windows PE, COFF, Unix ELF, macOS Mach-O, Intel HEX, and RAW binary file formats.
 
 RetDec can be used in the following ways:
 \begin{enumerate}
@@ -112,21 +113,18 @@ This section describes prerequisites and the installation process of RetDec IDA 
 It is also possible to build and install the plugin directly from sources. To do so, follow the \href{https://github.com/avast/retdec-idaplugin#build-and-installation}{Build and Installation} instructions instead of this section.
 
 \subsection{IDA}
-The plugin is created using IDA SDK version 7.5. The plugin is compatible with IDA versions 7.5+. The plugin does NOT work with IDA 6.x, IDA 7.0-7.4, or freeware version of IDA 7.0. The plugin comes at both 32-bit and 64-bit address space variants (both are 64-bit binaries). I.e. it works in both \texttt{ida} and \texttt{ida64}. At the moment, it can decompile the following architectures:
-\begin{itemize}
-    \item 32-bit: x86, arm, mips, and powerpc.
-    \item 64-bit: x86-64, arm64.
-\end{itemize}
+The plugin is created using IDA SDK version 7.5. The plugin is compatible with IDA versions 7.5+. The plugin does NOT work with IDA 6.x, IDA 7.0-7.4, or freeware version of IDA 7.0. The plugin comes at both 32-bit and 64-bit address space variants (both are 64-bit binaries). I.e. it works in both \texttt{ida} and \texttt{ida64}.
 
 \subsection{RetDec IDA plugin}
-Now, we need to install the RetDec IDA plugin itself.
+The binary release packages are available for Linux and Windows.
 
 \subsubsection{Linux}
 Follow the next steps to install RetDec plugin in a Linux environment:
 \begin{enumerate}
 	\item Install 64-bit versions of the following shared-object dependencies:
 \begin{verbatim}
-libc.so.6 libgcc_s.so.1 libm.so.6 libpthread.so.0 libstdc++.so.6
+libcrypto.so.1.1 libpthread.so.0 libz.so.1 libdl.so.2 libstdc++.so.6
+libm.so.6 libgcc_s.so.1 libc.so.6
 \end{verbatim}
 	\item Download the Linux installation package (Table~\ref{table:installation-package-linux}) from the \href{https://github.com/avast/retdec-idaplugin/releases}{project's release page}.
 	\item Extract the package. Directory \texttt{retdec-idaplugin} gets created.
@@ -147,7 +145,7 @@ libc.so.6 libgcc_s.so.1 libm.so.6 libpthread.so.0 libstdc++.so.6
 \texttt{retdec/LICENSE} & RetDec IDA plugin's license. \\
 \texttt{retdec/LICENSE-THIRD-PARTY} & Licenses of libraries used by RetDec plugin. \\
 \texttt{retdec/decompiler-config.json} & RetDec configuration file. \\
-\texttt{retdec/support/} & Directory with decompilation resources. \\
+\texttt{retdec/*/} & Directories with decompilation resources. \\
 \end{tabular}
 \end{table}
 
@@ -189,28 +187,14 @@ This section describes how to configure RetDec plugin. After you follow these st
 
 \subsection{IDA's plugin.cfg}
 \label{sec:config:plugin-cfg}
-The plugin's default mode is set to selective decompilation (see Section~\ref{sec:decompilation}). It tries to register hotkey \texttt{CTRL+D} for its invocation. If you already use this hotkey for another action or you just want to use a different hotkey, you need to modify IDA's plugin configuration file. Moreover, the plugin supports one more decompilation mode and a hotkey invocation for the plugin's configuration. If you want to use any of them, you also have to modify the config file.
+The plugin's default mode is set to selective decompilation (see Section~\ref{sec:decompilation}). It tries to register hotkey \texttt{Ctrl+d} for its invocation. If you already use this hotkey for another action or you just want to use a different hotkey, you need to modify IDA's plugin configuration file.
 
-The IDA's plugin configuration file is in \texttt{<IDA\_ROOT>/plugins/plugins.cfg}. Its format is documented inside the file itself. To configure RetDec plugin, add the following lines at the beginning\footnote{Newer versions of IDA behave strangely when the lines are appended at the end, so just put them at the start.} of the file:
+The IDA's plugin configuration file is in \texttt{<IDA\_ROOT>/plugins/plugins.cfg}. Its format is documented inside the file itself. To configure RetDec plugin to use hotkey \texttt{Ctrl+Alt+d} instead of the default \texttt{Ctrl+d}, add the following line:
 \begin{verbatim}
 ; Plugin_name           File_name Hotkey        Arg
 ; -------------------------------------------------
-Retargetable_Decompiler retdec    Ctrl-d        0
-Retargetable_Decompiler retdec    Ctrl-Shift-d  1
+Retargetable_Decompiler retdec    Ctrl-Alt-d  0
 \end{verbatim}
-These lines tell IDA which hotkeys invoke the plugin and what argument is passed to it. The plugin's behavior after invocation is determined by the passed argument. Possible argument values are summarized in Table~\ref{table:plugin-args}. In the provided example, we mapped selective decompilation to hotkey \texttt{CTRL+D} (plugin's default), full decompilation to \texttt{CTRL+SHIFT+D}, and plugin configuration to \texttt{CTRL+SHIFT+C}. However, you may choose whichever hotkeys you like, provided they do not clash with other plugins or IDA.
-
-\begin{table}[!ht]
-\centering
-\caption{Description of RetDec plugin's invocation arguments.}
-\label{table:plugin-args}
-\begin{tabular}{cl}
-\textbf{Argument value} & \textbf{Description}\\
-\hline
-\texttt{0} & Invokes selective decompilation. See Section~\ref{sec:decompilation}. \\
-\texttt{1} & Invokes full decompilation. See Section~\ref{sec:decompilation}. \\
-\end{tabular}
-\end{table}
 
 %-----------------------------------------------------------------------------
 %  Plugin Information
@@ -270,16 +254,30 @@ This section describes how to invoke a decompilation. After reading it, you shou
 
 \subsection{Selective Decompilation}
 \label{sec:selective-decompilation}
-RetDec plugin's primary decompilation mode is selective decompilation. It decompiles the function that is currently under the cursor. It is invoked from the IDA's disassembly window, where you need to bring focus to the desired function and use either the default hotkey \texttt{CTRL+D}, or a hotkey you configured according to Section~\ref{sec:config:plugin-cfg}.
+RetDec plugin's primary decompilation mode is selective decompilation. It decompiles the function that is currently under the cursor. It is invoked from the IDA's disassembly window, where you need to bring focus to the desired function and use either the default hotkey \texttt{Ctrl+d}, or a hotkey you configured according to Section~\ref{sec:config:plugin-cfg}. You can also trigger it by running the plugin from the main IDA menu bar (Figure~\ref{fig:selective-decompilation}).
 
 Once the decompilation is finished, the decompiled source code is displayed in a new IDA viewer window. Here, you can invoke new decompilations by double-clicking on function calls.
 
-At the moment, the RetDec plugin supports only one simultaneous decompilation. If you trigger a decompilation before the last one is finished, the unfinished decompilation gets killed and the new one takes its place.
+At the moment, the RetDec plugin supports only one simultaneous decompilation.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=13cm]{figures/selective-decompilation}
+	\caption{Selective decompilation.}
+	\label{fig:selective-decompilation}
+\end{figure}
 
 \subsection{Full Decompilation}
-If you configured a hotkey for full decompilation in Section~\ref{sec:config:plugin-cfg}, you can use it to decompile an entire binary that is being analyzed. The result of this decompilation is stored into an output file, whose location is communicated to you through IDA's output window. The result cannot be displayed in the IDA's viewer window.
+You can also decompile an entire binary that is being analyzed. Either use the hotkey \texttt{Ctrl+Shift+d}, or the main IDA menu bar (Figure~\ref{fig:full-decompilation}). The result of this decompilation is stored into an output file, whose location is communicated to you through IDA's output window. The result cannot be displayed in the IDA's viewer window.
 
-Same as with selective decompilation (Section~\ref{sec:selective-decompilation}), only one decompilation can run at a time - unfinished decompilation is terminated when a new one is triggered.
+Same as with selective decompilation (Section~\ref{sec:selective-decompilation}), only one decompilation can run at a time.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=15cm]{figures/full-decompilation}
+	\caption{Full decompilation.}
+	\label{fig:full-decompilation}
+\end{figure}
 
 %-----------------------------------------------------------------------------
 %  User Interactions
@@ -309,10 +307,10 @@ RetDec plugin supports function navigation---jumping forward and backward betwee
 	\label{fig:navigation}
 \end{figure}
 
-Unfortunately, we were not able to integrate navigation with IDA's graphical control elements, so it can be done only through keyboard hotkeys:
+RetDec navigation is integrated with IDA's graphical control elements, so you can use either \contour{black}{$\Leftarrow$} and \contour{black}{$\Rightarrow$} buttons or hotkeys:
 \begin{itemize}
-	\item \texttt{ESC} to move back.
-	\item \texttt{CTRL+F} to move forward.
+	\item \texttt{Esc} to move backward.
+	\item \texttt{Ctrl+Enter} to move forward.
 \end{itemize}
 
 \subsection{Code Refactoring}
