@@ -24,7 +24,17 @@ bool canDecompileInput(
 	// 32-bit binary -> is_32bit() == 1 && is_64bit() == 0.
 	// 64-bit binary -> is_32bit() == 1 && is_64bit() == 1.
 	// Allow 64-bit x86 and arm.
-	if ((!inf_is_32bit() || inf_is_64bit()) && !isX86()) // && procName != "ARM")
+	if (inf_is_64bit())
+	{
+		if (!isX86() && procName != "ARM")
+		{
+			WARNING_GUI(RetDec::pluginName << " version " << RetDec::pluginVersion
+					<< " cannot decompile 64-bit for PROCNAME = " << procName
+			);
+			return false;
+		}
+	}
+	else if (!inf_is_32bit())
 	{
 		WARNING_GUI(RetDec::pluginName << " version " << RetDec::pluginVersion
 				<< " cannot decompile PROCNAME = " << procName
