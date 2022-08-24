@@ -239,7 +239,7 @@ void retdec_place_t::registerPlace(const plugin_t& PLUGIN)
 	///
 	/// Note: Whenever one of the 'p1' or 'p2' places is unregistered,
 	/// corresponding converters will be automatically unregistered as well.
-	register_loc_converter(
+	register_loc_converter2(
 		_template.name(),
 		_idaplace.name(),
 		place_converter
@@ -287,7 +287,8 @@ std::ostream& operator<<(std::ostream& os, const retdec_place_t& p)
 lecvt_code_t idaapi place_converter(
         lochist_entry_t* dst,
         const lochist_entry_t& src,
-        TWidget* view)
+        TWidget* view,
+		uint32)
 {
 	// idaplace_t -> retdec_place_t
 	if (src.place()->name() == std::string(_idaplace.name()))

@@ -34,7 +34,7 @@ bool canDecompileInput(
 			return false;
 		}
 	}
-	else if (!inf_is_32bit())
+	else if (!inf_is_32bit_exactly())
 	{
 		WARNING_GUI(RetDec::pluginName << " version " << RetDec::pluginVersion
 				<< " cannot decompile PROCNAME = " << procName
@@ -100,7 +100,7 @@ bool canDecompileInput(
 	if (fileType == f_BIN)
 	{
 		if (inf_is_64bit) bitSize = 64;
-		else if (inf_is_32bit) bitSize = 32;
+		else if (inf_is_32bit_exactly) bitSize = 32;
 		else
 		{
 			WARNING_GUI("Can decompile only 32/64 bit f_BIN.\n");
@@ -552,7 +552,7 @@ void generateCallingConvention(
 
 		case CM_CC_INVALID:
 		case CM_CC_UNKNOWN:
-		case CM_CC_RESERVE4:
+		case CM_CC_GOLANG:
 		case CM_CC_RESERVE3:
 		default:             configCC.setIsUnknown(); break;
 	}
