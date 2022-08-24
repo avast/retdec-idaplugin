@@ -30,7 +30,7 @@ set(IDAPLUGIN_SOURCES
 	token.cpp
 	retdec.cpp
 	ui.cpp
-	utils
+	utils.cpp
 	yx.cpp
 )
 
