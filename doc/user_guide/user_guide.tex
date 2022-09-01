@@ -113,7 +113,7 @@ This section describes prerequisites and the installation process of RetDec IDA 
 It is also possible to build and install the plugin directly from sources. To do so, follow the \href{https://github.com/avast/retdec-idaplugin#build-and-installation}{Build and Installation} instructions instead of this section.
 
 \subsection{IDA}
-The plugin is created using IDA SDK version 7.5. The plugin is compatible with IDA versions 7.5+. The plugin does NOT work with IDA 6.x, IDA 7.0-7.4, or freeware version of IDA 7.0. The plugin comes at both 32-bit and 64-bit address space variants (both are 64-bit binaries). I.e. it works in both \texttt{ida} and \texttt{ida64}.
+The plugin is created using IDA SDK version 8.0. The plugin is compatible with IDA versions 8.0. The plugin does NOT work with IDA 7.x, or freeware version of IDA. The plugin comes at both 32-bit and 64-bit address space variants (both are 64-bit binaries). I.e. it works in both \texttt{ida} and \texttt{ida64}.
 
 \subsection{RetDec IDA plugin}
 The binary release packages are available for Linux and Windows.
@@ -123,7 +123,7 @@ Follow the next steps to install RetDec plugin in a Linux environment:
 \begin{enumerate}
 	\item Install 64-bit versions of the following shared-object dependencies:
 \begin{verbatim}
-libcrypto.so.1.1 libpthread.so.0 libz.so.1 libdl.so.2 libstdc++.so.6
+libcrypto.so.1.1 libz.so.1 libstdc++.so.6
 libm.so.6 libgcc_s.so.1 libc.so.6
 \end{verbatim}
 	\item Download the Linux installation package (Table~\ref{table:installation-package-linux}) from the \href{https://github.com/avast/retdec-idaplugin/releases}{project's release page}.
@@ -151,10 +151,9 @@ libm.so.6 libgcc_s.so.1 libc.so.6
 
 \subsubsection{Windows}
 \label{sec:installation:windows}
-The Windows version of the plugin requires Windows 7 or later, with the MSVC 2017 runtime\footnote{Visual C++ Redistributable for Visual Studio 2017: \url{https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads}} installed.
-
-Follow the next steps to install RetDec plugin in a Windows environment:
+The Windows version of the plugin requires Windows 7 or later. Follow the next steps to install RetDec plugin in a Windows environment:
 \begin{enumerate}
+	\item Install \href{https://www.openssl.org/}{OpenSSL 3}. You may use a pre-built binary release, for example from \href{https://slproweb.com/products/Win32OpenSSL.html}{here} or \href{https://kb.firedaemon.com/support/solutions/articles/4000121705-openssl-3-0-and-1-1-1-binary-distributions-for-microsoft-windows}{here}.
 	\item Download the Windows installation package (Table~\ref{table:installation-package-windows}) from the \href{https://github.com/avast/retdec-idaplugin/releases}{project's release page}.
 	\item Extract the package. Directory \texttt{retdec-idaplugin} gets created.
 	\item Copy the contents of the directory, not the directory itself, to the IDA's plugins directory (\texttt{<IDA\_ROOT>/plugins}).

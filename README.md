@@ -15,6 +15,7 @@ Currently, we officially support only Windows and Linux. It may be possible to b
 
 1. Either download and unpack a pre-built package from the [latest release](https://github.com/avast/retdec-idaplugin/releases/latest), or build and install the RetDec IDA plugin by yourself (the process is described below).
 2. Follow the user guide (`user_guide.pdf`) that is part of the downloaded package, or use the [current version](https://github.com/avast/retdec-idaplugin/blob/master/doc/user_guide/user_guide.pdf) from this repository.
+3. Don't forget to install the required dependencies mentioned in the user guide.
 
 ## Build and Installation
 
@@ -25,7 +26,7 @@ Currently, we officially support only Windows and Linux. It may be possible to b
 * A compiler supporting C++17
   * On Windows, only Microsoft Visual C++ is supported (version >= Visual Studio 2017).
 * CMake (version >= 3.6)
-* IDA SDK (version == 7.5)
+* IDA SDK (version >= 7.7)
 
 ### Process
 
