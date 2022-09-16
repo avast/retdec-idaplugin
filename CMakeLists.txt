@@ -76,6 +76,7 @@ endif()
 # Global defines.
 add_definitions(-D__IDP__ -D__PLUGIN__ -DNO_OBSOLETE_FUNCS)
 add_definitions(-D__X64__)
+add_definitions(-DUSE_DANGEROUS_FUNCTIONS=1)
 add_definitions(-DRELEASE_VERSION="${RELEASE_VERSION}")
 if(WIN32)
 	add_definitions(-D__NT__)
