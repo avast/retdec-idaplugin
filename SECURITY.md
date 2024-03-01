@@ -1,0 +1,1 @@
+Please use [this submission form](https://www.nortonlifelock.com/us/en/contact-us/report-a-security-vulnerability/) to report any (potential) security vulnerabilities. Provide as much details as possible.
